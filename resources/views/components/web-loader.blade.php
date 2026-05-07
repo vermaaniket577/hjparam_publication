@@ -1,5 +1,5 @@
 <div id="global-loader"
-    class="fixed inset-0 z-[100] bg-white flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out">
+    class="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center transition-opacity duration-500 ease-in-out">
     <div class="relative flex flex-col items-center">
         <!-- Logo Animation -->
         <div class="mb-6 relative">
@@ -38,6 +38,37 @@
 </div>
 
 <style>
+    body.is-loading {
+        cursor: progress;
+    }
+
+    .btn-loading {
+        position: relative;
+        color: transparent !important;
+        pointer-events: none;
+    }
+
+    .btn-loading::after {
+        content: "";
+        position: absolute;
+        width: 1em;
+        height: 1em;
+        top: 50%;
+        left: 50%;
+        margin-top: -0.5em;
+        margin-left: -0.5em;
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+        to {
+            transform: rotate(360deg);
+        }
+    }
+
     @keyframes scan {
         0% {
             transform: translateY(-100%);
@@ -88,28 +119,101 @@
 </style>
 
 <script>
+    window.showGlobalLoader = function (message = 'Processing your request...') {
+        const loader = document.getElementById('global-loader');
+        const loaderText = document.getElementById('loader-text');
+
+        if (!loader) return;
+
+        if (loaderText) {
+            loaderText.textContent = message;
+            loaderText.style.opacity = '1';
+        }
+
+        loader.classList.remove('opacity-0', 'pointer-events-none');
+        document.body.classList.add('is-loading');
+    };
+
+    window.hideGlobalLoader = function () {
+        const loader = document.getElementById('global-loader');
+        const loaderText = document.getElementById('loader-text');
+
+        if (!loader) return;
+
+        loader.classList.add('opacity-0', 'pointer-events-none');
+        document.body.classList.remove('is-loading');
+
+        if (loaderText) {
+            loaderText.style.opacity = '0';
+        }
+    };
+
     document.addEventListener("DOMContentLoaded", function () {
-        // Change text slightly before hiding to simulate steps
         setTimeout(() => {
             const loaderText = document.getElementById('loader-text');
             if (loaderText) loaderText.style.opacity = '0';
         }, 800);
 
         setTimeout(function () {
-            const loader = document.getElementById('global-loader');
-            if (loader) {
-                loader.classList.add('opacity-0', 'pointer-events-none');
-                // Remove from DOM for performance after fade out
-                setTimeout(() => loader.remove(), 500);
+            window.hideGlobalLoader();
+        }, 1200);
+
+        document.addEventListener('click', function (event) {
+            const trigger = event.target.closest('a, button, [data-show-loader], .btn-loading-trigger');
+
+            if (!trigger || event.defaultPrevented) return;
+
+            if (trigger.matches('button[type="button"], button[type="reset"]')) return;
+            if (trigger.closest('[x-data]') && !trigger.closest('form') && !trigger.matches('a[href]')) return;
+
+            const link = trigger.closest('a[href]');
+            if (link) {
+                const href = link.getAttribute('href') || '';
+                const isModifiedClick = event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0;
+
+                if (
+                    isModifiedClick ||
+                    link.target === '_blank' ||
+                    link.hasAttribute('download') ||
+                    href.startsWith('#') ||
+                    href.startsWith('javascript:') ||
+                    href.startsWith('mailto:') ||
+                    href.startsWith('tel:')
+                ) {
+                    return;
+                }
+
+                window.showGlobalLoader('Loading page...');
+                return;
             }
-        }, 1200); // Minimum view time
+
+            if (trigger.matches('.btn-loading-trigger')) {
+                window.showGlobalLoader('Processing your request...');
+            }
+        });
+
+        document.addEventListener('submit', function (event) {
+            if (event.defaultPrevented) return;
+
+            const form = event.target;
+            const submitter = event.submitter;
+
+            if (form.hasAttribute('data-no-loader')) return;
+            if (submitter && submitter.hasAttribute('formnovalidate')) return;
+
+            if (submitter) {
+                submitter.classList.add('btn-loading');
+            }
+
+            window.showGlobalLoader('Submitting...');
+        });
     });
 
-    // Handle back/forward cache
     window.addEventListener('pageshow', function (event) {
-        if (event.persisted) {
-            const loader = document.getElementById('global-loader');
-            if (loader) loader.remove();
-        }
+        if (event.persisted) window.hideGlobalLoader();
+    });
+
+    window.addEventListener('pagehide', function () {
+        window.showGlobalLoader('Loading page...');
     });
 </script>

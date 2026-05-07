@@ -7,7 +7,8 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>@yield('title', 'Portal') - HJPARAM Publication</title>
-    <link rel="icon" href="{{ asset('images/logo.png') }}" type="image/png">
+    <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+    <link rel="icon" href="{{ asset('images/favicon.png') }}" type="image/png">
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -137,6 +138,16 @@
                             Articles
                         </a>
 
+                        <a href="{{ route('admin.conferences.index') }}"
+                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.conferences.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                </path>
+                            </svg>
+                            Manage Conferences
+                        </a>
+
                         <div class="pt-4 pb-2">
                             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</p>
                         </div>
@@ -151,6 +162,32 @@
                             Submissions
                         </a>
 
+                        <a href="{{ route('admin.subscriptions.index') }}"
+                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.subscriptions.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-width="2"></path>
+                            </svg>
+                            Subscriptions
+                        </a>
+
+                        <a href="{{ route('admin.payments.index') }}"
+                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.payments.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2h10a2 2 0 002-2v-2m0-4h4a2 2 0 012 2v2a2 2 0 01-2 2h-4m0-6v6">
+                                </path>
+                            </svg>
+                            Payments
+                        </a>
+
+                        <a href="{{ route('admin.contact-messages.index') }}"
+                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.contact-messages.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" stroke-width="2"></path>
+                            </svg>
+                            Contact Messages
+                        </a>
+
                         <div class="pt-4 pb-2">
                             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Content</p>
                         </div>
@@ -162,7 +199,15 @@
                                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                                 </path>
                             </svg>
-                            Manage Topics
+                            Manage Categories
+                        </a>
+
+                        <a href="{{ route('admin.countries.index') }}"
+                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.countries.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path d="M12 21l-8-4.5v-9L12 3l8 4.5v9L12 21z" stroke-width="2.5"></path>
+                            </svg>
+                            Manage Countries
                         </a>
 
                         <a href="{{ route('admin.pages.index') }}"

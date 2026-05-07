@@ -6,6 +6,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\SubmissionController;
+use App\Http\Controllers\PaymentController;
 use Illuminate\Support\Facades\Route;
 
 // Ecosystem Modules are handled in routes/ecosystem.php
@@ -31,6 +32,10 @@ Route::get('/info/{slug}', [\App\Http\Controllers\PageController::class, 'show']
 Route::get('/author/guidelines', [\App\Http\Controllers\PageController::class, 'guidelines'])->name('author.guidelines');
 Route::get('/author/submit', [SubmissionController::class, 'create'])->middleware('auth')->name('author.submit');
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
+
+Route::get('/publication-payment', [PaymentController::class, 'create'])->name('payments.create');
+Route::post('/publication-payment', [PaymentController::class, 'store'])->name('payments.store');
+Route::get('/api/payment-settings', [PaymentController::class, 'settings'])->name('payments.settings');
 
 Route::get('/initiatives/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->name('initiatives.show');
 Route::get('/about/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->name('about.page');
@@ -77,6 +82,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('submissions/{submission}/view', [\App\Http\Controllers\Admin\SubmissionController::class, 'view'])->name('submissions.view');
     Route::get('submissions/{submission}/download', [\App\Http\Controllers\Admin\SubmissionController::class, 'download'])->name('submissions.download');
     Route::post('submissions/{submission}/assign', [\App\Http\Controllers\Admin\SubmissionController::class, 'assign'])->name('submissions.assign');
+    Route::post('submissions/{submission}/publish', [\App\Http\Controllers\Admin\SubmissionController::class, 'publish'])->name('submissions.publish');
     Route::resource('submissions', \App\Http\Controllers\Admin\SubmissionController::class);
     Route::resource('reviews', \App\Http\Controllers\Admin\ReviewController::class)->only(['index', 'destroy']);
 
@@ -85,16 +91,45 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
     Route::put('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
 
-    // Content Management
+    // Conference Management
+    Route::resource('conferences', \App\Http\Controllers\Admin\ConferenceController::class);
+    Route::patch('conferences/{conference}/toggle-featured', [\App\Http\Controllers\Admin\ConferenceController::class, 'toggleFeatured'])->name('conferences.toggle-featured');
+
     Route::resource('topics', \App\Http\Controllers\Admin\TopicController::class)->except(['show', 'create', 'edit']);
+    Route::resource('countries', \App\Http\Controllers\Admin\CountryController::class)->except(['show', 'create', 'edit']);
     Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
     Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
     Route::resource('news', \App\Http\Controllers\Admin\NewsController::class);
+    Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)->only(['index', 'destroy', 'update']);
+    Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactController::class)->only(['index', 'show', 'destroy']);
+    Route::get('payments/export', [\App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
+    Route::get('payments/{payment}/screenshot', [\App\Http\Controllers\Admin\PaymentController::class, 'downloadScreenshot'])->name('payments.screenshot');
+    Route::patch('payments/{payment}/status', [\App\Http\Controllers\Admin\PaymentController::class, 'updateStatus'])->name('payments.status');
+    Route::put('payments/settings', [\App\Http\Controllers\Admin\PaymentController::class, 'updateSettings'])->name('payments.settings');
+    Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
 });
+
+// Organizer Panel
+Route::middleware(['auth', 'verified', 'organizer'])->prefix('organizer')->name('organizer.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Organizer\DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('conferences', \App\Http\Controllers\Organizer\ConferenceController::class);
+});
+
+// Public Search & Listings
+Route::get('/conferences', [\App\Http\Controllers\Public\ConferenceController::class, 'index'])->name('conferences.index');
+Route::get('/conferences/category/{slug}', [\App\Http\Controllers\Public\ConferenceController::class, 'category'])->name('conferences.category');
+Route::get('/conferences/{slug}', [\App\Http\Controllers\Public\ConferenceController::class, 'show'])->name('conferences.show');
+
+// Subscription
+Route::get('/subscribe', [\App\Http\Controllers\Public\SubscriptionController::class, 'index'])->name('subscribe.page');
+Route::post('/subscribe', [\App\Http\Controllers\Public\SubscriptionController::class, 'store'])->name('subscribe.store');
 
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/rss-feed', [\App\Http\Controllers\RSSFeedController::class, 'index'])->name('rss.feed');
 
+// Contact
+Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('contact.index');
+Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('contact.store');
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/ecosystem.php';

@@ -13,6 +13,7 @@ class Article extends Model
         'journal_id',
         'issue_id',
         'submission_id',
+        'user_id',
         'title',
         'slug',
         'abstract',

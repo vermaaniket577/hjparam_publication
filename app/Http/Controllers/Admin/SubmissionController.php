@@ -3,8 +3,13 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Article;
+use App\Models\Issue;
 use App\Models\Submission;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SubmissionController extends Controller
 {
@@ -13,7 +18,7 @@ class SubmissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Submission::with(['user', 'journal']);
+        $query = Submission::with(['user', 'journal', 'article']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -36,14 +41,19 @@ class SubmissionController extends Controller
      */
     public function show(Submission $submission)
     {
-        $submission->load(['user', 'journal', 'reviews.reviewer']);
+        $submission->load(['user', 'journal', 'issue.volume', 'article.journal', 'reviews.reviewer']);
+        $issues = Issue::with('volume')
+            ->whereHas('volume', fn ($query) => $query->where('journal_id', $submission->journal_id))
+            ->orderByDesc('publication_date')
+            ->get();
+
         // fetch potential reviewers: users with role reviewer or editor
         $reviewers = \App\Models\User::whereIn('role', ['reviewer', 'editor', 'admin'])
             ->where('id', '!=', $submission->user_id) // Cannot review own paper
             ->orderBy('name')
             ->get();
 
-        return view('admin.submissions.show', compact('submission', 'reviewers'));
+        return view('admin.submissions.show', compact('submission', 'reviewers', 'issues'));
     }
 
     /**
@@ -52,7 +62,7 @@ class SubmissionController extends Controller
     public function update(Request $request, Submission $submission)
     {
         $request->validate([
-            'status' => 'required|in:submitted,under_review,accepted,rejected,published',
+            'status' => 'required|in:submitted,under_review,verified,accepted,rejected,published',
         ]);
 
         $submission->update([
@@ -91,6 +101,94 @@ class SubmissionController extends Controller
         }
 
         return back()->with('success', 'Reviewer assigned successfully.');
+    }
+
+    /**
+     * Publish a verified submission as a public website article.
+     */
+    public function publish(Request $request, Submission $submission)
+    {
+        if ($submission->article) {
+            return redirect()
+                ->route('admin.articles.edit', $submission->article)
+                ->with('success', 'This submission has already been published. You can edit the article here.');
+        }
+
+        if (!in_array($submission->status, ['verified', 'accepted'], true)) {
+            return back()->with('error', 'Please verify or accept this submission before publishing it on the website.');
+        }
+
+        $validated = $request->validate([
+            'issue_id' => [
+                'required',
+                Rule::exists('issues', 'id')->where(function ($query) use ($submission) {
+                    $query->whereIn('volume_id', function ($volumeQuery) use ($submission) {
+                        $volumeQuery->select('id')
+                            ->from('volumes')
+                            ->where('journal_id', $submission->journal_id);
+                    });
+                }),
+            ],
+            'keywords' => 'nullable|string|max:1000',
+            'doi' => 'nullable|string|max:255|unique:articles,doi',
+            'published_at' => 'nullable|date',
+        ]);
+
+        $article = DB::transaction(function () use ($submission, $validated) {
+            $publishedAt = isset($validated['published_at'])
+                ? \Carbon\Carbon::parse($validated['published_at'])
+                : now();
+
+            $article = Article::create([
+                'journal_id' => $submission->journal_id,
+                'issue_id' => $validated['issue_id'],
+                'submission_id' => $submission->id,
+                'user_id' => $submission->user_id,
+                'title' => $submission->title,
+                'slug' => $this->uniqueArticleSlug($submission->title),
+                'abstract' => $submission->abstract,
+                'keywords' => $validated['keywords'] ?? $submission->keywords,
+                'doi' => $validated['doi'] ?? null,
+                'pdf_path' => $submission->file_path,
+                'status' => 'published',
+                'submitted_at' => $submission->created_at,
+                'accepted_at' => now(),
+                'published_at' => $publishedAt,
+            ]);
+
+            $article->authors()->create([
+                'name' => $submission->user->name,
+                'email' => $submission->user->email,
+                'affiliation' => $submission->user->affiliation ?: 'Not provided',
+                'is_corresponding' => true,
+            ]);
+
+            $submission->update([
+                'issue_id' => $validated['issue_id'],
+                'keywords' => $validated['keywords'] ?? $submission->keywords,
+                'status' => 'published',
+            ]);
+
+            return $article;
+        });
+
+        return redirect()
+            ->route('admin.articles.edit', $article)
+            ->with('success', 'Submission verified and published on the website successfully.');
+    }
+
+    private function uniqueArticleSlug(string $title): string
+    {
+        $baseSlug = Str::slug($title) ?: 'article';
+        $slug = $baseSlug;
+        $counter = 2;
+
+        while (Article::where('slug', $slug)->exists()) {
+            $slug = "{$baseSlug}-{$counter}";
+            $counter++;
+        }
+
+        return $slug;
     }
 
     /**

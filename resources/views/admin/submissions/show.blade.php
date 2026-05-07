@@ -14,9 +14,10 @@
                     <div>
                         <span
                             class="inline-block px-2 py-1 text-xs font-semibold rounded-full 
-                                                        {{ $submission->status === 'published' ? 'bg-green-100 text-green-800' :
+                                                        {{ $submission->status === 'published' ? 'bg-purple-100 text-purple-800' :
+        ($submission->status === 'verified' ? 'bg-emerald-100 text-emerald-800' :
         ($submission->status === 'rejected' ? 'bg-red-100 text-red-800' :
-            ($submission->status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800')) }}">
+            ($submission->status === 'under_review' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'))) }}">
                             {{ ucfirst(str_replace('_', ' ', $submission->status)) }}
                         </span>
                         <h1 class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ $submission->title }}</h1>
@@ -41,6 +42,16 @@
                     <div>
                         <span class="block text-xs font-bold text-gray-500 uppercase">Journal</span>
                         <p class="font-medium text-gray-900 dark:text-white">{{ $submission->journal->title }}</p>
+                    </div>
+                    <div>
+                        <span class="block text-xs font-bold text-gray-500 uppercase">Volume & Issue</span>
+                        <p class="font-medium text-gray-900 dark:text-white">
+                            @if($submission->issue)
+                                Volume {{ $submission->issue->volume->volume_number }}, Issue {{ $submission->issue->issue_number }}
+                            @else
+                                Not assigned yet
+                            @endif
+                        </p>
                     </div>
                     <div class="md:col-span-2">
                         <span class="block text-xs font-bold text-gray-500 uppercase mb-1">Files</span>
@@ -244,9 +255,9 @@
                                 Review</option>
                             <option value="accepted" {{ $submission->status == 'accepted' ? 'selected' : '' }}>Accepted
                             </option>
-                            <option value="rejected" {{ $submission->status == 'rejected' ? 'selected' : '' }}>Rejected
+                            <option value="verified" {{ $submission->status == 'verified' ? 'selected' : '' }}>Verified by Admin
                             </option>
-                            <option value="published" {{ $submission->status == 'published' ? 'selected' : '' }}>Published
+                            <option value="rejected" {{ $submission->status == 'rejected' ? 'selected' : '' }}>Rejected
                             </option>
                         </select>
                     </div>
@@ -257,6 +268,76 @@
                         Update Status
                     </button>
                 </form>
+            </div>
+
+            <!-- Publication Card -->
+            <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+                <h3 class="text-lg font-bold text-gray-800 dark:text-white mb-2">Publish on Website</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                    After verification, publish this submission as a public article. It will appear on journal pages, search,
+                    RSS, and the home page.
+                </p>
+
+                @if($submission->article)
+                    <div class="rounded-lg border border-purple-100 bg-purple-50 p-4 text-sm text-purple-800">
+                        <p class="font-bold mb-2">This submission is already published.</p>
+                        <a href="{{ route('admin.articles.edit', $submission->article) }}"
+                            class="inline-flex items-center text-xs font-bold uppercase tracking-wider text-purple-700 hover:text-purple-900">
+                            Manage Published Article
+                        </a>
+                    </div>
+                @elseif(!in_array($submission->status, ['verified', 'accepted']))
+                    <div class="rounded-lg border border-amber-100 bg-amber-50 p-4 text-sm text-amber-800">
+                        Mark this submission as <strong>Verified by Admin</strong> before publishing it on the website.
+                    </div>
+                @else
+                    <form action="{{ route('admin.submissions.publish', $submission) }}" method="POST" class="space-y-4">
+                        @csrf
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Publication Issue</label>
+                            <select name="issue_id"
+                                class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                required>
+                                <option value="">Choose volume and issue...</option>
+                                @foreach($issues as $issue)
+                                    <option value="{{ $issue->id }}" {{ old('issue_id', $submission->issue_id) == $issue->id ? 'selected' : '' }}>
+                                        Volume {{ $issue->volume->volume_number }}, Issue {{ $issue->issue_number }}
+                                        {{ $issue->special_issue_title ? '- ' . $issue->special_issue_title : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('issue_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Keywords</label>
+                            <input type="text" name="keywords" value="{{ old('keywords', $submission->keywords) }}"
+                                placeholder="research, publication, journal"
+                                class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            @error('keywords') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">DOI</label>
+                            <input type="text" name="doi" value="{{ old('doi') }}" placeholder="Optional DOI"
+                                class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            @error('doi') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Publication Date</label>
+                            <input type="date" name="published_at" value="{{ old('published_at', now()->format('Y-m-d')) }}"
+                                class="w-full bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:text-white">
+                            @error('published_at') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <button type="submit"
+                            class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded shadow transition duration-150 btn-loading-trigger">
+                            Publish on Website
+                        </button>
+                    </form>
+                @endif
             </div>
 
             <!-- Assign Reviewer Card -->

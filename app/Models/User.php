@@ -85,6 +85,21 @@ class User extends Authenticatable
         return $this->role === 'author';
     }
 
+    public function isOrganizer()
+    {
+        return $this->role === 'organizer' || $this->isAdmin();
+    }
+
+    public function isSubscriber()
+    {
+        return $this->role === 'subscriber' || $this->isAuthor() || $this->isOrganizer();
+    }
+
+    public function conferences()
+    {
+        return $this->hasMany(Conference::class, 'organizer_id');
+    }
+
     public function sciProfile()
     {
         return $this->hasOne(SciProfile::class);

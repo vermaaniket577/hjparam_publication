@@ -12,6 +12,7 @@ class ArticleController extends Controller
     public function show($journalSlug, $articleSlug)
     {
         $article = Article::where('slug', $articleSlug)
+            ->where('status', 'published')
             ->whereHas('journal', function ($query) use ($journalSlug) {
                 $query->where('slug', $journalSlug);
             })
@@ -26,15 +27,19 @@ class ArticleController extends Controller
 
     public function download($id)
     {
-        $article = Article::findOrFail($id);
+        $article = Article::where('status', 'published')->findOrFail($id);
 
-        // Log download
-        DownloadLog::create([
-            'article_id' => $article->id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'downloaded_at' => now(),
-        ]);
+        // Log download (with error handling for missing table)
+        try {
+            DownloadLog::create([
+                'article_id' => $article->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'downloaded_at' => now(),
+            ]);
+        } catch (\Exception $e) {
+            // Table may not exist yet - continue without logging
+        }
 
         $article->increment('downloads_count');
 

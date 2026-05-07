@@ -50,9 +50,9 @@
                                 <select name="journal_id" id="journal_id"
                                     class="w-full bg-slate-50 border-slate-200 rounded-lg p-3 text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 appearance-none transition-all cursor-pointer"
                                     required>
-                                    <option value="" disabled selected>Select Journal...</option>
+                                    <option value="" disabled {{ old('journal_id', request()->get('journal_id')) ? '' : 'selected' }}>Select Journal...</option>
                                     @foreach($journals as $journal)
-                                        <option value="{{ $journal->id }}" {{ request()->get('journal_id') == $journal->id ? 'selected' : '' }}>{{ $journal->title }}</option>
+                                        <option value="{{ $journal->id }}" {{ old('journal_id', request()->get('journal_id')) == $journal->id ? 'selected' : '' }}>{{ $journal->title }}</option>
                                     @endforeach
                                 </select>
                                 <div
@@ -66,22 +66,34 @@
                             @error('journal_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Volume &
+                            <label for="issue_id" class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Volume &
                                 Issue</label>
                             <div class="relative">
-                                <select disabled
-                                    class="w-full bg-slate-100 border-slate-200 rounded-lg p-3 text-slate-400 cursor-not-allowed">
-                                    <option>Assign to Issue (Optional)</option>
+                                <select name="issue_id" id="issue_id"
+                                    class="w-full bg-slate-50 border-slate-200 rounded-lg p-3 text-slate-700 focus:ring-2 focus:ring-blue-100 focus:border-blue-500 appearance-none transition-all cursor-pointer disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed">
+                                    <option value="">Select Volume & Issue (Optional)</option>
+                                    @foreach($journals as $journal)
+                                        @foreach($journal->volumes as $volume)
+                                            @foreach($volume->issues as $issue)
+                                                <option value="{{ $issue->id }}"
+                                                    data-journal-id="{{ $journal->id }}"
+                                                    {{ old('issue_id') == $issue->id ? 'selected' : '' }}>
+                                                    {{ $journal->title }} - Volume {{ $volume->volume_number }}, Issue {{ $issue->issue_number }}{{ $issue->special_issue_title ? ' - ' . $issue->special_issue_title : '' }}
+                                                </option>
+                                            @endforeach
+                                        @endforeach
+                                    @endforeach
                                 </select>
                                 <div
-                                    class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-400">
+                                    class="absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none text-slate-500">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M19 9l-7 7-7-7" />
                                     </svg>
                                 </div>
                             </div>
-                            <p class="text-[10px] text-slate-400 mt-1">Issues are assigned by editors upon acceptance.</p>
+                            <p id="issueHelp" class="text-[10px] text-slate-400 mt-1">Select a journal to view related volume and issue options.</p>
+                            @error('issue_id') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                         </div>
                     </div>
                 </div>
@@ -309,5 +321,50 @@
             filePreview.classList.add('hidden');
             event.stopPropagation();
         }
+
+        const journalSelect = document.getElementById('journal_id');
+        const issueSelect = document.getElementById('issue_id');
+        const issueHelp = document.getElementById('issueHelp');
+        const issueOptions = Array.from(issueSelect.options).slice(1);
+
+        function refreshIssueOptions() {
+            const selectedJournalId = journalSelect.value;
+            let visibleIssues = 0;
+
+            issueOptions.forEach((option) => {
+                const matchesJournal = option.dataset.journalId === selectedJournalId;
+                option.hidden = !matchesJournal;
+                option.disabled = !matchesJournal;
+
+                if (matchesJournal) {
+                    visibleIssues++;
+                }
+            });
+
+            if (!selectedJournalId) {
+                issueSelect.value = '';
+                issueSelect.disabled = true;
+                issueHelp.textContent = 'Select a journal to view related volume and issue options.';
+                return;
+            }
+
+            issueSelect.disabled = visibleIssues === 0;
+
+            if (visibleIssues === 0) {
+                issueSelect.value = '';
+                issueHelp.textContent = 'No volume or issue has been created for this journal yet.';
+                return;
+            }
+
+            const selectedOption = issueSelect.selectedOptions[0];
+            if (selectedOption && selectedOption.dataset.journalId !== selectedJournalId) {
+                issueSelect.value = '';
+            }
+
+            issueHelp.textContent = 'Only volume and issue options for the selected journal are shown.';
+        }
+
+        journalSelect.addEventListener('change', refreshIssueOptions);
+        refreshIssueOptions();
     </script>
 @endsection

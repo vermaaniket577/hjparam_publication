@@ -19,6 +19,7 @@
                         <option value="submitted" {{ request('status') == 'submitted' ? 'selected' : '' }}>Submitted</option>
                         <option value="under_review" {{ request('status') == 'under_review' ? 'selected' : '' }}>Under Review
                         </option>
+                        <option value="verified" {{ request('status') == 'verified' ? 'selected' : '' }}>Verified</option>
                         <option value="accepted" {{ request('status') == 'accepted' ? 'selected' : '' }}>Accepted</option>
                         <option value="rejected" {{ request('status') == 'rejected' ? 'selected' : '' }}>Rejected</option>
                         <option value="published" {{ request('status') == 'published' ? 'selected' : '' }}>Published</option>
@@ -79,6 +80,7 @@
                                         $statusClasses = [
                                             'submitted' => 'bg-blue-100 text-blue-800',
                                             'under_review' => 'bg-yellow-100 text-yellow-800',
+                                            'verified' => 'bg-emerald-100 text-emerald-800',
                                             'accepted' => 'bg-green-100 text-green-800',
                                             'rejected' => 'bg-red-100 text-red-800',
                                             'published' => 'bg-purple-100 text-purple-800',
@@ -122,11 +124,24 @@
                                                         Review</button>
                                                     <button type="submit" name="status" value="accepted"
                                                         class="block w-full text-left px-4 py-2 text-sm text-green-700 hover:bg-green-50">Accept</button>
+                                                    <button type="submit" name="status" value="verified"
+                                                        class="block w-full text-left px-4 py-2 text-sm text-emerald-700 hover:bg-emerald-50">Verify for Publish</button>
                                                     <button type="submit" name="status" value="rejected"
                                                         class="block w-full text-left px-4 py-2 text-sm text-red-700 hover:bg-red-50">Reject</button>
                                                 </form>
                                             </div>
                                         </div>
+                                        @if($submission->article)
+                                            <a href="{{ route('admin.articles.edit', $submission->article) }}"
+                                                class="text-purple-600 hover:text-purple-900 font-medium">
+                                                Published Article
+                                            </a>
+                                        @elseif(in_array($submission->status, ['verified', 'accepted']))
+                                            <a href="{{ route('admin.submissions.show', $submission) }}"
+                                                class="text-emerald-600 hover:text-emerald-900 font-medium">
+                                                Publish
+                                            </a>
+                                        @endif
                                     </div>
                                 </td>
                             </tr>

@@ -17,6 +17,8 @@
 </head>
 
 <body class="font-sans antialiased">
+    @include('components.web-loader')
+
     <x-ecosystem-nav />
     <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
         @include('layouts.navigation')

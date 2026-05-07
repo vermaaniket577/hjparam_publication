@@ -82,12 +82,24 @@
                     </p>
                 </div>
 
-                <!-- Primary Search Component (with inline Advanced Search) -->
-                <div class="relative max-w-3xl mx-auto mb-16 animate-fade-in-up" style="animation-delay: 0.1s;"
-                    x-data="{ advancedOpen: false }">
-                    <form action="{{ route('search') }}" method="GET" class="relative">
+                <!-- Strategic Search Component -->
+                <div class="relative max-w-4xl mx-auto mb-16 animate-fade-in-up" style="animation-delay: 0.1s;"
+                    x-data="{ searchType: 'conferences', advancedOpen: false }">
+                    
+                    <!-- Search Type Toggles -->
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button @click="searchType = 'journals'" 
+                            :class="searchType === 'journals' ? 'bg-blue-900 text-white shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'"
+                            class="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300">Search Journals</button>
+                        <button @click="searchType = 'conferences'" 
+                            :class="searchType === 'conferences' ? 'bg-blue-900 text-white shadow-lg' : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'"
+                            class="px-6 py-2 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300">Search Conferences</button>
+                    </div>
+
+                    <form :action="searchType === 'journals' ? '{{ route('search') }}' : '{{ route('conferences.index') }}'" method="GET" class="relative">
                         <div
                             class="relative flex flex-col md:flex-row items-center bg-white rounded-3xl md:rounded-full shadow-[0_15px_50px_-15px_rgba(30,58,138,0.12)] border border-slate-200 p-2.5 transition-all duration-500 hover:shadow-[0_25px_60px_-12px_rgba(30,58,138,0.18)] focus-within:ring-8 focus-within:ring-blue-50/60 focus-within:border-blue-400">
+                            
                             <div class="flex items-center w-full group">
                                 <div class="pl-6 text-slate-400 group-focus-within:text-blue-600 transition-colors">
                                     <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -95,77 +107,17 @@
                                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                                     </svg>
                                 </div>
-                                <input type="text" name="q"
+                                <input type="text" name="search"
                                     class="w-full bg-transparent border-none focus:ring-0 text-xl py-5 px-5 text-slate-800 placeholder-slate-400 font-medium"
-                                    placeholder="Search by Title, Keyword, Author, DOI...">
+                                    :placeholder="searchType === 'journals' ? 'Search by Title, Keyword, Author, DOI...' : 'Search for International Conferences by Topic, City, or Name...'">
                             </div>
+
                             <button type="submit"
                                 class="w-full md:w-auto bg-blue-900 hover:bg-slate-900 text-white font-bold py-5 px-12 rounded-2xl md:rounded-full transition-all duration-500 shadow-lg shadow-blue-900/20 active:scale-95 text-lg">
-                                Search
+                                Find
                             </button>
                         </div>
-
-                        <!-- Advanced Search Fields (Inline) -->
-                        <div x-show="advancedOpen" x-transition:enter="transition ease-out duration-300"
-                            x-transition:enter-start="opacity-0 -translate-y-4"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            class="mt-4 bg-white rounded-2xl shadow-xl border border-slate-100 p-8 text-left">
-                            <h3 class="text-lg font-bold text-slate-900 mb-6 border-b pb-2">Filter Research</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Author
-                                        Name</label>
-                                    <input type="text" name="author" placeholder="e.g. John Smith"
-                                        class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                                </div>
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Journal</label>
-                                    <select name="journal"
-                                        class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="">All Journals</option>
-                                        @foreach(\App\Models\Journal::all() as $journal)
-                                            <option value="{{ $journal->id }}">{{ $journal->title }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label
-                                        class="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Publication
-                                        Year</label>
-                                    <div class="flex gap-2">
-                                        <input type="number" name="year_from" placeholder="From"
-                                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                                        <input type="number" name="year_to" placeholder="To"
-                                            class="w-full bg-slate-50 border-slate-200 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                                    </div>
-                                </div>
-                                <div class="flex items-end">
-                                    <button type="submit"
-                                        class="w-full bg-slate-900 text-white font-bold py-3 rounded-xl hover:bg-blue-900 transition shadow-lg">Apply
-                                        Filters & Search</button>
-                                </div>
-                            </div>
-                        </div>
                     </form>
-
-                    <div class="mt-6 flex justify-center gap-6">
-                        <button type="button" @click="advancedOpen = !advancedOpen"
-                            class="text-sm font-semibold text-slate-400 hover:text-blue-900 flex items-center gap-1 transition-all group">
-                            <span x-text="advancedOpen ? 'Simple Search' : 'Advanced Search'">Advanced Search</span>
-                            <svg class="w-4 h-4 transition-transform duration-300" :class="advancedOpen ? 'rotate-180' : ''"
-                                fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                            </svg>
-                        </button>
-                        <span class="text-slate-200">|</span>
-                        <a href="{{ route('journals.index') }}"
-                            class="text-sm font-semibold text-slate-400 hover:text-blue-900 transition-colors">Browse
-                            Journals</a>
-                    </div>
                 </div>
 
                 <!-- Strategic Statistics (Deep Shining Cards) -->
@@ -267,11 +219,14 @@
                 @foreach($latestNews as $index => $news)
                     @php
                         $category = strtolower($news->category ?? 'announcement');
-                        $badgeColors = match (true) {
-                            str_contains($category, 'partnership') => 'bg-blue-50 text-blue-600 border-blue-100',
-                            str_contains($category, 'call') || str_contains($category, 'paper') => 'bg-emerald-50 text-emerald-600 border-emerald-100',
-                            default => 'bg-orange-50 text-orange-600 border-orange-100',
-                        };
+                        
+                        if (strpos($category, 'partnership') !== false) {
+                            $badgeColors = 'bg-blue-50 text-blue-600 border-blue-100';
+                        } elseif (strpos($category, 'call') !== false || strpos($category, 'paper') !== false) {
+                            $badgeColors = 'bg-emerald-50 text-emerald-600 border-emerald-100';
+                        } else {
+                            $badgeColors = 'bg-orange-50 text-orange-600 border-orange-100';
+                        }
                     @endphp
                     <div class="group h-full bg-white rounded-2xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2 transition-all duration-500 animate-fade-in-up flex flex-col"
                         style="animation-delay: {{ 0.1 * ($index + 1) }}s">
@@ -468,7 +423,7 @@
                                         academic inbox.</p>
 
                                     <form
-                                        @submit.prevent="alert('Thank you for subscribing! You will now receive alerts for new publications.'); subscribeOpen = false"
+                                        x-on:submit.prevent="alert('Thank you for subscribing! You will now receive alerts for new publications.'); subscribeOpen = false"
                                         class="space-y-5">
                                         <div class="text-left">
                                             <label
@@ -673,6 +628,68 @@
         </div>
     </div>
 
+    <!-- Featured Conferences Grid -->
+    <div class="bg-gray-50 py-24">
+        <div class="container mx-auto px-4">
+            <div class="flex justify-between items-end mb-12 border-b border-slate-200 pb-8">
+                <div>
+                    <h2 class="text-3xl md:text-5xl font-serif font-black text-slate-900 tracking-tight">Featured <span
+                            class="text-blue-900">Conferences</span></h2>
+                    <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-2">Upcoming Global Academic Events</p>
+                </div>
+                <a href="{{ route('conferences.index') }}"
+                    class="text-[11px] font-black uppercase tracking-[0.2em] text-blue-800 hover:text-blue-600 border-b-2 border-blue-100 pb-1 transition-all">View All Events</a>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                @foreach($featuredConferences as $conf)
+                    <div class="group bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_80px_-20px_rgba(30,58,138,0.15)] transition-all duration-700 overflow-hidden flex flex-col hover:-translate-y-3">
+                        <div class="relative h-60 overflow-hidden">
+                            @if($conf->banner_image)
+                                <img src="{{ asset('storage/' . $conf->banner_image) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
+                            @else
+                                <div class="w-full h-full bg-gradient-to-br from-[#0f172a] to-blue-900 flex items-center justify-center p-8 text-center relative">
+                                    <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
+                                    <span class="text-white font-serif font-bold text-2xl leading-tight relative z-10">{{ $conf->title }}</span>
+                                </div>
+                            @endif
+                            <div class="absolute top-6 left-6">
+                                <span class="px-4 py-1.5 bg-white/95 backdrop-blur text-blue-900 text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl border border-blue-50">{{ $conf->type }}</span>
+                            </div>
+                        </div>
+                        <div class="p-10 flex flex-col flex-grow">
+                            <div class="flex items-center gap-3 mb-5 flex-wrap">
+                                <span class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-100 uppercase tracking-wide">{{ $conf->category->name }}</span>
+                                <span class="text-slate-200">/</span>
+                                <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100 uppercase tracking-wide">{{ $conf->country->name }}</span>
+                            </div>
+                            <h3 class="text-xl md:text-2xl font-bold text-slate-900 mb-6 line-clamp-2 group-hover:text-blue-700 transition-colors leading-tight">
+                                <a href="{{ route('conferences.show', $conf->slug) }}">{{ $conf->title }}</a>
+                            </h3>
+                            <div class="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 rounded-2xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors duration-500">
+                                        <span class="text-[10px] font-black text-slate-400 group-hover:text-blue-100 uppercase leading-none mb-1">{{ $conf->start_date->format('M') }}</span>
+                                        <span class="text-lg font-black text-slate-900 group-hover:text-white leading-none">{{ $conf->start_date->format('d') }}</span>
+                                    </div>
+                                    <div class="flex flex-col">
+                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Location</span>
+                                        <span class="text-sm font-bold text-slate-700">{{ $conf->city }}, {{ $conf->country->name }}</span>
+                                    </div>
+                                </div>
+                                <a href="{{ route('conferences.show', $conf->slug) }}" class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all duration-500 shadow-xl shadow-slate-900/10 hover:shadow-blue-600/30">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+                                    </svg>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
     <!-- Community Voices (Elite Researchers) -->
     <div class="bg-white py-32 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent">
@@ -755,11 +772,7 @@
     <div class="relative py-24 overflow-hidden group/section">
         <!-- Advanced Background Engine -->
         <div class="absolute inset-0 bg-[#0f172a] z-0">
-            <div class="absolute inset-0 opacity-20" style="background-image: url('data:image/svg+xml,%3Csvg width=\" 60\"
-                height=\"60\" viewBox=\"0 0 60 60\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cpath d=\"M54.627 0l.83.83L0
-                55.457l-.83-.83L54.627 0zm-27.313 0l.83.83L0 28.144l-.83-.83L27.314 0zm0 27.313l.83.83L0
-                55.457l-.83-.83L27.314 27.313z\" fill=\"%233b82f6\" fill-opacity=\"0.1\"
-                fill-rule=\"evenodd\"/%3E%3C/svg%3E');"></div>
+            <div class="absolute inset-0 opacity-20" style="background-image: url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cpath d=%22M54.627 0l.83.83L0 55.457l-.83-.83L54.627 0zm-27.313 0l.83.83L0 28.144l-.83-.83L27.314 0zm0 27.313l.83.83L0 55.457l-.83-.83L27.314 27.313z%22 fill=%22%233b82f6%22 fill-opacity=%220.1%22 fill-rule=%22evenodd%22/%3E%3C/svg%3E');"></div>
             <div class="absolute top-0 right-0 w-2/3 h-full bg-blue-600/10 -skew-x-12 translate-x-1/4 blur-3xl"></div>
             <div class="absolute bottom-0 left-0 w-1/3 h-full bg-indigo-600/10 skew-x-12 -translate-x-1/4 blur-3xl"></div>
         </div>

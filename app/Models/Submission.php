@@ -12,6 +12,7 @@ class Submission extends Model
     protected $fillable = [
         'user_id',
         'journal_id',
+        'issue_id',
         'title',
         'abstract',
         'keywords',
@@ -41,6 +42,11 @@ class Submission extends Model
     public function journal()
     {
         return $this->belongsTo(Journal::class);
+    }
+
+    public function issue()
+    {
+        return $this->belongsTo(Issue::class);
     }
 
     public function article()

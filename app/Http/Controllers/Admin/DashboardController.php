@@ -15,6 +15,10 @@ class DashboardController extends Controller
             'submissions_total' => \App\Models\Submission::count(),
             'articles_published' => \App\Models\Article::where('status', 'published')->count(),
             'submissions_pending' => \App\Models\Submission::where('status', 'submitted')->count(),
+            'total_conferences' => \App\Models\Conference::count(),
+            'pending_conferences' => \App\Models\Conference::where('status', 'pending')->count(),
+            'total_organizers' => \App\Models\User::where('role', 'organizer')->count(),
+            'total_subscribers' => \App\Models\Subscription::count(),
         ];
 
         return view('admin.dashboard', compact('stats'));

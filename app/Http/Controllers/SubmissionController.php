@@ -6,6 +6,7 @@ use App\Models\Journal;
 use App\Models\Submission;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class SubmissionController extends Controller
 {
@@ -21,7 +22,11 @@ class SubmissionController extends Controller
 
     public function create()
     {
-        $journals = Journal::where('is_active', true)->get();
+        $journals = Journal::where('is_active', true)
+            ->with(['volumes.issues' => fn ($query) => $query->orderBy('issue_number')])
+            ->orderBy('title')
+            ->get();
+
         return view('submissions.create', compact('journals'));
     }
 
@@ -29,6 +34,16 @@ class SubmissionController extends Controller
     {
         $request->validate([
             'journal_id' => 'required|exists:journals,id',
+            'issue_id' => [
+                'nullable',
+                Rule::exists('issues', 'id')->where(function ($query) use ($request) {
+                    $query->whereIn('volume_id', function ($volumeQuery) use ($request) {
+                        $volumeQuery->select('id')
+                            ->from('volumes')
+                            ->where('journal_id', $request->journal_id);
+                    });
+                }),
+            ],
             'title' => 'required|string|max:255',
             'abstract' => 'required|string',
             'file' => 'required|file|mimes:pdf,doc,docx,jpg,png|max:512000', // 500MB limit
@@ -43,6 +58,7 @@ class SubmissionController extends Controller
         Submission::create([
             'user_id' => Auth::id(),
             'journal_id' => $request->journal_id,
+            'issue_id' => $request->issue_id,
             'title' => $request->title,
             'abstract' => $request->abstract,
             'file_path' => $path,

@@ -27,6 +27,16 @@ class HomeController extends Controller
             ->take(3)
             ->get();
 
-        return view('home', compact('featuredJournals', 'latestArticles', 'partners', 'latestNews'));
+        $featuredConferences = \App\Models\Conference::where('is_featured', true)
+            ->where('status', 'approved')
+            ->take(4)
+            ->get();
+
+        $latestConferences = \App\Models\Conference::where('status', 'approved')
+            ->orderBy('start_date', 'asc')
+            ->take(6)
+            ->get();
+
+        return view('home', compact('featuredJournals', 'latestArticles', 'partners', 'latestNews', 'featuredConferences', 'latestConferences'));
     }
 }
