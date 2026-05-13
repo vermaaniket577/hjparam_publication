@@ -12,12 +12,6 @@
         <changefreq>weekly</changefreq>
         <priority>0.8</priority>
     </url>
-    <url>
-        <loc>{{ route('articles.show', ['journalSlug' => 'all', 'articleSlug' => 'latest']) }}</loc>
-        <lastmod>{{ now()->toAtomString() }}</lastmod>
-        <changefreq>daily</changefreq>
-        <priority>0.8</priority>
-    </url>
     @if($hasContact)
         <url>
             <loc>{{ route('info.page', 'contact') }}</loc>

@@ -1,8 +1,14 @@
 User-agent: *
 Allow: /
 
-# Disallow sensitive and administrative areas
+# Block sensitive areas
+Disallow: /login
+Disallow: /register
+Disallow: /subscribe
+Disallow: /publication-payment
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /profile
 
-
-# Allow search engines to find the sitemap
+# Sitemap location
 Sitemap: https://hjparam.com/sitemap.xml

@@ -7,13 +7,39 @@ use App\Http\Controllers\JournalController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\SubmissionController;
 use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\Admin\{
+    ConferenceController,
+    CountryController,
+    DashboardController,
+    UserController,
+    JournalController as AdminJournalController,
+    ArticleController as AdminArticleController,
+    SubmissionController as AdminSubmissionController,
+    ReviewController as AdminReviewController,
+    AnalyticsController,
+    SettingsController,
+    TopicController,
+    PageController as AdminPageController,
+    PartnerController,
+    NewsController,
+    SubscriptionController,
+    ContactController,
+    PaymentController as AdminPaymentController
+};
 use Illuminate\Support\Facades\Route;
 
 // Ecosystem Modules are handled in routes/ecosystem.php
 
 
+// SEO Redirects for Duplicate URLs
+Route::redirect('/about/about', '/about/about-hjparam', 301);
+Route::redirect('/info/review-process', '/info/peer-review-process', 301);
+Route::redirect('/info/contact', '/contact', 301);
+Route::redirect('/about/contact-information', '/contact', 301);
+
 // Public Routes
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/about', function() { return redirect()->route('about.page', 'about-hjparam'); });
 
 Route::get('/search', [\App\Http\Controllers\SearchController::class, 'index'])->name('search');
 Route::get('/advanced-search', [\App\Http\Controllers\SearchController::class, 'advanced'])->name('search.advanced');
@@ -73,40 +99,40 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Admin Routes
 Route::redirect('/admin', '/admin/dashboard');
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
-    Route::resource('journals', \App\Http\Controllers\Admin\JournalController::class);
-    Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::resource('users', UserController::class);
+    Route::resource('journals', JournalController::class);
+    Route::resource('articles', ArticleController::class);
 
 
-    Route::get('submissions/{submission}/view', [\App\Http\Controllers\Admin\SubmissionController::class, 'view'])->name('submissions.view');
-    Route::get('submissions/{submission}/download', [\App\Http\Controllers\Admin\SubmissionController::class, 'download'])->name('submissions.download');
-    Route::post('submissions/{submission}/assign', [\App\Http\Controllers\Admin\SubmissionController::class, 'assign'])->name('submissions.assign');
-    Route::post('submissions/{submission}/publish', [\App\Http\Controllers\Admin\SubmissionController::class, 'publish'])->name('submissions.publish');
-    Route::resource('submissions', \App\Http\Controllers\Admin\SubmissionController::class);
-    Route::resource('reviews', \App\Http\Controllers\Admin\ReviewController::class)->only(['index', 'destroy']);
+    Route::get('submissions/{submission}/view', [SubmissionController::class, 'view'])->name('submissions.view');
+    Route::get('submissions/{submission}/download', [SubmissionController::class, 'download'])->name('submissions.download');
+    Route::post('submissions/{submission}/assign', [SubmissionController::class, 'assign'])->name('submissions.assign');
+    Route::post('submissions/{submission}/publish', [SubmissionController::class, 'publish'])->name('submissions.publish');
+    Route::resource('submissions', SubmissionController::class);
+    Route::resource('reviews', ReviewController::class)->only(['index', 'destroy']);
 
     // System Routes
-    Route::get('/analytics', [\App\Http\Controllers\Admin\AnalyticsController::class, 'index'])->name('analytics.index');
-    Route::get('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'index'])->name('settings.index');
-    Route::put('/settings', [\App\Http\Controllers\Admin\SettingsController::class, 'update'])->name('settings.update');
+    Route::get('/analytics', [AnalyticsController::class, 'index'])->name('analytics.index');
+    Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
+    Route::put('/settings', [SettingsController::class, 'update'])->name('settings.update');
 
     // Conference Management
-    Route::resource('conferences', \App\Http\Controllers\Admin\ConferenceController::class);
-    Route::patch('conferences/{conference}/toggle-featured', [\App\Http\Controllers\Admin\ConferenceController::class, 'toggleFeatured'])->name('conferences.toggle-featured');
+    Route::resource('conferences', ConferenceController::class);
+    Route::patch('conferences/{conference}/toggle-featured', [ConferenceController::class, 'toggleFeatured'])->name('conferences.toggle-featured');
 
-    Route::resource('topics', \App\Http\Controllers\Admin\TopicController::class)->except(['show', 'create', 'edit']);
-    Route::resource('countries', \App\Http\Controllers\Admin\CountryController::class)->except(['show', 'create', 'edit']);
-    Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
-    Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
-    Route::resource('news', \App\Http\Controllers\Admin\NewsController::class);
-    Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)->only(['index', 'destroy', 'update']);
-    Route::resource('contact-messages', \App\Http\Controllers\Admin\ContactController::class)->only(['index', 'show', 'destroy']);
-    Route::get('payments/export', [\App\Http\Controllers\Admin\PaymentController::class, 'export'])->name('payments.export');
-    Route::get('payments/{payment}/screenshot', [\App\Http\Controllers\Admin\PaymentController::class, 'downloadScreenshot'])->name('payments.screenshot');
-    Route::patch('payments/{payment}/status', [\App\Http\Controllers\Admin\PaymentController::class, 'updateStatus'])->name('payments.status');
-    Route::put('payments/settings', [\App\Http\Controllers\Admin\PaymentController::class, 'updateSettings'])->name('payments.settings');
-    Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');
+    Route::resource('topics', TopicController::class)->except(['show', 'create', 'edit']);
+    Route::resource('countries', CountryController::class)->except(['show', 'create', 'edit']);
+    Route::resource('pages', PageController::class)->except(['show']);
+    Route::resource('partners', PartnerController::class);
+    Route::resource('news', NewsController::class);
+    Route::resource('subscriptions', SubscriptionController::class)->only(['index', 'destroy', 'update']);
+    Route::resource('contact-messages', ContactController::class)->only(['index', 'show', 'destroy']);
+    Route::get('payments/export', [AdminPaymentController::class, 'export'])->name('payments.export');
+    Route::get('payments/{payment}/screenshot', [AdminPaymentController::class, 'downloadScreenshot'])->name('payments.screenshot');
+    Route::patch('payments/{payment}/status', [AdminPaymentController::class, 'updateStatus'])->name('payments.status');
+    Route::put('payments/settings', [AdminPaymentController::class, 'updateSettings'])->name('payments.settings');
+    Route::get('payments', [AdminPaymentController::class, 'index'])->name('payments.index');
 });
 
 // Organizer Panel

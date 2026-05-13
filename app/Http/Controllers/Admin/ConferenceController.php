@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
 use App\Models\Conference;
 use App\Models\Topic;
 use App\Models\Country;
@@ -49,7 +48,7 @@ class ConferenceController extends Controller
 
         $validated['slug'] = Str::slug($validated['title']) . '-' . rand(1000, 9999);
         $validated['organizer_id'] = auth()->id();
-        $validated['status'] = 'approved'; // Admin directly creates approved ones
+        $validated['status'] = 'approved';
 
         if ($request->hasFile('banner_image')) {
             $validated['banner_image'] = $request->file('banner_image')->store('conferences', 'public');

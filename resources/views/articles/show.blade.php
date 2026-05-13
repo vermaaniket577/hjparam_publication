@@ -1,5 +1,65 @@
 @extends('layouts.web')
-@section('title', $article->title . ' | HJPARAM Publication')
+@section('title', $article->title)
+@section('meta_description', $article->abstract)
+@section('meta_keywords', $article->keywords)
+
+@section('scholar_metadata')
+    <!-- Google Scholar Tags -->
+    <meta name="citation_title" content="{{ $article->title }}">
+    @foreach($article->authors as $author)
+        <meta name="citation_author" content="{{ $author->name }}">
+    @endforeach
+    <meta name="citation_publication_date" content="{{ $article->published_at->format('Y/m/d') }}">
+    <meta name="citation_journal_title" content="{{ $article->journal->title }}">
+    <meta name="citation_volume" content="{{ $article->issue->volume->volume_number }}">
+    <meta name="citation_issue" content="{{ $article->issue->issue_number }}">
+    <meta name="citation_doi" content="{{ $article->doi }}">
+    <meta name="citation_abstract_html_url" content="{{ url()->current() }}">
+    <meta name="citation_pdf_url" content="{{ route('articles.download', $article->id) }}">
+    <meta name="citation_keywords" content="{{ $article->keywords }}">
+@endsection
+
+@section('structured_data')
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ScholarlyArticle",
+  "headline": "{{ $article->title }}",
+  "description": "{{ Str::limit($article->abstract, 200) }}",
+  "image": "{{ asset('images/og-image-default.png') }}",
+  "author": [
+    @foreach($article->authors as $author)
+    {
+      "@type": "Person",
+      "name": "{{ $author->name }}",
+      "affiliation": {
+        "@type": "Organization",
+        "name": "{{ $author->affiliation }}"
+      }
+    }@if(!$loop->last),@endif
+    @endforeach
+  ],
+  "datePublished": "{{ $article->published_at->toIso8601String() }}",
+  "dateModified": "{{ $article->updated_at->toIso8601String() }}",
+  "publisher": {
+    "@type": "Organization",
+    "name": "HJPARAM",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "{{ asset('images/logo.png') }}"
+    }
+  },
+  "isPartOf": {
+    "@type": "Periodical",
+    "name": "{{ $article->journal->title }}",
+    "issn": "{{ $article->journal->issn ?? 'XXXX-XXXX' }}"
+  },
+  "doi": "{{ $article->doi }}",
+  "abstract": "{{ $article->abstract }}",
+  "keywords": "{{ $article->keywords }}"
+}
+</script>
+@endsection
 
 @section('content')
     <div class="bg-white min-h-screen">

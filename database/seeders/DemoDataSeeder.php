@@ -95,7 +95,7 @@ class DemoDataSeeder extends Seeder
                 'title' => 'Sensors & Actuators: Open Access',
                 'slug' => 'sensors-actuators',
                 'description' => 'A leading journal for sensor technologies and applications.',
-                'issn' => '1424-8220',
+                'issn' => 'XXXX-XXXX',
                 'impact_factor' => 3.9,
                 'aims_and_scope' => 'Covers chemical sensors, physical sensors, and biosensors.',
                 'is_active' => true,
@@ -104,7 +104,7 @@ class DemoDataSeeder extends Seeder
                 'title' => 'International Journal of Molecular Sciences',
                 'slug' => 'ijms',
                 'description' => 'Forum for scholarly research in biochemistry and molecular biology.',
-                'issn' => '1422-0067',
+                'issn' => 'XXXX-XXXX',
                 'impact_factor' => 5.6,
                 'aims_and_scope' => 'Intermolecular interactions, molecular electronics, and more.',
                 'is_active' => true,
@@ -113,7 +113,7 @@ class DemoDataSeeder extends Seeder
                 'title' => 'Sustainability & Innovation',
                 'slug' => 'sustainability-innovation',
                 'description' => 'Research focused on environmental, social, and economic sustainability.',
-                'issn' => '2071-1050',
+                'issn' => 'XXXX-XXXX',
                 'impact_factor' => 4.2,
                 'aims_and_scope' => 'Green technology, social responsibility, and climate change.',
                 'is_active' => true,
@@ -122,7 +122,7 @@ class DemoDataSeeder extends Seeder
                 'title' => 'Applied Engineering and Tech',
                 'slug' => 'applied-eng-tech',
                 'description' => 'Engineering applications in real-world scenarios.',
-                'issn' => '1996-1073',
+                'issn' => 'XXXX-XXXX',
                 'impact_factor' => 3.1,
                 'aims_and_scope' => 'Civil, mechanical, and electrical engineering innovations.',
                 'is_active' => true,
@@ -131,11 +131,29 @@ class DemoDataSeeder extends Seeder
                 'title' => 'Global Health Review',
                 'slug' => 'global-health-review',
                 'description' => 'Scholarly articles on public health and medical research.',
-                'issn' => '1660-4601',
+                'issn' => 'XXXX-XXXX',
                 'impact_factor' => 4.8,
                 'aims_and_scope' => 'Epidemiology, health policy, and environmental health.',
                 'is_active' => true,
             ],
+        ];
+
+        $articleTitles = [
+            'Recent Advances in Smart Sensor Technologies for Precision Agriculture',
+            'Molecular Mechanisms of Neurodegenerative Diseases: A Comprehensive Review',
+            'Sustainable Urban Development: Strategies for Carbon-Neutral Cities',
+            'Impact of Artificial Intelligence on Modern Surgical Procedures',
+            'Green Synthesis of Metallic Nanoparticles using Plant Extracts',
+            'Evaluation of Renewable Energy Storage Systems for Grid Stability',
+            'Machine Learning Models for Early Detection of Cardiovascular Anomalies',
+            'Blockchain Applications in Secure Supply Chain Management',
+            'Biodiversity Conservation in Fragmented Tropical Ecosystems',
+            'Quantum Computing: Prospects for Cryptographic Resilience',
+            'The Role of MicroRNAs in Regulating Cancer Cell Proliferation',
+            'Internet of Things (IoT) Frameworks for Smart Home Energy Optimization',
+            'Experimental Analysis of Composite Materials in Aerospace Engineering',
+            'Socio-Economic Impacts of Digital Transformation in Developing Regions',
+            'Advanced Photocatalytic Materials for Wastewater Remediation',
         ];
 
         $allTopics = \App\Models\Topic::all();
@@ -163,13 +181,13 @@ class DemoDataSeeder extends Seeder
 
                     // 5. Articles for each Issue (Adding 3-5 published articles)
                     for ($a = 1; $a <= rand(3, 5); $a++) {
-                        $articleTitle = "Advancements in " . Str::title(Str::random(12)) . " for " . $journal->title;
+                        $articleTitle = $articleTitles[array_rand($articleTitles)] . " (Part " . $a . ")";
                         $article = Article::create([
                             'journal_id' => $journal->id,
                             'issue_id' => $issue->id,
                             'title' => $articleTitle,
-                            'slug' => Str::slug($articleTitle . '-' . Str::random(5)),
-                            'abstract' => "This detailed research paper investigates the recent breakthroughs in scientific methodology and application, specifically looking at how " . Str::random(20) . " affects contemporary results.",
+                            'slug' => Str::slug($articleTitle),
+                            'abstract' => "This detailed research paper investigates the recent breakthroughs in scientific methodology and application, specifically looking at how modern " . strtolower($journal->slug) . " technologies affect contemporary results.",
                             'keywords' => 'Research, Innovation, Science, Global, Impact',
                             'doi' => '10.3390/' . $journal->slug . '.' . $v . '.' . $i . '.' . $a,
                             'status' => 'published',
@@ -196,10 +214,11 @@ class DemoDataSeeder extends Seeder
             // 7. Submissions for each Journal (Various statuses)
             $statuses = ['submitted', 'under_review', 'revision', 'rejected'];
             foreach ($statuses as $status) {
+                $submissionTitle = "Exploring " . $articleTitles[array_rand($articleTitles)];
                 $submission = Submission::create([
                     'user_id' => $allAuthors->random()->id,
                     'journal_id' => $journal->id,
-                    'title' => "Proposed Research on " . Str::title(Str::random(15)),
+                    'title' => $submissionTitle,
                     'abstract' => "Draft submission exploring preliminary results in " . $journal->title . " ecosystem.",
                     'status' => $status,
                     'file_path' => 'submissions/sample_manuscript.pdf',
@@ -234,10 +253,11 @@ class DemoDataSeeder extends Seeder
                 'google_scholar' => "https://scholar.google.com/citations?user=" . Str::random(12)
             ]);
 
+            $preprintTitle = "Preliminary Findings: " . $articleTitles[array_rand($articleTitles)];
             Preprint::create([
                 'user_id' => $user->id,
-                'title' => "Preliminary Findings: " . fake()->sentence(),
-                'slug' => Str::slug("preprint-" . Str::random(10)),
+                'title' => $preprintTitle,
+                'slug' => Str::slug($preprintTitle),
                 'abstract' => fake()->paragraph(),
                 'version' => 1,
                 'status' => 'published',
@@ -248,9 +268,10 @@ class DemoDataSeeder extends Seeder
         // 9. Sciforum Events
         $eventTypes = ['conference', 'workshop', 'webinar'];
         foreach ($eventTypes as $type) {
+            $eventTitle = "Global " . Str::title($type) . " on " . Str::replace('Recent Advances in ', '', $articleTitles[array_rand($articleTitles)]);
             SciforumEvent::create([
-                'title' => "Global " . Str::title($type) . " on " . Str::title(Str::random(10)),
-                'slug' => Str::slug("event-" . $type . "-" . Str::random(5)),
+                'title' => $eventTitle,
+                'slug' => Str::slug($eventTitle),
                 'description' => fake()->paragraph(),
                 'start_date' => Carbon::now()->addMonths(rand(1, 6)),
                 'end_date' => Carbon::now()->addMonths(7),
@@ -261,10 +282,11 @@ class DemoDataSeeder extends Seeder
 
         // 10. Encyclopedia Entries
         for ($e = 0; $e < 5; $e++) {
+            $entryTitle = Str::replace('Recent Advances in ', '', $articleTitles[array_rand($articleTitles)]);
             EncyclopediaEntry::create([
                 'user_id' => $allAuthors->random()->id,
-                'title' => Str::title(fake()->words(3, true)),
-                'slug' => Str::slug(fake()->words(3, true)),
+                'title' => $entryTitle,
+                'slug' => Str::slug($entryTitle),
                 'content' => fake()->paragraphs(3, true),
                 'category' => "Science & Technology",
                 'status' => 'published'

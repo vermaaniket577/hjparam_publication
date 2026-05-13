@@ -1,5 +1,26 @@
 @extends('layouts.web')
-@section('title', $journal->title . ' | HJPARAM Publication')
+
+@section('title', $journal->title)
+
+@section('structured_data')
+<script type="application/ld+json">
+{
+  "@@context": "https://schema.org",
+  "@@type": "Periodical",
+  "name": "{{ $journal->title }}",
+  "description": "{{ $journal->description }}",
+  "issn": "{{ $journal->issn ?? 'XXXX-XXXX' }}",
+  "publisher": {
+    "@@type": "Organization",
+    "name": "HJPARAM",
+    "logo": {
+      "@@type": "ImageObject",
+      "url": "{{ asset('images/logo.png') }}"
+    }
+  }
+}
+</script>
+@endsection
 
 @section('content')
     <div class="bg-blue-900 text-white py-12">
@@ -21,7 +42,6 @@
                 </div>
             </div>
             <div class="md:w-1/3 mt-8 md:mt-0 flex justify-center">
-                <!-- Journal Cover Placeholder -->
                 <div
                     class="w-48 h-64 bg-white rounded shadow-lg flex items-center justify-center text-blue-900 font-bold text-4xl opacity-20 transform rotate-3">
                     {{ substr($journal->title, 0, 1) }}
@@ -103,7 +123,7 @@
                             <div class="flex flex-wrap gap-2">
                                 @foreach($volume->issues as $issue)
                                     <a href="{{ route('journals.issue', [$journal->slug, $volume->volume_number, $issue->issue_number]) }}"
-                                        class="bg-gray-100 hovering:bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 transition">
+                                        class="bg-gray-100 hover:bg-blue-100 text-blue-700 px-3 py-1 rounded text-sm hover:bg-blue-200 transition">
                                         Issue {{ $issue->issue_number }}
                                     </a>
                                 @endforeach

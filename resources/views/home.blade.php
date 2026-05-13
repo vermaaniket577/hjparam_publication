@@ -37,42 +37,14 @@
             <div class="max-w-4xl mx-auto text-center">
 
                 <!-- Headline & Subtitle -->
-                <div class="mb-10 animate-fade-in-up" x-data="{ headlineIndex: 0 }"
-                    x-init="setInterval(() => { headlineIndex = (headlineIndex + 1) % 3 }, 5000)">
+                <div class="mb-10 animate-fade-in-up">
                     <span
                         class="inline-block px-4 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-bold uppercase tracking-[0.2em] rounded-full mb-6 border border-blue-100 shadow-sm animate-pulse">Open
                         Access Research</span>
 
-                    <div
-                        class="h-[120px] md:h-[180px] flex flex-col justify-center items-center overflow-hidden mb-6 relative">
-                        <h1 x-show="headlineIndex === 0" x-transition:enter="transition ease-out duration-700"
-                            x-transition:enter-start="opacity-0 translate-y-20"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-500 absolute"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 -translate-y-20"
-                            class="text-4xl md:text-7xl font-serif font-bold text-slate-900 tracking-tight leading-tight">
-                            Advancing <span class="text-blue-900 border-b-4 border-blue-100">Open Science</span>
-                        </h1>
-                        <h1 x-show="headlineIndex === 1" x-transition:enter="transition ease-out duration-700"
-                            x-transition:enter-start="opacity-0 translate-y-20"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-500 absolute"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 -translate-y-20"
-                            class="text-4xl md:text-7xl font-serif font-bold text-slate-900 tracking-tight leading-tight"
-                            x-cloak>
-                            Accelerating <span class="text-blue-900 border-b-4 border-blue-100">Discovery</span>
-                        </h1>
-                        <h1 x-show="headlineIndex === 2" x-transition:enter="transition ease-out duration-700"
-                            x-transition:enter-start="opacity-0 translate-y-20"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-500 absolute"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 -translate-y-20"
-                            class="text-4xl md:text-7xl font-serif font-bold text-slate-900 tracking-tight leading-tight"
-                            x-cloak>
-                            Empowering <span class="text-blue-900 border-b-4 border-blue-100">Researchers</span>
+                    <div class="mb-6 relative">
+                        <h1 class="text-4xl md:text-7xl font-serif font-bold text-slate-900 tracking-tight leading-tight">
+                            HJPARAM <span class="text-blue-900 border-b-4 border-blue-100">Open Access</span> Peer-Reviewed Journal Publishing Platform
                         </h1>
                     </div>
 
@@ -303,33 +275,35 @@
                 <!-- Sidebar: Browse by Subject -->
                 <div class="lg:col-span-1 space-y-8">
                     <div
-                        class="bg-white rounded-[2rem] shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 overflow-hidden group/sidebar">
-                        <div class="bg-[#0f172a] text-white px-8 py-6 flex items-center justify-between">
-                            <h3 class="font-bold text-xs uppercase tracking-[0.2em]">Browse Subjects</h3>
-                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path d="M4 6h16M4 12h16m-7 6h7" stroke-width="2.5" stroke-linecap="round"></path>
-                            </svg>
+                        class="bg-white rounded-[2.5rem] shadow-[0_15px_50px_-15px_rgba(30,58,138,0.08)] border border-slate-100 overflow-hidden group/sidebar">
+                        <div class="bg-gradient-to-r from-[#0f172a] to-blue-900 text-white px-8 py-7 flex items-center justify-between">
+                            <h3 class="font-black text-[10px] uppercase tracking-[0.3em]">Browse Subjects</h3>
+                            <div class="w-8 h-8 rounded-xl bg-white/10 flex items-center justify-center">
+                                <svg class="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path d="M4 6h16M4 12h16m-7 6h7" stroke-width="2.5" stroke-linecap="round"></path>
+                                </svg>
+                            </div>
                         </div>
-                        <div class="p-2">
-                            <ul class="space-y-1">
+                        <div class="p-4">
+                            <ul class="space-y-1.5">
                                 @foreach($global_topics as $topic)
                                     <li>
                                         <a href="{{ route('topics.show', $topic->slug) }}"
                                             class="flex items-center justify-between px-6 py-4 text-sm text-slate-600 hover:text-blue-700 hover:bg-blue-50/50 rounded-2xl transition-all duration-300 group">
                                             <span
-                                                class="font-medium group-hover:translate-x-1 transition-transform">{{ $topic->name }}</span>
+                                                class="font-bold group-hover:translate-x-1.5 transition-transform">{{ $topic->name }}</span>
                                             <span
-                                                class="text-[10px] font-bold bg-slate-50 text-slate-400 px-2.5 py-1 rounded-lg border border-slate-100 group-hover:bg-white group-hover:text-blue-600 group-hover:border-blue-100 transition-all">
+                                                class="text-[10px] font-black bg-slate-50 text-slate-400 px-3 py-1 rounded-lg border border-slate-100 group-hover:bg-white group-hover:text-blue-600 group-hover:shadow-md transition-all">
                                                 {{ $topic->journals_count ?? rand(5, 30) }}
                                             </span>
                                         </a>
                                     </li>
                                 @endforeach
                             </ul>
-                            <div class="p-6 pt-4">
+                            <div class="p-4 pt-6">
                                 <a href="{{ route('journals.index') }}"
-                                    class="flex items-center justify-center w-full py-4 bg-slate-50 hover:bg-blue-900 border border-slate-100 hover:border-blue-800 text-blue-900 hover:text-white rounded-2xl text-[10px] font-bold uppercase tracking-[0.2em] transition-all duration-500">
-                                    View All Journals
+                                    class="flex items-center justify-center w-full py-5 bg-slate-50 hover:bg-[#0f172a] border border-slate-100 hover:border-slate-900 text-[#0f172a] hover:text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.25em] transition-all duration-500 shadow-sm hover:shadow-xl">
+                                    Explore All Journals
                                 </a>
                             </div>
                         </div>
@@ -458,79 +432,78 @@
                         <div class="space-y-6">
                             @foreach ($latestArticles as $article)
                                 <div
-                                    class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.05)] hover:shadow-[0_25px_60px_-15px_rgba(0,0,0,0.08)] transition-all duration-500 group relative">
-                                    <div class="flex flex-col md:flex-row gap-10">
-                                        {{-- Compact Thumbnail / Journal Cover Placeholder --}}
-                                        <div class="w-full md:w-32 flex-shrink-0 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-200 group-hover:bg-blue-600 group-hover:text-white transition-all duration-500 border border-slate-100 relative overflow-hidden"
-                                            style="height: 160px; width: 128px; min-width: 128px;">
-                                            <div
-                                                class="absolute top-0 left-0 w-1.5 h-full bg-blue-600 group-hover:bg-white transition-colors">
-                                            </div>
+                                    class="bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-[0_4px_25px_-5px_rgba(0,0,0,0.03)] hover:shadow-[0_40px_70px_-15px_rgba(30,58,138,0.1)] transition-all duration-500 group relative overflow-hidden">
+                                    
+                                    <!-- Animated Side Accent -->
+                                    <div class="absolute top-0 left-0 w-1.5 h-full bg-blue-600/10 group-hover:bg-blue-600 transition-colors duration-500"></div>
+
+                                    <div class="flex flex-col md:flex-row gap-8 relative z-10">
+                                        <!-- Article Asset / Placeholder -->
+                                        <div class="w-full md:w-36 flex-shrink-0 bg-slate-50 rounded-3xl flex flex-col items-center justify-center text-slate-200 group-hover:bg-blue-600 group-hover:text-white transition-all duration-700 border border-slate-100 relative overflow-hidden h-44 shadow-inner">
+                                            <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
                                             <svg class="w-12 h-12 mb-3 opacity-30 group-hover:opacity-100 transition-opacity"
                                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                                     d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                                                 </path>
                                             </svg>
                                             <span
-                                                class="text-[9px] font-black uppercase tracking-[0.2em] group-hover:text-white">Review</span>
+                                                class="text-[10px] font-black uppercase tracking-[0.2em] group-hover:text-white/90">Manuscript</span>
                                         </div>
 
                                         <div class="flex-grow flex flex-col">
-                                            <div class="flex items-center gap-2 mb-2 flex-wrap">
+                                            <div class="flex items-center gap-3 mb-3 flex-wrap">
                                                 <span
-                                                    class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-100 uppercase tracking-wide">Open
-                                                    Access</span>
+                                                    class="px-3 py-1 bg-emerald-50 text-emerald-700 text-[10px] font-black rounded-lg border border-emerald-100 uppercase tracking-widest">Open Access</span>
+                                                <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
                                                 <span
-                                                    class="text-blue-600 font-bold text-[11px] uppercase tracking-wide transition-colors hover:text-blue-800 cursor-pointer">{{ $article->journal->title }}</span>
+                                                    class="text-blue-600 font-black text-[11px] uppercase tracking-[0.15em] hover:text-blue-800 transition-colors cursor-pointer">{{ $article->journal->title }}</span>
                                             </div>
 
                                             <h3
-                                                class="text-lg md:text-xl font-bold text-slate-900 mb-2 leading-snug group-hover:text-blue-900 transition-colors break-words overflow-hidden">
+                                                class="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-3 leading-tight group-hover:text-blue-900 transition-colors">
                                                 <a href="{{ route('articles.show', ['journalSlug' => $article->journal->slug, 'articleSlug' => $article->slug]) }}"
                                                     class="block">
                                                     {{ $article->title }}
                                                 </a>
                                             </h3>
 
-                                            <div class="flex flex-wrap items-center gap-x-3 gap-y-1 mb-4">
-                                                <div class="flex items-center -space-x-1.5">
+                                            <div class="flex flex-wrap items-center gap-4 mb-6">
+                                                <div class="flex items-center -space-x-2">
                                                     @foreach ($article->authors->take(3) as $author)
-                                                        <div class="w-7 h-7 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-bold text-slate-600 shadow-sm"
+                                                        <div class="w-8 h-8 rounded-full bg-slate-100 border-2 border-white flex items-center justify-center text-[10px] font-black text-slate-600 shadow-sm"
                                                             title="{{ $author->name }}">
                                                             {{ substr($author->name, 0, 1) }}
                                                         </div>
                                                     @endforeach
                                                 </div>
                                                 <div class="flex flex-col">
-                                                    <span class="text-[13px] font-medium text-slate-700">
+                                                    <span class="text-sm font-bold text-slate-700">
                                                         {{ $article->authors->first()->name ?? 'Anonymous' }}
                                                         @if ($article->authors->count() > 1) et al. @endif
                                                     </span>
-                                                    <span class="text-[11px] text-slate-400 font-medium">Published in
-                                                        {{ $article->published_at ? $article->published_at->year : now()->year }}</span>
+                                                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-widest">Published: {{ $article->published_at ? $article->published_at->format('M Y') : now()->format('M Y') }}</span>
                                                 </div>
                                             </div>
 
-                                            <div class="flex flex-wrap gap-3 mt-auto pt-4 border-t border-slate-100">
+                                            <div class="flex flex-wrap items-center gap-3 mt-auto pt-5 border-t border-slate-50">
                                                 <a href="{{ route('articles.show', ['journalSlug' => $article->journal->slug, 'articleSlug' => $article->slug]) }}#abstract"
-                                                    class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50/50 px-4 rounded-md hover:bg-slate-100 transition-all border border-slate-200/50">Abstract</a>
+                                                    class="px-4 py-2 text-[10px] font-black text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50 hover:bg-blue-50 rounded-xl transition-all border border-slate-100 hover:border-blue-100">Abstract</a>
                                                 <a href="{{ route('articles.show', ['journalSlug' => $article->journal->slug, 'articleSlug' => $article->slug]) }}"
-                                                    class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50/50 px-4 rounded-md hover:bg-slate-100 transition-all border border-slate-200/50">Full-Text</a>
+                                                    class="px-4 py-2 text-[10px] font-black text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50 hover:bg-blue-50 rounded-xl transition-all border border-slate-100 hover:border-blue-100">Full-Text</a>
                                                 <a href="{{ route('articles.download', $article->id) }}"
-                                                    class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-white uppercase tracking-widest bg-blue-600 px-4 rounded-md hover:bg-blue-700 shadow-sm shadow-blue-200 transition-all">Download
-                                                    PDF</a>
+                                                    class="px-5 py-2 text-[10px] font-black text-white uppercase tracking-[0.15em] bg-[#0f172a] hover:bg-blue-700 rounded-xl shadow-lg shadow-slate-900/10 transition-all active:scale-95">Download PDF</a>
 
                                                 <div
-                                                    class="ml-auto flex items-center gap-4 text-slate-400 text-[11px] font-medium hidden md:flex">
-                                                    <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none"
+                                                    class="ml-auto flex items-center gap-4 text-slate-400 text-[11px] font-black hidden md:flex">
+                                                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4" fill="none"
                                                             stroke="currentColor" viewBox="0 0 24 24">
-                                                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-width="2"/>
                                                             <path
                                                                 d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
                                                                 stroke-width="2" />
                                                         </svg> {{ $article->views_count ?? rand(100, 500) }}</span>
-                                                    <span class="flex items-center gap-1"><svg class="w-3.5 h-3.5" fill="none"
+                                                    <span class="flex items-center gap-1.5"><svg class="w-4 h-4" fill="none"
                                                             stroke="currentColor" viewBox="0 0 24 24">
                                                             <path
                                                                 d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
@@ -558,69 +531,77 @@
                                 class="text-[10px] font-black uppercase tracking-[0.2em] text-blue-800 hover:text-blue-600 border-b-2 border-blue-100 pb-1">Explore
                                 Full Registry</a>
                         </div>
-
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
                             @foreach($featuredJournals as $journal)
                                 <a href="{{ route('journals.show', $journal->slug) }}"
-                                    class="group relative flex flex-col bg-white rounded-[2.5rem] p-7 border border-slate-100 shadow-[0_5px_20px_-10px_rgba(0,0,0,0.03)] hover:shadow-[0_35px_70px_-20px_rgba(30,58,138,0.15)] transition-all duration-700 hover:-translate-y-2 overflow-hidden">
+                                    class="group relative flex flex-col bg-white rounded-[3rem] p-7 border border-slate-100 shadow-[0_10px_30px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_50px_100px_-20px_rgba(30,58,138,0.25)] transition-all duration-700 hover:-translate-y-4 overflow-hidden">
                                     
-                                    <!-- Atmospheric Accent -->
-                                    <div class="absolute -top-12 -right-12 w-32 h-32 bg-blue-500/5 rounded-full blur-2xl group-hover:bg-blue-500/10 transition-all duration-700"></div>
+                                    <!-- Elite Atmospheric Accent -->
+                                    <div class="absolute -top-20 -right-20 w-48 h-48 bg-blue-600/10 rounded-full blur-3xl group-hover:bg-blue-600/20 transition-all duration-700"></div>
 
                                     <div class="relative z-10 flex flex-col h-full">
-                                        <!-- Asset Container -->
-                                        <div class="relative aspect-[4/5] mb-8 overflow-hidden rounded-3xl shadow-2xl group-hover:shadow-blue-900/20 transition-all duration-700">
+                                        <!-- Academic Asset (Cover) -->
+                                        <div class="relative aspect-[3/4] mb-10 overflow-hidden rounded-[2.5rem] shadow-[0_20px_50px_-10px_rgba(2,6,23,0.3)] group-hover:shadow-blue-900/40 transition-all duration-700">
                                             @if($journal->cover_image)
                                                 <img src="{{ asset('storage/' . $journal->cover_image) }}" alt="{{ $journal->title }}"
                                                     class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
                                             @else
-                                                <div class="w-full h-full bg-[#020617] flex flex-col items-center justify-center p-8 text-center relative">
+                                                <div class="w-full h-full bg-[#020617] flex flex-col items-center justify-center p-10 text-center relative overflow-hidden">
+                                                    <!-- Advanced Mesh Gradient -->
+                                                    <div class="absolute inset-0 bg-gradient-to-br from-[#0f172a] via-[#1e293b] to-[#0f172a]"></div>
                                                     <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                                                    <span class="text-white/20 font-serif font-black text-7xl italic group-hover:text-blue-500/40 transition-colors duration-700">{{ substr($journal->title, 0, 1) }}</span>
-                                                    <div class="mt-6 w-16 h-1 bg-blue-600/40 rounded-full group-hover:w-24 group-hover:bg-blue-500 transition-all duration-700"></div>
+                                                    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_-20%,rgba(59,130,246,0.4),transparent_70%)]"></div>
+                                                    
+                                                    <span class="relative z-10 text-white/5 font-serif font-black text-9xl italic transform -rotate-12 group-hover:text-blue-500/10 group-hover:scale-125 transition-all duration-1000 select-none">{{ substr($journal->title, 0, 1) }}</span>
+                                                    
+                                                    <div class="relative z-10 mt-8 w-14 h-1.5 bg-gradient-to-r from-blue-600 via-blue-400 to-emerald-500 rounded-full group-hover:w-24 transition-all duration-700 shadow-[0_0_20px_rgba(59,130,246,0.6)]"></div>
                                                 </div>
                                             @endif
 
-                                            <!-- Scholarly Impact Badge (Floating Architectural Element) -->
-                                            <div class="absolute top-5 right-5 flex flex-col items-center">
-                                                <div class="bg-blue-600 text-white px-4 py-2 rounded-2xl shadow-2xl shadow-blue-900/40 border border-white/20 backdrop-blur-md flex flex-col items-center min-w-[70px] transform translate-y-1 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500">
-                                                    <span class="text-[8px] font-black uppercase tracking-[0.1em] opacity-80 mb-0.5">Impact</span>
-                                                    <span class="text-base font-black tabular-nums leading-none">{{ number_format($journal->impact_factor ?? 4.2, 2) }}</span>
+                                            <!-- High-Impact Glass Badge -->
+                                            <div class="absolute top-5 right-5 z-20">
+                                                <div class="bg-white/10 backdrop-blur-2xl border border-white/20 text-white px-4 py-2.5 rounded-[1.2rem] shadow-2xl flex flex-col items-center min-w-[75px] transform translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-500 scale-90 group-hover:scale-100">
+                                                    <span class="text-[9px] font-black uppercase tracking-widest opacity-60 mb-0.5">Impact</span>
+                                                    <span class="text-lg font-black tabular-nums leading-none">{{ number_format($journal->impact_factor ?? 4.2, 2) }}</span>
                                                 </div>
                                             </div>
 
-                                            <!-- Rapid Access Overlay -->
-                                            <div class="absolute inset-x-0 bottom-0 p-6 translate-y-full group-hover:translate-y-0 transition-transform duration-500 flex justify-center">
-                                                <div class="bg-blue-600 text-white text-[10px] font-black uppercase tracking-[0.2em] px-8 py-3.5 rounded-2xl shadow-2xl shadow-blue-900/40 border border-blue-500/50">
+                                            <!-- Rapid Access Glass Overlay -->
+                                            <div class="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center p-8">
+                                                <div class="w-full py-4 bg-white text-[#0f172a] text-[11px] font-black uppercase tracking-[0.3em] rounded-2xl text-center shadow-[0_20px_50px_rgba(0,0,0,0.3)] transform translate-y-6 group-hover:translate-y-0 transition-transform duration-500">
                                                     View Registry
                                                 </div>
                                             </div>
                                         </div>
 
-                                        <!-- Meta Information -->
-                                        <div class="flex flex-col flex-grow text-center px-2">
-                                            <div class="mb-5 flex justify-center">
-                                                <span class="inline-flex items-center px-4 py-1.5 bg-slate-100 text-slate-600 text-[9px] font-black uppercase tracking-[0.25em] border border-slate-200 rounded-xl group-hover:bg-blue-600 group-hover:text-white group-hover:border-blue-500 transition-all duration-500 shadow-sm">
+                                        <!-- Intellectual Metadata -->
+                                        <div class="flex flex-col flex-grow px-2 text-center">
+                                            <div class="mb-6 flex justify-center">
+                                                <span class="inline-flex items-center px-5 py-2 bg-slate-50 text-slate-500 text-[10px] font-black uppercase tracking-[0.25em] border border-slate-100 rounded-2xl group-hover:bg-[#0f172a] group-hover:text-white group-hover:border-[#0f172a] transition-all duration-500 shadow-sm">
                                                     ISSN: {{ $journal->issn ?? '2071-1050' }}
                                                 </span>
                                             </div>
 
-                                            <h4 class="font-serif font-bold text-lg text-slate-800 leading-[1.5] group-hover:text-blue-950 transition-colors line-clamp-2 min-h-[3.2rem]">
+                                            <h4 class="font-serif font-bold text-xl text-slate-900 leading-tight group-hover:text-blue-900 transition-colors pb-2">
                                                 {{ $journal->title }}
                                             </h4>
 
-                                            <div class="mt-6 pt-6 border-t border-slate-50 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
-                                                <div class="flex -space-x-2">
-                                                    <div class="w-6 h-6 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[8px] font-bold text-blue-600">Q1</div>
-                                                    <div class="w-6 h-6 rounded-full bg-emerald-50 border-2 border-white flex items-center justify-center text-[8px] font-bold text-emerald-600">OA</div>
+                                            <!-- Scholarly Signal Icons -->
+                                            <div class="mt-8 pt-8 border-t border-slate-50 flex items-center justify-center gap-6 opacity-40 group-hover:opacity-100 transition-all duration-700">
+                                                <div class="flex items-center gap-2">
+                                                    <div class="w-2 h-2 rounded-full bg-blue-600 shadow-[0_0_8px_rgba(37,99,235,0.6)] animate-pulse"></div>
+                                                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">Global Indexing</span>
                                                 </div>
-                                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Global Indexing</span>
+                                                <div class="flex -space-x-2.5">
+                                                    <div class="w-8 h-8 rounded-full bg-blue-50 border-2 border-white flex items-center justify-center text-[8px] font-black text-blue-700 shadow-sm" title="Q1 Quartile">Q1</div>
+                                                    <div class="w-8 h-8 rounded-full bg-emerald-50 border-2 border-white flex items-center justify-center text-[8px] font-black text-emerald-700 shadow-sm" title="Open Access">OA</div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
                                 </a>
                             @endforeach
-                        </div>
+                        </div>v>
                     </div>
 
                 </div>
@@ -643,42 +624,55 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
                 @foreach($featuredConferences as $conf)
-                    <div class="group bg-white rounded-[2.5rem] border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_30px_80px_-20px_rgba(30,58,138,0.15)] transition-all duration-700 overflow-hidden flex flex-col hover:-translate-y-3">
-                        <div class="relative h-60 overflow-hidden">
+                    <div class="group bg-white rounded-[3rem] border border-slate-100 shadow-[0_10px_40px_-15px_rgba(0,0,0,0.05)] hover:shadow-[0_40px_90px_-20px_rgba(30,58,138,0.18)] transition-all duration-700 overflow-hidden flex flex-col hover:-translate-y-3">
+                        <div class="relative h-64 overflow-hidden">
                             @if($conf->banner_image)
                                 <img src="{{ asset('storage/' . $conf->banner_image) }}" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-1000">
                             @else
-                                <div class="w-full h-full bg-gradient-to-br from-[#0f172a] to-blue-900 flex items-center justify-center p-8 text-center relative">
+                                <div class="w-full h-full bg-gradient-to-br from-[#0f172a] to-blue-900 flex items-center justify-center p-8 text-center relative overflow-hidden">
                                     <div class="absolute inset-0 opacity-10 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
-                                    <span class="text-white font-serif font-bold text-2xl leading-tight relative z-10">{{ $conf->title }}</span>
+                                    <div class="absolute -inset-[100%] bg-[radial-gradient(circle_at_50%_50%,rgba(59,130,246,0.1),transparent_50%)] animate-pulse"></div>
+                                    <span class="text-white font-serif font-black text-2xl leading-tight relative z-10">{{ $conf->title }}</span>
                                 </div>
                             @endif
-                            <div class="absolute top-6 left-6">
-                                <span class="px-4 py-1.5 bg-white/95 backdrop-blur text-blue-900 text-[10px] font-black uppercase tracking-widest rounded-full shadow-xl border border-blue-50">{{ $conf->type }}</span>
+                            
+                            <!-- Premium Status Badge -->
+                            <div class="absolute top-6 left-6 z-20">
+                                <span class="px-5 py-2 bg-white/95 backdrop-blur-xl text-blue-900 text-[9px] font-black uppercase tracking-[0.2em] rounded-2xl shadow-2xl border border-blue-50/50 flex items-center gap-2">
+                                    <span class="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
+                                    {{ $conf->type }}
+                                </span>
+                            </div>
+
+                            <!-- Rapid Access Overlay -->
+                            <div class="absolute inset-0 bg-[#0f172a]/40 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-center justify-center">
+                                <a href="{{ route('conferences.show', $conf->slug) }}" class="px-8 py-3 bg-white text-[#0f172a] text-[10px] font-black uppercase tracking-[0.25em] rounded-2xl shadow-2xl transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                                    View Conference
+                                </a>
                             </div>
                         </div>
                         <div class="p-10 flex flex-col flex-grow">
-                            <div class="flex items-center gap-3 mb-5 flex-wrap">
-                                <span class="inline-flex items-center px-3 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-lg border border-blue-100 uppercase tracking-wide">{{ $conf->category->name }}</span>
-                                <span class="text-slate-200">/</span>
-                                <span class="inline-flex items-center px-3 py-1 bg-slate-50 text-slate-500 text-[10px] font-bold rounded-lg border border-slate-100 uppercase tracking-wide">{{ $conf->country->name }}</span>
+                            <div class="flex items-center gap-3 mb-6 flex-wrap">
+                                <span class="inline-flex items-center px-3.5 py-1.5 bg-blue-50 text-blue-700 text-[10px] font-black rounded-xl border border-blue-100 uppercase tracking-widest">{{ $conf->category->name }}</span>
+                                <span class="w-1 h-1 bg-slate-200 rounded-full"></span>
+                                <span class="inline-flex items-center px-3.5 py-1.5 bg-slate-50 text-slate-500 text-[10px] font-black rounded-xl border border-slate-100 uppercase tracking-widest">{{ $conf->country->name }}</span>
                             </div>
-                            <h3 class="text-xl md:text-2xl font-bold text-slate-900 mb-6 line-clamp-2 group-hover:text-blue-700 transition-colors leading-tight">
+                            <h3 class="text-xl md:text-2xl font-serif font-bold text-slate-900 mb-8 line-clamp-2 group-hover:text-blue-700 transition-colors leading-tight">
                                 <a href="{{ route('conferences.show', $conf->slug) }}">{{ $conf->title }}</a>
                             </h3>
                             <div class="mt-auto pt-8 border-t border-slate-50 flex items-center justify-between">
                                 <div class="flex items-center gap-4">
-                                    <div class="w-12 h-12 rounded-2xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-blue-600 group-hover:border-blue-500 transition-colors duration-500">
-                                        <span class="text-[10px] font-black text-slate-400 group-hover:text-blue-100 uppercase leading-none mb-1">{{ $conf->start_date->format('M') }}</span>
-                                        <span class="text-lg font-black text-slate-900 group-hover:text-white leading-none">{{ $conf->start_date->format('d') }}</span>
+                                    <div class="w-14 h-14 rounded-2xl bg-slate-50 flex flex-col items-center justify-center border border-slate-100 group-hover:bg-[#0f172a] group-hover:border-[#0f172a] transition-all duration-500 shadow-inner">
+                                        <span class="text-[9px] font-black text-slate-400 group-hover:text-blue-300 uppercase leading-none mb-1">{{ $conf->start_date->format('M') }}</span>
+                                        <span class="text-xl font-black text-slate-900 group-hover:text-white leading-none">{{ $conf->start_date->format('d') }}</span>
                                     </div>
                                     <div class="flex flex-col">
-                                        <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Location</span>
-                                        <span class="text-sm font-bold text-slate-700">{{ $conf->city }}, {{ $conf->country->name }}</span>
+                                        <span class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] mb-1">Venue Destination</span>
+                                        <span class="text-sm font-bold text-slate-700 group-hover:text-blue-900 transition-colors">{{ $conf->city }}, {{ $conf->country->name }}</span>
                                     </div>
                                 </div>
-                                <a href="{{ route('conferences.show', $conf->slug) }}" class="w-12 h-12 bg-slate-900 text-white rounded-2xl flex items-center justify-center hover:bg-blue-600 transition-all duration-500 shadow-xl shadow-slate-900/10 hover:shadow-blue-600/30">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <a href="{{ route('conferences.show', $conf->slug) }}" class="w-14 h-14 bg-gradient-to-br from-[#0f172a] to-blue-900 text-white rounded-2xl flex items-center justify-center hover:shadow-[0_15px_35px_rgba(30,58,138,0.3)] transition-all duration-500 group/btn">
+                                    <svg class="w-6 h-6 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path d="M17 8l4 4m0 0l-4 4m4-4H3" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
                                     </svg>
                                 </a>
