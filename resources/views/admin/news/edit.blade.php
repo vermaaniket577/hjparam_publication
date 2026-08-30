@@ -1,0 +1,77 @@
+@extends('layouts.admin')
+@section('title', 'Edit News')
+@section('breadcrumb', 'Edit News')
+
+@section('content')
+    <div class="max-w-4xl mx-auto">
+        <div class="bg-white dark:bg-gray-800 shadow rounded-lg p-6 border border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-white mb-6">Edit News Article</h3>
+
+            <form action="{{ route('admin.news.update', $news->id) }}" method="POST">
+                @csrf
+                @method('PUT')
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Title</label>
+                    <input type="text" name="title"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        value="{{ $news->title }}" required>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Slug (URL)</label>
+                        <input type="text" name="slug"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value="{{ $news->slug }}">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Category</label>
+                        <input type="text" name="category"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value="{{ $news->category }}">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Published
+                            Date</label>
+                        <input type="date" name="published_at"
+                            class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                            value="{{ $news->published_at ? $news->published_at->format('Y-m-d') : '' }}">
+                    </div>
+                    <div class="flex items-center pt-8">
+                        <input type="checkbox" name="is_active" value="1"
+                            class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" {{ $news->is_active ? 'checked' : '' }}>
+                        <span class="ml-2 text-sm text-gray-600 dark:text-gray-400">Active / Published</span>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Brief Description (Meta /
+                        Cards)</label>
+                    <textarea name="description" rows="3"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                        required>{{ $news->description }}</textarea>
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Content (HTML
+                        allowed)</label>
+                    <textarea name="content" rows="15"
+                        class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
+                        required>{{ $news->content }}</textarea>
+                </div>
+
+                <div class="flex justify-end">
+                    <a href="{{ route('admin.news.index') }}"
+                        class="px-4 py-2 border border-gray-300 rounded text-gray-700 mr-2 hover:bg-gray-50">Cancel</a>
+                    <button type="submit"
+                        class="px-6 py-2 bg-blue-600 text-white font-bold rounded hover:bg-blue-700 shadow">Update
+                        News</button>
+                </div>
+            </form>
+        </div>
+    </div>
+@endsection

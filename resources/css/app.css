@@ -1,0 +1,131 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .animate-fade-in-up {
+        animation: fadeInUp 0.8s ease-out forwards;
+        opacity: 0;
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Hide scrollbar for Chrome, Safari and Opera */
+    .scrollbar-hide::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Hide scrollbar for IE, Edge and Firefox */
+    .scrollbar-hide {
+        -ms-overflow-style: none;
+        /* IE and Edge */
+        scrollbar-width: none;
+        /* Firefox */
+    }
+
+    [x-cloak] {
+        display: none !important;
+    }
+
+    .hero-cloud-blob {
+        position: absolute;
+        width: 600px;
+        height: 600px;
+        border-radius: 50%;
+        filter: blur(100px);
+        opacity: 0.15;
+        transition: all 5s ease-in-out;
+        pointer-events: none;
+    }
+
+    #hero-section:hover .hero-cloud-blob {
+        transform: scale(1.2) translate(50px, -30px);
+        opacity: 0.25;
+        filter: blur(120px);
+    }
+
+    .shining-hero {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .shining-hero::after {
+        content: "";
+        position: absolute;
+        top: -100%;
+        left: -100%;
+        width: 300%;
+        height: 300%;
+        background: radial-gradient(circle at center,
+                rgba(255, 255, 255, 0.5) 0%,
+                rgba(59, 130, 246, 0.05) 30%,
+                transparent 70%);
+        opacity: 0;
+        transition: opacity 1s ease-out;
+        pointer-events: none;
+        z-index: 5;
+    }
+
+    .shining-hero:hover::after {
+        opacity: 0.8;
+        animation: rotateShine 15s linear infinite;
+    }
+
+    @keyframes rotateShine {
+        0% {
+            transform: rotate(0deg) translate(-5%, -5%);
+        }
+
+        50% {
+            transform: rotate(180deg) translate(5%, 5%);
+        }
+
+        100% {
+            transform: rotate(360deg) translate(-5%, -5%);
+        }
+    }
+
+    @keyframes cloudFloat {
+
+        0%,
+        100% {
+            transform: translate(0, 0) scale(1) rotate(0deg);
+        }
+
+        25% {
+            transform: translate(40px, -30px) scale(1.1) rotate(2deg);
+        }
+
+        50% {
+            transform: translate(-20px, 50px) scale(0.95) rotate(-1deg);
+        }
+
+        75% {
+            transform: translate(-50px, -20px) scale(1.05) rotate(1deg);
+        }
+    }
+
+    .animate-cloud-float {
+        animation: cloudFloat 40s ease-in-out infinite;
+    }
+
+    .hero-cloud-blob:nth-child(2) {
+        animation-duration: 55s;
+        animation-delay: -7s;
+    }
+
+    .hero-cloud-blob:nth-child(3) {
+        animation-duration: 45s;
+        animation-delay: -15s;
+    }
+}

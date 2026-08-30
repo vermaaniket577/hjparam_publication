@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+
+# Disallow sensitive and administrative areas
+
+
+# Allow search engines to find the sitemap
+Sitemap: https://hjparam.com/sitemap.xml
