@@ -772,6 +772,370 @@
         </div>
     </div>
 
+    <!-- Upcoming & Active International Conferences Section -->
+    <section class="bg-white py-24 border-t border-slate-100 relative overflow-hidden">
+        <!-- Subtle Academic Grid Background -->
+        <div class="absolute inset-0 opacity-[0.03] pointer-events-none"
+            style="background-image: radial-gradient(#0f172a 1px, transparent 1px); background-size: 32px 32px;"></div>
+
+        <div class="container mx-auto px-4 sm:px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-6 border-b border-slate-100 pb-8">
+                <div class="max-w-3xl">
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-[10px] font-black uppercase tracking-[0.2em] mb-4 border border-blue-100">
+                        <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                        Academic Gatherings & Symposia
+                    </div>
+                    <h2 class="text-3xl md:text-5xl font-serif font-black text-slate-900 tracking-tight leading-tight">
+                        Upcoming International <span class="text-blue-600">Conferences</span>
+                    </h2>
+                    <p class="text-slate-500 text-base md:text-lg mt-3 font-normal leading-relaxed">
+                        Discover upcoming peer-reviewed symposiums, present breakthrough findings, and access Scopus & Web of Science indexed proceedings.
+                    </p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <a href="{{ route('conferences.index') }}"
+                        class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 hover:bg-blue-600 text-white font-bold text-xs uppercase tracking-wider transition-all duration-300 shadow-md hover:shadow-xl hover:-translate-y-0.5">
+                        <span>View All Conferences</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Conferences Cards Grid -->
+            @if(isset($upcomingConferences) && $upcomingConferences->count() > 0)
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    @foreach($upcomingConferences as $conf)
+                        @php
+                            $typeBadgeClass = match($conf->type) {
+                                'online' => 'bg-cyan-500/90 text-white border-cyan-400/30',
+                                'hybrid' => 'bg-indigo-600/90 text-white border-indigo-400/30',
+                                default => 'bg-emerald-600/90 text-white border-emerald-400/30',
+                            };
+                            $typeLabel = match($conf->type) {
+                                'online' => 'Virtual / Online',
+                                'hybrid' => 'Hybrid Event',
+                                default => 'In-Person / Onsite',
+                            };
+                        @endphp
+                        <div class="group bg-white rounded-3xl border border-slate-200/80 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_20px_50px_rgba(30,58,138,0.12)] hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-500 flex flex-col overflow-hidden">
+                            
+                            <!-- Card Banner / Media Header -->
+                            <div class="relative h-52 w-full overflow-hidden bg-slate-900">
+                                @if($conf->banner_image)
+                                    <img src="{{ $conf->banner_url }}" alt="{{ $conf->title }}"
+                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                                @else
+                                    <div class="w-full h-full flex flex-col justify-between p-6 relative"
+                                        style="background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #1e3a8a 100%);">
+                                        <div class="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-300">
+                                            <span>HJPARAM CONFERENCE</span>
+                                            <span class="text-amber-400">PEER REVIEWED</span>
+                                        </div>
+                                        <div class="my-auto text-center">
+                                            <div class="w-12 h-12 mx-auto rounded-2xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center text-blue-300 text-xl font-serif font-black shadow-inner mb-2 group-hover:scale-110 transition-transform">
+                                                {{ substr($conf->title, 0, 1) }}
+                                            </div>
+                                            <span class="text-xs font-semibold text-slate-200 line-clamp-1">
+                                                {{ $conf->category->name ?? 'Multidisciplinary' }}
+                                            </span>
+                                        </div>
+                                        <div class="flex justify-between items-center text-[9px] font-bold text-slate-400 border-t border-white/10 pt-2">
+                                            <span class="text-emerald-400">GLOBAL INDEXING</span>
+                                            <span>PROCEEDINGS</span>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                <!-- Floating Overlay Gradient -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30 pointer-events-none"></div>
+
+                                <!-- Floating Badges: Top -->
+                                <div class="absolute top-4 left-4 right-4 flex items-center justify-between gap-2 z-10">
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-md border {{ $typeBadgeClass }}">
+                                        {{ $typeLabel }}
+                                    </span>
+
+                                    @if($conf->is_featured)
+                                        <span class="px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 text-[10px] font-black uppercase tracking-wider shadow-md flex items-center gap-1">
+                                            <svg class="w-3 h-3 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                            Featured
+                                        </span>
+                                    @elseif($conf->category)
+                                        <span class="px-2.5 py-1 rounded-full bg-white/90 text-slate-800 text-[10px] font-bold uppercase tracking-wider backdrop-blur-sm shadow-md line-clamp-1 max-w-[140px]">
+                                            {{ $conf->category->name }}
+                                        </span>
+                                    @endif
+                                </div>
+
+                                <!-- Floating Date & Location: Bottom of Banner -->
+                                <div class="absolute bottom-3 left-4 right-4 text-white z-10">
+                                    <div class="flex items-center gap-1.5 text-xs font-bold text-amber-300 mb-0.5">
+                                        <svg class="w-3.5 h-3.5 text-amber-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                                        </svg>
+                                        <span>
+                                            {{ $conf->start_date->format('M d, Y') }}
+                                            @if($conf->end_date && $conf->end_date->format('Y-m-d') !== $conf->start_date->format('Y-m-d'))
+                                                - {{ $conf->end_date->format('M d, Y') }}
+                                            @endif
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-6 flex-grow flex flex-col justify-between">
+                                <div>
+                                    <!-- Location Tag -->
+                                    <div class="flex items-center gap-1.5 text-xs text-slate-500 font-medium mb-3">
+                                        <svg class="w-3.5 h-3.5 text-rose-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                                        </svg>
+                                        <span class="truncate">
+                                            {{ $conf->city ?? 'Virtual Convention' }}@if($conf->country), {{ $conf->country->name }}@endif
+                                        </span>
+                                    </div>
+
+                                    <!-- Conference Title -->
+                                    <h3 class="text-lg font-bold text-slate-900 leading-snug line-clamp-2 mb-3 group-hover:text-blue-600 transition-colors">
+                                        <a href="{{ route('conferences.show', $conf->slug) }}">
+                                            {{ $conf->title }}
+                                        </a>
+                                    </h3>
+
+                                    <!-- Short Description / Organizer -->
+                                    <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed mb-4">
+                                        {{ $conf->description ?? 'Join leading academics and industry professionals for peer-reviewed technical sessions, keynote panels, and paper presentations.' }}
+                                    </p>
+                                </div>
+
+                                <!-- Metadata Badges & Deadlines -->
+                                <div class="pt-4 border-t border-slate-100 mt-auto space-y-4">
+                                    <div class="flex items-center justify-between text-[11px] text-slate-500">
+                                        <span class="font-medium truncate max-w-[160px]">
+                                            By {{ $conf->organizer_name ?? 'HJPARAM Board' }}
+                                        </span>
+                                        @if($conf->paper_submission_end_date)
+                                            <span class="font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded-md border border-rose-100">
+                                                Due: {{ \Carbon\Carbon::parse($conf->paper_submission_end_date)->format('M d') }}
+                                            </span>
+                                        @else
+                                            <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                                                Call for Papers Open
+                                            </span>
+                                        @endif
+                                    </div>
+
+                                    <!-- Action Buttons -->
+                                    <div class="grid grid-cols-2 gap-2.5">
+                                        <a href="{{ route('conferences.show', $conf->slug) }}"
+                                            class="inline-flex items-center justify-center py-2.5 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold transition-colors text-center">
+                                            View Details
+                                        </a>
+                                        <a href="{{ route('conferences.submit', $conf->slug) }}"
+                                            class="inline-flex items-center justify-center py-2.5 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm shadow-blue-500/20 hover:shadow-md text-center">
+                                            Submit Paper
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @else
+                <!-- Clean Empty State Banner -->
+                <div class="bg-slate-50 rounded-3xl border border-slate-200/80 p-12 text-center max-w-2xl mx-auto shadow-sm">
+                    <div class="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-inner">
+                        <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">No Active Conferences Scheduled</h3>
+                    <p class="text-slate-500 text-sm mb-6 leading-relaxed">
+                        Check back soon for new conference announcements or explore past conference archives and proceedings.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-3">
+                        <a href="{{ route('conferences.index') }}"
+                            class="px-6 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-colors shadow-sm">
+                            Browse Conference Directory
+                        </a>
+                        <a href="{{ route('info.page', 'proposals') }}"
+                            class="px-6 py-3 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 font-bold text-xs uppercase tracking-wider transition-colors">
+                            Submit a Proposal
+                        </a>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </section>
+
+    <!-- Complete Conference Lifecycle & Process Flow -->
+    <section class="bg-slate-900 py-24 text-white relative overflow-hidden">
+        <!-- Ambient Decorative Lighting -->
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+        <div class="container mx-auto px-4 sm:px-6 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center max-w-3xl mx-auto mb-20">
+                <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] mb-4">
+                    <span class="w-2 h-2 rounded-full bg-blue-400"></span>
+                    Standard Academic Workflow
+                </div>
+                <h2 class="text-3xl md:text-5xl font-serif font-black tracking-tight text-white mb-4">
+                    Complete Conference <span class="text-blue-400">Participation Flow</span>
+                </h2>
+                <p class="text-slate-400 text-base md:text-lg font-normal leading-relaxed">
+                    From call for papers to international peer review, live presentation, and verified publication with digital credentials.
+                </p>
+            </div>
+
+            <!-- 4-Step Process Timeline Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 relative">
+                
+                <!-- Step 1: Discover -->
+                <div class="group relative bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-blue-500/40 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 flex flex-col justify-between">
+                    <div>
+                        <!-- Step Number Badge -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 border border-blue-500/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-2xl font-black text-slate-600 group-hover:text-blue-400 transition-colors font-mono">01</span>
+                        </div>
+
+                        <span class="inline-block text-[10px] font-black uppercase tracking-[0.2em] text-blue-400 mb-2">Step 1</span>
+                        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-blue-300 transition-colors">
+                            Discover & Select Track
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            Explore upcoming symposiums, session themes, keynote speakers, formatting guidelines, and registration deadlines.
+                        </p>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 flex items-center text-xs font-semibold text-slate-400 gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Multidisciplinary Tracks</span>
+                    </div>
+                </div>
+
+                <!-- Step 2: Submit -->
+                <div class="group relative bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-indigo-500/40 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 flex flex-col justify-between">
+                    <div>
+                        <!-- Step Number Badge -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-2xl font-black text-slate-600 group-hover:text-indigo-400 transition-colors font-mono">02</span>
+                        </div>
+
+                        <span class="inline-block text-[10px] font-black uppercase tracking-[0.2em] text-indigo-400 mb-2">Step 2</span>
+                        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-indigo-300 transition-colors">
+                            Submit Manuscript
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            Upload abstract or full papers with co-author data, copyright agreements, and track blind review statuses seamlessly.
+                        </p>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 flex items-center text-xs font-semibold text-slate-400 gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Double-Blind Peer Review</span>
+                    </div>
+                </div>
+
+                <!-- Step 3: Present -->
+                <div class="group relative bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-purple-500/40 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 flex flex-col justify-between">
+                    <div>
+                        <!-- Step Number Badge -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-purple-500/10 text-purple-400 border border-purple-500/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-2xl font-black text-slate-600 group-hover:text-purple-400 transition-colors font-mono">03</span>
+                        </div>
+
+                        <span class="inline-block text-[10px] font-black uppercase tracking-[0.2em] text-purple-400 mb-2">Step 3</span>
+                        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">
+                            Present & Engage
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            Deliver your research through interactive virtual streams or onsite podium presentations with global delegates.
+                        </p>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 flex items-center text-xs font-semibold text-slate-400 gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Hybrid & In-Person Modes</span>
+                    </div>
+                </div>
+
+                <!-- Step 4: Publish & Certify -->
+                <div class="group relative bg-white/[0.04] backdrop-blur-md rounded-3xl p-8 border border-white/10 hover:border-emerald-500/40 hover:bg-white/[0.07] transition-all duration-500 hover:-translate-y-2 flex flex-col justify-between">
+                    <div>
+                        <!-- Step Number Badge -->
+                        <div class="flex items-center justify-between mb-6">
+                            <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex items-center justify-center group-hover:scale-110 transition-transform shadow-inner">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                                </svg>
+                            </div>
+                            <span class="text-2xl font-black text-slate-600 group-hover:text-emerald-400 transition-colors font-mono">04</span>
+                        </div>
+
+                        <span class="inline-block text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400 mb-2">Step 4</span>
+                        <h3 class="text-xl font-bold text-white mb-3 group-hover:text-emerald-300 transition-colors">
+                            Publish & Certify
+                        </h3>
+                        <p class="text-slate-400 text-sm leading-relaxed mb-6">
+                            Obtain DOI-indexed proceedings publication, Scopus indexing eligibility, and verifiable QR-coded certificates.
+                        </p>
+                    </div>
+
+                    <div class="pt-4 border-t border-white/5 flex items-center text-xs font-semibold text-slate-400 gap-1.5">
+                        <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
+                        <span>Verifiable Certificates & DOI</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Bottom CTA Banner in Flow Section -->
+            <div class="mt-16 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-3xl p-8 md:p-12 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                <div class="max-w-2xl">
+                    <h3 class="text-2xl md:text-3xl font-serif font-black text-white mb-2">
+                        Ready to Organize or Present at a Global Conference?
+                    </h3>
+                    <p class="text-blue-100 text-sm md:text-base font-normal">
+                        Submit your research paper today or partner with HJParam for end-to-end conference management and publishing.
+                    </p>
+                </div>
+                <div class="flex flex-wrap items-center justify-center gap-4 shrink-0">
+                    <a href="{{ route('conferences.index') }}"
+                        class="px-8 py-4 rounded-2xl bg-white text-slate-900 hover:bg-slate-100 font-extrabold text-xs uppercase tracking-wider transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5">
+                        Explore All Conferences
+                    </a>
+                    <a href="{{ route('author.submit') }}"
+                        class="px-8 py-4 rounded-2xl bg-slate-900/40 hover:bg-slate-900 text-white font-extrabold text-xs uppercase tracking-wider border border-white/20 transition-all duration-300">
+                        Submit a Paper
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Community Voices (Elite Researchers) -->
     <div class="bg-white py-32 relative overflow-hidden">
         <div class="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-slate-200 to-transparent">
