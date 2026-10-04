@@ -1,209 +1,316 @@
 <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
 <meta charset="utf-8">
-<title>HJPARAM Copyright Transfer and Declaration Form</title>
+<title>HJPARAM Copyright Transfer & Author Declaration Agreement</title>
 <!--[if gte mso 9]>
 <xml>
 <w:WordDocument>
 <w:View>Print</w:View>
 <w:Zoom>100</w:Zoom>
 <w:DoNotOptimizeForBrowser/>
+<w:Compatibility>
+<w:BreakWrappedTables/>
+<w:SnapToGridInCell/>
+<w:WrapTextWithPunct/>
+<w:UseAsianBreakRules/>
+</w:Compatibility>
 </w:WordDocument>
 </xml>
 <![endif]-->
 <style>
+@page {
+    size: 21.0cm 29.7cm; /* A4 Portrait */
+    margin: 1.0cm 1.4cm 0.8cm 1.4cm;
+    mso-page-orientation: portrait;
+}
+@page Section1 {
+    size: 21.0cm 29.7cm;
+    margin: 1.0cm 1.4cm 0.8cm 1.4cm;
+    mso-header-margin: 0.4cm;
+    mso-footer-margin: 0.4cm;
+}
+div.Section1 {
+    page: Section1;
+}
 body {
     font-family: 'Times New Roman', Times, serif;
-    font-size: 11pt;
-    line-height: 1.35;
-    color: #000000;
-    margin: 1in;
+    font-size: 8.5pt;
+    line-height: 1.2;
+    color: #0f172a;
+    margin: 0;
+    padding: 0;
 }
-h1 {
-    font-size: 16pt;
-    font-weight: bold;
-    text-align: center;
-    color: #0b132b;
-    margin-bottom: 2pt;
-    text-transform: uppercase;
-}
-h2 {
-    font-size: 13pt;
-    font-weight: bold;
-    text-align: center;
-    color: #1e3a8a;
-    margin-top: 0;
-    margin-bottom: 12pt;
-}
-.header-box {
-    border-bottom: 2pt solid #1e3a8a;
-    padding-bottom: 8pt;
-    margin-bottom: 16pt;
-    text-align: center;
-}
-.sub-header {
-    font-size: 9.5pt;
-    color: #475569;
-    text-align: center;
-}
-table.info-table {
+/* Header */
+.header-table {
     width: 100%;
     border-collapse: collapse;
-    margin-bottom: 14pt;
+    margin-bottom: 6pt;
+    border-bottom: 2pt solid #0f2b5c;
+    padding-bottom: 4pt;
 }
-table.info-table td {
-    padding: 6pt 8pt;
-    border: 1pt solid #cbd5e1;
+.header-table td {
+    vertical-align: middle;
+    padding: 0;
+}
+.pub-name {
+    font-size: 15pt;
+    font-weight: bold;
+    color: #0f2b5c;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin: 0;
+}
+.form-title {
     font-size: 10.5pt;
-    vertical-align: top;
-}
-table.info-table td.label {
-    background-color: #f1f5f9;
     font-weight: bold;
-    width: 28%;
+    color: #1e3a8a;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    margin: 2pt 0 0 0;
 }
-.section-title {
-    font-weight: bold;
-    font-size: 11pt;
-    color: #0f172a;
-    margin-top: 10pt;
-    margin-bottom: 4pt;
+.meta-right {
+    text-align: right;
+    font-size: 7.5pt;
+    color: #475569;
+    line-height: 1.25;
 }
-p.policy-text {
-    font-size: 10pt;
-    text-align: justify;
+/* Notice Box */
+.notice-box {
+    background-color: #f8fafc;
+    border: 0.5pt solid #cbd5e1;
+    border-left: 2.5pt solid #0f2b5c;
+    padding: 3pt 6pt;
+    font-size: 7.5pt;
+    color: #334155;
+    margin-bottom: 6pt;
+    line-height: 1.2;
+}
+/* Manuscript Info Table */
+table.info-tbl {
+    width: 100%;
+    border-collapse: collapse;
     margin-bottom: 6pt;
 }
-ol {
-    margin-top: 4pt;
-    margin-bottom: 8pt;
-    padding-left: 20pt;
+table.info-tbl td {
+    border: 0.5pt solid #94a3b8;
+    padding: 2.5pt 4pt;
+    font-size: 8pt;
+    vertical-align: middle;
 }
-li {
-    font-size: 10pt;
-    margin-bottom: 4pt;
-    text-align: justify;
-}
-table.sign-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 12pt;
-}
-table.sign-table th, table.sign-table td {
-    border: 1pt solid #64748b;
-    padding: 6pt;
-    font-size: 9.5pt;
-    text-align: left;
-}
-table.sign-table th {
+table.info-tbl td.lbl {
     background-color: #f1f5f9;
     font-weight: bold;
+    color: #0f172a;
+    width: 22%;
+    white-space: nowrap;
+}
+/* Section Headers */
+.sec-hdr {
+    background-color: #0f2b5c;
+    color: #ffffff;
+    font-size: 8pt;
+    font-weight: bold;
+    padding: 2pt 5pt;
+    margin-top: 5pt;
+    margin-bottom: 3pt;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+/* Terms 2-Column Table */
+table.terms-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 5pt;
+}
+table.terms-tbl td {
+    vertical-align: top;
+    padding: 0 4pt;
+    font-size: 7.5pt;
+    line-height: 1.2;
+    text-align: justify;
+}
+.term-item {
+    margin-bottom: 3pt;
+}
+.term-item strong {
+    color: #0f172a;
+}
+/* Signature Table */
+table.sign-tbl {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 4pt;
+    margin-bottom: 4pt;
+}
+table.sign-tbl th {
+    background-color: #f1f5f9;
+    border: 0.5pt solid #64748b;
+    padding: 3pt 4pt;
+    font-size: 8pt;
+    font-weight: bold;
+    color: #0f172a;
+    text-align: left;
+}
+table.sign-tbl td {
+    border: 0.5pt solid #94a3b8;
+    padding: 3pt 4pt;
+    font-size: 7.5pt;
+    vertical-align: middle;
+    height: 18pt;
+}
+/* Footer */
+.footer-text {
+    text-align: center;
+    font-size: 7pt;
+    color: #64748b;
+    margin-top: 4pt;
+    border-top: 0.5pt solid #e2e8f0;
+    padding-top: 3pt;
 }
 </style>
 </head>
 <body>
 
-<div class="header-box">
-    <h1>HJPARAM PUBLICATION</h1>
-    <h2>COPYRIGHT TRANSFER & AUTHOR DECLARATION AGREEMENT</h2>
-    <div class="sub-header">
-        Official Publishing Ethics & Copyright Assignment Form | Open Access Under CC BY 4.0<br>
-        Website: www.hjparam.com | Email: editorial@hjparam.com
+<div class="Section1">
+
+    <!-- Header -->
+    <table class="header-table">
+        <tr>
+            <td style="width: 65%;">
+                <div class="pub-name">HJPARAM PUBLICATION</div>
+                <div class="form-title">COPYRIGHT TRANSFER &amp; AUTHOR DECLARATION AGREEMENT</div>
+            </td>
+            <td style="width: 35%;" class="meta-right">
+                <strong>Open Access Publishing</strong> (CC BY 4.0)<br>
+                Official Editorial Ethics &amp; Legal Assignment<br>
+                Web: www.hjparam.com | Email: editorial@hjparam.com
+            </td>
+        </tr>
+    </table>
+
+    <!-- Notice -->
+    <div class="notice-box">
+        <strong>Mandatory Submission Requirement:</strong> All authors must be listed below. All authors may sign individually, or the corresponding author may sign on behalf of all co-authors with their explicit written consent. Please upload the completed, signed copy via the online submission portal.
     </div>
+
+    <!-- Manuscript Metadata Table -->
+    <table class="info-tbl">
+        <tr>
+            <td class="lbl">Manuscript Title:</td>
+            <td colspan="3" style="font-weight: bold; height: 16pt;">&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="lbl">Manuscript Tracking ID:</td>
+            <td style="width: 28%;">&nbsp;</td>
+            <td class="lbl" style="width: 20%;">Target Journal:</td>
+            <td style="width: 30%;">&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="lbl">Corresponding Author:</td>
+            <td>Name:</td>
+            <td class="lbl">Official Email:</td>
+            <td>&nbsp;</td>
+        </tr>
+        <tr>
+            <td class="lbl">Author Affiliation:</td>
+            <td colspan="3">Department / University / Institution:</td>
+        </tr>
+        <tr>
+            <td class="lbl">Names of All Co-Authors:</td>
+            <td colspan="3">1. ______________________ &nbsp; 2. ______________________ &nbsp; 3. ______________________ &nbsp; 4. ______________________</td>
+        </tr>
+    </table>
+
+    <!-- Section A & B Grid -->
+    <table style="width: 100%; border-collapse: collapse; margin-bottom: 2pt;">
+        <tr>
+            <td style="width: 50%; vertical-align: top; padding-right: 4pt;">
+                <div class="sec-hdr">PART A: WARRANTIES OF ORIGINALITY &amp; ETHICS</div>
+                <div class="term-item">
+                    <strong>1. Original Work:</strong> The manuscript represents an original, unplagiarized study, has not been published elsewhere, and is not currently under review with any other journal or conference proceedings.
+                </div>
+                <div class="term-item">
+                    <strong>2. Authorship Integrity:</strong> All authors listed qualify under ICMJE criteria, contributed directly to the research, and approved the final submitted draft. No ghost or gift authors are included.
+                </div>
+                <div class="term-item">
+                    <strong>3. Data Authenticity:</strong> Figures, tables, and experimental findings are genuine and unmanipulated. Proper citations and permissions have been obtained for any copyrighted excerpts.
+                </div>
+                <div class="term-item">
+                    <strong>4. Ethical Approvals:</strong> Studies involving human participants or animal welfare secured prior approval from the Institutional Review Board (IRB) / Ethics Committee, adhering to Helsinki/ARRIVE guidelines.
+                </div>
+                <div class="term-item">
+                    <strong>5. Conflict Disclosure:</strong> All financial assistance, grants, and commercial conflicts of interest are disclosed in the manuscript text.
+                </div>
+            </td>
+            <td style="width: 50%; vertical-align: top; padding-left: 4pt;">
+                <div class="sec-hdr">PART B: COPYRIGHT &amp; CC BY 4.0 OPEN ACCESS</div>
+                <div class="term-item">
+                    <strong>1. Author Copyright Retention:</strong> Authors retain full, unrestricted intellectual copyright and patent rights over their published manuscript.
+                </div>
+                <div class="term-item">
+                    <strong>2. Non-Exclusive License:</strong> Authors grant HJPARAM Publication a perpetual, worldwide, non-exclusive license to publish, archive, index, and distribute the Version of Record.
+                </div>
+                <div class="term-item">
+                    <strong>3. Creative Commons (CC BY 4.0):</strong> The article is published under CC BY 4.0 terms, permitting anyone to read, copy, adapt, and build upon the work with proper attribution.
+                </div>
+                <div class="term-item">
+                    <strong>4. Self-Archiving Freedom:</strong> Authors retain the right to self-archive preprints, accepted manuscripts, and the published PDF in institutional repositories with zero embargo.
+                </div>
+                <div class="term-item">
+                    <strong>5. Legal Indemnity:</strong> Authors confirm that the paper contains no defamatory, unlawful, or copyright-infringing content.
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Section C: Signatures -->
+    <div class="sec-hdr">PART C: AUTHOR SIGNATURE &amp; DECLARATION ACCEPTANCE</div>
+    <div style="font-size: 7.5pt; color: #334155; margin-bottom: 2pt;">
+        By signing below, I/we certify that all information provided is accurate and agree to all terms of this agreement on behalf of all authors.
+    </div>
+
+    <table class="sign-tbl">
+        <thead>
+            <tr>
+                <th style="width: 25%;">Author Full Name (Printed)</th>
+                <th style="width: 32%;">Designation &amp; Institution</th>
+                <th style="width: 25%;">Signature / E-Signature</th>
+                <th style="width: 18%;">Date (DD/MM/YYYY)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>1. (Corresponding Author)</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>2.</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>3.</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+            <tr>
+                <td>4.</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+                <td>&nbsp;</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer-text">
+        HJPARAM Publication • Official Open Access Copyright Agreement • Form Version 2.4 • Retain a signed copy for your institutional records
+    </div>
+
 </div>
-
-<p class="policy-text">
-    <strong>Instructions:</strong> Please complete and sign this form and submit it alongside your revised manuscript or upload it via the author portal. All authors must either sign individually or authorize the corresponding author to sign on their behalf.
-</p>
-
-<table class="info-table">
-    <tr>
-        <td class="label">Manuscript Title:</td>
-        <td>____________________________________________________________________________________<br>____________________________________________________________________________________</td>
-    </tr>
-    <tr>
-        <td class="label">Manuscript Tracking ID:</td>
-        <td>____________________________________________________________________________________</td>
-    </tr>
-    <tr>
-        <td class="label">Name of Target Journal:</td>
-        <td>____________________________________________________________________________________</td>
-    </tr>
-    <tr>
-        <td class="label">Corresponding Author:</td>
-        <td>Name: ____________________________________________________________________________<br>Email: _____________________________________ Phone: _______________________________<br>Affiliation: ________________________________________________________________________</td>
-    </tr>
-    <tr>
-        <td class="label">List of All Co-Authors:</td>
-        <td>1. __________________________________ 2. __________________________________<br>3. __________________________________ 4. __________________________________</td>
-    </tr>
-</table>
-
-<div class="section-title">PART A: WARRANTIES OF AUTHORSHIP & ORIGINALITY</div>
-<p class="policy-text">The undersigned author(s) hereby certify and warrant that:</p>
-<ol>
-    <li>The manuscript submitted is an <strong>original work</strong>, has not been published previously (except as an academic thesis, abstract, or preliminary preprint), and is not currently under evaluation by any other journal or conference proceedings.</li>
-    <li>All authors listed have made substantial, direct intellectual contributions to the research design, data collection, analysis, or drafting of the manuscript, and have approved the final submitted version (conforming to ICMJE criteria).</li>
-    <li>The manuscript contains no fabricated, falsified, or plagiarized text, data, figures, or tables. Proper citations and permissions have been obtained for any copyrighted excerpts or illustrations reproduced from third-party sources.</li>
-    <li>For empirical studies involving human subjects or animal welfare, full ethical approval was secured from the relevant Institutional Review Board (IRB) or Ethics Oversight Committee, adhering to the Declaration of Helsinki and ARRIVE guidelines.</li>
-    <li>All financial assistance, commercial affiliations, and potential conflicts of interest have been disclosed in the acknowledgments and funding statements.</li>
-</ol>
-
-<div class="section-title">PART B: COPYRIGHT LICENSING & OPEN ACCESS TERMS</div>
-<p class="policy-text">
-    HJPARAM Publication publishes under the <strong>Creative Commons Attribution 4.0 International License (CC BY 4.0)</strong>:
-</p>
-<ol>
-    <li><strong>Author Copyright Retention:</strong> Authors retain the full intellectual copyright of their published manuscript without restrictions.</li>
-    <li><strong>Publisher License:</strong> Authors grant HJPARAM Publication a perpetual, worldwide, non-exclusive license to publish, display, distribute, archive, and index the Version of Record across academic databases and repository networks.</li>
-    <li><strong>Public Rights:</strong> Anyone is free to copy, share, adapt, and build upon the work for lawful academic, educational, or commercial purposes, provided unambiguous attribution is made to the authors and original HJPARAM publication.</li>
-</ol>
-
-<div class="section-title">PART C: AUTHOR SIGNATURE & DECLARATION</div>
-<p class="policy-text">
-    By signing below, I/we acknowledge that I/we have read, understood, and agreed to all the terms of this Copyright Transfer & Declaration Form.
-</p>
-
-<table class="sign-table">
-    <thead>
-        <tr>
-            <th style="width: 25%;">Author Full Name</th>
-            <th style="width: 30%;">Institutional Affiliation</th>
-            <th style="width: 25%;">Signature</th>
-            <th style="width: 20%;">Date (DD/MM/YYYY)</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>&nbsp;<br><br></td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>&nbsp;<br><br></td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>&nbsp;<br><br></td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
-        <tr>
-            <td>&nbsp;<br><br></td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-            <td>&nbsp;</td>
-        </tr>
-    </tbody>
-</table>
-
-<p style="font-size: 8.5pt; color: #64748b; margin-top: 14pt; text-align: center;">
-    HJPARAM Publication • Ethical Research Integrity • Open Access Scholarly Network
-</p>
 
 </body>
 </html>
