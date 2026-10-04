@@ -15,6 +15,26 @@
          crossorigin="anonymous"></script>
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
+    <style>
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 5px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+        .custom-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: #cbd5e1 #f8fafc;
+        }
+    </style>
 </head>
 
 <body class="font-sans antialiased text-gray-700 bg-white flex flex-col min-h-screen">
@@ -258,12 +278,14 @@
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Journals
                                 by Subject</a>
                             <div class="border-t border-slate-100 my-1"></div>
-                            <span class="block px-4 py-1 text-[11px] text-slate-400 font-bold uppercase">Featured
+                            <span class="block px-4 py-1 text-[11px] text-slate-400 font-bold uppercase tracking-wider">Featured
                                 Journals</span>
-                            @foreach($featured_journals as $journal)
-                                <a href="{{ route('journals.show', $journal->slug) }}"
-                                    class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-800 normal-case text-xs overflow-hidden truncate transition-colors">{{ $journal->title }}</a>
-                            @endforeach
+                            <div class="max-h-52 overflow-y-auto custom-scrollbar" style="max-height: 210px; overflow-y: auto;">
+                                @foreach($featured_journals as $journal)
+                                    <a href="{{ route('journals.show', $journal->slug) }}"
+                                        class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-800 normal-case text-xs overflow-hidden truncate transition-colors">{{ $journal->title }}</a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
@@ -282,13 +304,15 @@
                         </button>
                         <div x-show="activeDropdown === 'topics'" x-transition.opacity.duration.200ms
                             class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
-                            @foreach($global_topics as $topic)
-                                <a href="{{ route('topics.show', $topic->slug) }}"
-                                    class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $topic->name }}</a>
-                            @endforeach
-                            @if($global_topics->isEmpty())
-                                <span class="block px-4 py-2 text-xs text-slate-500">No topics added yet.</span>
-                            @endif
+                            <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
+                                @foreach($global_topics as $topic)
+                                    <a href="{{ route('topics.show', $topic->slug) }}"
+                                        class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $topic->name }}</a>
+                                @endforeach
+                                @if($global_topics->isEmpty())
+                                    <span class="block px-4 py-2 text-xs text-slate-500">No topics added yet.</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -338,10 +362,13 @@
                             <a href="{{ route('author.guidelines') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Author
                                 Guidelines</a>
-                            @foreach($menu_author as $page)
-                                <a href="{{ route('author.page', $page->slug) }}"
-                                    class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
-                            @endforeach
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <div class="max-h-52 overflow-y-auto custom-scrollbar" style="max-height: 210px; overflow-y: auto;">
+                                @foreach($menu_author as $page)
+                                    <a href="{{ route('author.page', $page->slug) }}"
+                                        class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
+                                @endforeach
+                            </div>
                         </div>
                     </div>
 
@@ -360,13 +387,15 @@
                         </button>
                         <div x-show="activeDropdown === 'initiatives'" x-transition.opacity.duration.200ms
                             class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
-                            @foreach($menu_initiatives as $page)
-                                <a href="{{ route('initiatives.show', $page->slug) }}"
-                                    class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
-                            @endforeach
-                            @if($menu_initiatives->isEmpty())
-                                <span class="block px-4 py-2 text-xs text-slate-400">No initiatives</span>
-                            @endif
+                            <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
+                                @foreach($menu_initiatives as $page)
+                                    <a href="{{ route('initiatives.show', $page->slug) }}"
+                                        class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
+                                @endforeach
+                                @if($menu_initiatives->isEmpty())
+                                    <span class="block px-4 py-2 text-xs text-slate-400">No initiatives</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
@@ -385,13 +414,15 @@
                         </button>
                         <div x-show="activeDropdown === 'about'" x-transition.opacity.duration.200ms
                             class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
-                            @foreach($menu_about as $page)
-                                <a href="{{ route('about.page', $page->slug) }}"
-                                    class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
-                            @endforeach
-                            @if($menu_about->isEmpty())
-                                <span class="block px-4 py-2 text-xs text-slate-500">No pages added.</span>
-                            @endif
+                            <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
+                                @foreach($menu_about as $page)
+                                    <a href="{{ route('about.page', $page->slug) }}"
+                                        class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
+                                @endforeach
+                                @if($menu_about->isEmpty())
+                                    <span class="block px-4 py-2 text-xs text-slate-500">No pages added.</span>
+                                @endif
+                            </div>
                         </div>
                     </div>
 

@@ -100,6 +100,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::redirect('/admin', '/admin/dashboard');
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Admin\DashboardController::class, 'index'])->name('dashboard');
+    Route::match(['get', 'post'], 'users/{user}/accept-reviewer', [\App\Http\Controllers\Admin\UserController::class, 'acceptReviewer'])->name('users.accept-reviewer');
+    Route::match(['get', 'post'], 'users/{user}/reject-reviewer', [\App\Http\Controllers\Admin\UserController::class, 'rejectReviewer'])->name('users.reject-reviewer');
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     Route::resource('journals', \App\Http\Controllers\Admin\JournalController::class);
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
@@ -146,6 +148,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
             return back()->with('error', 'Migration error: ' . $e->getMessage());
         }
     })->name('run-migrations');
+
+    // System Cache Clear Helper
+    Route::match(['get', 'post'], '/clear-cache', function () {
+        try {
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            $output = \Illuminate\Support\Facades\Artisan::output();
+            return back()->with('success', 'System cache cleared successfully! ' . ($output ?: 'Done'));
+        } catch (\Exception $e) {
+            return back()->with('error', 'Cache clear error: ' . $e->getMessage());
+        }
+    })->name('clear-cache');
 
     // Admin Payment Management
     Route::get('payments', [\App\Http\Controllers\Admin\PaymentController::class, 'index'])->name('payments.index');

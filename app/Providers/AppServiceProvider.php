@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Featured Journals for layout dropdowns
             $featured_journals = \Illuminate\Support\Facades\Cache::remember('featured_journals_global', 3600, function () {
-                return \App\Models\Journal::where('is_active', true)->take(5)->get();
+                return \App\Models\Journal::where('is_active', true)->orderBy('title')->get();
             });
             $view->with('featured_journals', $featured_journals);
         });

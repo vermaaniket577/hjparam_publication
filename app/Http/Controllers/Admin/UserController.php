@@ -85,4 +85,16 @@ class UserController extends Controller
         $user->delete();
         return redirect()->route('admin.users.index')->with('success', 'User deleted successfully.');
     }
+
+    public function acceptReviewer(\App\Models\User $user)
+    {
+        $user->update(['role' => 'reviewer']);
+        return back()->with('success', "User {$user->name} has been approved as a Reviewer.");
+    }
+
+    public function rejectReviewer(\App\Models\User $user)
+    {
+        $user->update(['role' => 'author']);
+        return back()->with('success', "Reviewer status for {$user->name} was revoked.");
+    }
 }

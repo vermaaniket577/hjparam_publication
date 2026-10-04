@@ -25,3 +25,5 @@ Thumbs.db
 *.zip
 artisan_*.txt
 scratch/
+composer.phar
+.agent/
