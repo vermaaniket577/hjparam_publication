@@ -73,6 +73,41 @@
 
                 <div>
                     <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1.5">
+                        Month <span class="text-gray-400 font-normal">(Optional)</span>
+                    </label>
+                    <select name="month"
+                        class="w-full px-3.5 py-2.5 rounded-xl bg-gray-50 border border-gray-200 text-sm font-semibold text-gray-800 focus:bg-white focus:border-blue-600 focus:ring-2 focus:ring-blue-500/20 transition">
+                        <option value="">-- All Year / Annual --</option>
+                        <option value="January">January</option>
+                        <option value="February">February</option>
+                        <option value="March">March</option>
+                        <option value="April">April</option>
+                        <option value="May">May</option>
+                        <option value="June">June</option>
+                        <option value="July">July</option>
+                        <option value="August">August</option>
+                        <option value="September">September</option>
+                        <option value="October">October</option>
+                        <option value="November">November</option>
+                        <option value="December">December</option>
+                        <option disabled>────── Bi-Monthly / Quarterly ──────</option>
+                        <option value="Jan - Feb">January - February</option>
+                        <option value="Mar - Apr">March - April</option>
+                        <option value="May - Jun">May - June</option>
+                        <option value="Jul - Aug">July - August</option>
+                        <option value="Sep - Oct">September - October</option>
+                        <option value="Nov - Dec">November - December</option>
+                        <option value="Jan - Mar (Q1)">Jan - Mar (Q1)</option>
+                        <option value="Apr - Jun (Q2)">Apr - Jun (Q2)</option>
+                        <option value="Jul - Sep (Q3)">Jul - Sep (Q3)</option>
+                        <option value="Oct - Dec (Q4)">Oct - Dec (Q4)</option>
+                        <option value="Jan - Jun">January - June (Bi-Annual)</option>
+                        <option value="Jul - Dec">July - December (Bi-Annual)</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-gray-600 dark:text-gray-400 mb-1.5">
                         Publication Year <span class="text-red-500">*</span>
                     </label>
                     <input type="number" name="year" value="{{ old('year', date('Y')) }}" required min="1900" max="2100" placeholder="e.g. {{ date('Y') }}"
@@ -116,7 +151,7 @@
                             </div>
                             <div>
                                 <h3 class="text-base font-bold text-gray-900 dark:text-white leading-tight">
-                                    Volume {{ $volume->volume_number }} <span class="text-gray-400 font-normal">({{ $volume->year }})</span>
+                                    Volume {{ $volume->volume_number }} <span class="text-gray-400 font-normal">({{ ($volume->month ? $volume->month . ' ' : '') . $volume->year }})</span>
                                 </h3>
                                 <div class="flex items-center gap-2 mt-0.5">
                                     @if($volume->is_published)

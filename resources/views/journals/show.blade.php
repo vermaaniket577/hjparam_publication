@@ -99,7 +99,7 @@
                 <div class="space-y-6">
                     @forelse($volumes as $volume)
                         <div class="bg-white border rounded p-4">
-                            <h3 class="font-bold text-lg mb-2">Volume {{ $volume->volume_number }} ({{ $volume->year }})</h3>
+                            <h3 class="font-bold text-lg mb-2">Volume {{ $volume->volume_number }} ({{ ($volume->month ? $volume->month . ' ' : '') . $volume->year }})</h3>
                             <div class="flex flex-wrap gap-2">
                                 @foreach($volume->issues as $issue)
                                     <a href="{{ route('journals.issue', [$journal->slug, $volume->volume_number, $issue->issue_number]) }}"

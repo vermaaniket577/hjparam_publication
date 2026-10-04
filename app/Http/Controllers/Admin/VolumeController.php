@@ -33,6 +33,7 @@ class VolumeController extends Controller
     {
         $validated = $request->validate([
             'volume_number' => 'required|string|max:50',
+            'month' => 'nullable|string|max:50',
             'year' => 'required|integer|min:1900|max:2100',
         ]);
 
@@ -41,7 +42,8 @@ class VolumeController extends Controller
 
         Volume::create($validated);
 
-        return back()->with('success', "Volume {$validated['volume_number']} ({$validated['year']}) created successfully.");
+        $monthYear = trim(($validated['month'] ?? '') . ' ' . $validated['year']);
+        return back()->with('success', "Volume {$validated['volume_number']} ({$monthYear}) created successfully.");
     }
 
     /**

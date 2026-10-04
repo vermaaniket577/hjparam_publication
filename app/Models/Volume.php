@@ -12,6 +12,7 @@ class Volume extends Model
     protected $fillable = [
         'journal_id',
         'volume_number',
+        'month',
         'year',
         'is_published',
     ];
