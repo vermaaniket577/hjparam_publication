@@ -254,7 +254,7 @@
                 <!-- Desktop Menu -->
                 <nav
                     class="hidden lg:flex items-center h-full"
-                    style="display: flex; align-items: center; gap: 20px; white-space: nowrap; margin-left: 20px;">
+                    style="display: flex; align-items: center; gap: 16px; white-space: nowrap; margin-left: 16px;">
 
                     <!-- Journals Dropdown -->
                     <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'journals'"
@@ -286,6 +286,41 @@
                                         class="block px-4 py-2 hover:bg-blue-50 hover:text-blue-800 normal-case text-xs overflow-hidden truncate transition-colors">{{ $journal->title }}</a>
                                 @endforeach
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- Journal Policies Dropdown -->
+                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'policies'"
+                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
+                        <button
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'policies' }">
+                            <span>Journal Policies</span>
+                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                    d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="activeDropdown === 'policies'" x-transition.opacity.duration.200ms
+                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                            <a href="{{ route('policies.show', 'disclaimer') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Disclaimer</a>
+                            <a href="{{ route('policies.show', 'open-access-policy') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Open Access Policy</a>
+                            <a href="{{ route('policies.show', 'peer-review-policy') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Peer Review Policy</a>
+                            <a href="{{ route('policies.show', 'crossmark-policy') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">CrossMark Policy</a>
+                            <a href="{{ route('policies.show', 'archiving-policies') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Archiving Policies</a>
+                            <a href="{{ route('policies.show', 'license-terms') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">License Terms</a>
+                            <a href="{{ route('policies.show', 'other-policies') }}"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Other Policies</a>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <a href="{{ route('policies.index') }}"
+                                class="block px-4 py-2 hover:bg-blue-50 text-blue-700 font-bold normal-case text-xs">All Policies & Ethics Hub →</a>
                         </div>
                     </div>
 
@@ -553,8 +588,24 @@
                 </a>
             </div>
             <a href="{{ route('journals.index') }}" class="block font-bold text-gray-800">Journals</a>
+            <div x-data="{ policiesOpen: false }">
+                <button @click="policiesOpen = !policiesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                    <span>Journal Policies</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': policiesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="policiesOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600">
+                    <a href="{{ route('policies.show', 'disclaimer') }}" class="block py-1 hover:text-blue-700">Disclaimer</a>
+                    <a href="{{ route('policies.show', 'open-access-policy') }}" class="block py-1 hover:text-blue-700">Open Access Policy</a>
+                    <a href="{{ route('policies.show', 'peer-review-policy') }}" class="block py-1 hover:text-blue-700">Peer Review Policy</a>
+                    <a href="{{ route('policies.show', 'crossmark-policy') }}" class="block py-1 hover:text-blue-700">CrossMark Policy</a>
+                    <a href="{{ route('policies.show', 'archiving-policies') }}" class="block py-1 hover:text-blue-700">Archiving Policies</a>
+                    <a href="{{ route('policies.show', 'license-terms') }}" class="block py-1 hover:text-blue-700">License Terms</a>
+                    <a href="{{ route('policies.show', 'other-policies') }}" class="block py-1 hover:text-blue-700">Other Policies</a>
+                    <a href="{{ route('policies.index') }}" class="block py-1 font-bold text-blue-700">All Policies Overview &rarr;</a>
+                </div>
+            </div>
             <a href="{{ route('topics.index') }}" class="block font-bold text-gray-800">Topics</a>
-            <a href="{{ route('info.page', 'about') }}" class="block font-bold text-gray-800">Information</a>
+            <a href="{{ route('conferences.index') }}" class="block font-bold text-gray-800">Conferences</a>
             <a href="{{ route('author.submit') }}" class="block font-bold text-gray-800">Author Services</a>
             <a href="{{ route('about.page', 'contact') }}" class="block font-bold text-gray-800">About</a>
         </div>

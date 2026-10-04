@@ -24,6 +24,7 @@
                         <select name="category"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             required>
+                            <option value="policies">Journal Policies</option>
                             <option value="info">Information</option>
                             <option value="author">Author Services</option>
                             <option value="initiatives">Initiatives</option>

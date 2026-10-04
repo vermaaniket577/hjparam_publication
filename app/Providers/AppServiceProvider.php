@@ -42,6 +42,7 @@ class AppServiceProvider extends ServiceProvider
             $view->with('menu_author', $allPages->where('category', 'author'));
             $view->with('menu_initiatives', $allPages->where('category', 'initiatives'));
             $view->with('menu_about', $allPages->where('category', 'about'));
+            $view->with('menu_policies', $allPages->where('category', 'policies'));
 
             // Featured Journals for layout dropdowns
             $featured_journals = \Illuminate\Support\Facades\Cache::remember('featured_journals_global', 3600, function () {

@@ -43,7 +43,7 @@ class PageController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
-            'category' => 'required|string|in:info,author,initiatives,about',
+            'category' => 'required|string|in:info,author,initiatives,about,policies',
             'sort_order' => 'integer|min:0',
             'content' => 'nullable|string',
             'active' => 'boolean',
@@ -78,7 +78,7 @@ class PageController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'nullable|string|max:255',
-            'category' => 'required|string|in:info,author,initiatives,about',
+            'category' => 'required|string|in:info,author,initiatives,about,policies',
             'sort_order' => 'integer|min:0',
             'content' => 'nullable|string',
             'active' => 'boolean',

@@ -25,6 +25,7 @@
                         <select name="category"
                             class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                             required>
+                            <option value="policies" {{ $page->category == 'policies' ? 'selected' : '' }}>Journal Policies</option>
                             <option value="info" {{ $page->category == 'info' ? 'selected' : '' }}>Information</option>
                             <option value="author" {{ $page->category == 'author' ? 'selected' : '' }}>Author Services
                             </option>

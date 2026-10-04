@@ -89,22 +89,26 @@
                 </ul>
             </div>
 
-            <!-- 4. Legal & Policies -->
+            <!-- 4. Journal Policies -->
             <div>
                 <h3
                     class="text-white font-serif font-bold tracking-wide uppercase text-sm mb-6 border-b border-slate-700 pb-2 inline-block">
-                    Legal & Policies</h3>
+                    Journal Policies</h3>
                 <ul class="space-y-3 text-sm">
-                    <li><a href="{{ route('info.page', 'privacy') }}"
-                            class="hover:text-blue-400 transition-colors">Privacy Policy</a></li>
-                    <li><a href="{{ route('info.page', 'terms') }}" class="hover:text-blue-400 transition-colors">Terms
-                            & Conditions</a></li>
-                    <li><a href="{{ route('info.page', 'disclaimer') }}"
+                    <li><a href="{{ route('policies.show', 'disclaimer') }}"
                             class="hover:text-blue-400 transition-colors">Disclaimer</a></li>
-                    <li><a href="{{ route('info.page', 'retraction') }}"
-                            class="hover:text-blue-400 transition-colors">Retraction Policy</a></li>
-                    <li><a href="{{ route('info.page', 'conflict-interest') }}"
-                            class="hover:text-blue-400 transition-colors">Conflict of Interest</a></li>
+                    <li><a href="{{ route('policies.show', 'open-access-policy') }}"
+                            class="hover:text-blue-400 transition-colors">Open Access Policy</a></li>
+                    <li><a href="{{ route('policies.show', 'peer-review-policy') }}"
+                            class="hover:text-blue-400 transition-colors">Peer Review Policy</a></li>
+                    <li><a href="{{ route('policies.show', 'crossmark-policy') }}"
+                            class="hover:text-blue-400 transition-colors">CrossMark Policy</a></li>
+                    <li><a href="{{ route('policies.show', 'archiving-policies') }}"
+                            class="hover:text-blue-400 transition-colors">Archiving Policies</a></li>
+                    <li><a href="{{ route('policies.show', 'license-terms') }}"
+                            class="hover:text-blue-400 transition-colors">License Terms</a></li>
+                    <li><a href="{{ route('policies.show', 'other-policies') }}"
+                            class="hover:text-blue-400 transition-colors">Other Policies</a></li>
                 </ul>
             </div>
 

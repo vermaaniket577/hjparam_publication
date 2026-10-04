@@ -47,6 +47,11 @@ Route::get('/author/guidelines', [\App\Http\Controllers\PageController::class, '
 Route::get('/author/submit', [SubmissionController::class, 'create'])->middleware('auth')->name('author.submit');
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 
+// Journal Policies Routes
+Route::get('/policies', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'policies')->defaults('slug', 'index')->name('policies.index');
+Route::redirect('/policies/disclamier', '/policies/disclaimer');
+Route::get('/policies/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'policies')->name('policies.show');
+
 // Initiatives Routes
 Route::get('/initiatives/join-us', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->defaults('slug', 'join-us')->name('initiatives.join-us');
 Route::post('/initiatives/join-us', [\App\Http\Controllers\InitiativeController::class, 'storeJoinUs'])->name('initiatives.join-us.store');

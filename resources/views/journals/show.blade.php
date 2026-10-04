@@ -41,6 +41,8 @@
                     <li><a href="#volumes" class="text-gray-600 hover:text-blue-600 font-medium">Volumes & Issues</a></li>
                     <li><a href="{{ route('author.page', 'instructions-for-authors') }}"
                             class="text-gray-600 hover:text-blue-600 font-medium">Guide for Authors</a></li>
+                    <li><a href="{{ route('policies.index') }}"
+                            class="text-gray-600 hover:text-blue-600 font-medium">Journal Policies</a></li>
                 </ul>
             </div>
 
