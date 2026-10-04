@@ -73,11 +73,18 @@
                 </div>
             </div>
 
-            <div class="flex justify-end">
-                <a href="{{ route('admin.journals.index') }}"
-                    class="bg-gray-200 text-gray-700 px-4 py-2 rounded mr-2 hover:bg-gray-300">Cancel</a>
-                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Update
-                    Journal</button>
+            <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                <a href="{{ route('admin.journals.volumes.index', $journal) }}"
+                    class="w-full sm:w-auto bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100 font-bold px-4 py-2.5 rounded-xl text-sm transition flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Manage Volumes & Issues ({{ $journal->volumes()->count() }})
+                </a>
+                <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                    <a href="{{ route('admin.journals.index') }}"
+                        class="bg-gray-200 text-gray-700 px-4 py-2.5 rounded-xl font-bold text-sm hover:bg-gray-300 transition">Cancel</a>
+                    <button type="submit" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-700 transition">Update
+                        Journal</button>
+                </div>
             </div>
         </form>
     </div>

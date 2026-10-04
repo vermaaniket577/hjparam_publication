@@ -111,6 +111,12 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::match(['get', 'post'], 'users/{user}/reject-reviewer', [\App\Http\Controllers\Admin\UserController::class, 'rejectReviewer'])->name('users.reject-reviewer');
     Route::resource('users', \App\Http\Controllers\Admin\UserController::class);
     Route::resource('journals', \App\Http\Controllers\Admin\JournalController::class);
+    // Journal Volumes & Issues Management
+    Route::get('journals/{journal}/volumes', [\App\Http\Controllers\Admin\VolumeController::class, 'index'])->name('journals.volumes.index');
+    Route::post('journals/{journal}/volumes', [\App\Http\Controllers\Admin\VolumeController::class, 'store'])->name('journals.volumes.store');
+    Route::delete('journals/{journal}/volumes/{volume}', [\App\Http\Controllers\Admin\VolumeController::class, 'destroy'])->name('journals.volumes.destroy');
+    Route::post('volumes/{volume}/issues', [\App\Http\Controllers\Admin\VolumeController::class, 'storeIssue'])->name('volumes.issues.store');
+    Route::delete('volumes/{volume}/issues/{issue}', [\App\Http\Controllers\Admin\VolumeController::class, 'destroyIssue'])->name('volumes.issues.destroy');
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
 
     // Admin Conference Management

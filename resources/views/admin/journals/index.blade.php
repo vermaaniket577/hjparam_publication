@@ -47,6 +47,8 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <a href="{{ route('admin.journals.volumes.index', $journal) }}"
+                                    class="text-blue-600 hover:text-blue-900 font-semibold mr-3">Volumes & Issues ({{ $journal->volumes()->count() }})</a>
                                 <a href="{{ route('admin.journals.edit', $journal) }}"
                                     class="text-indigo-600 hover:text-indigo-900 mr-3">Edit</a>
                                 <form action="{{ route('admin.journals.destroy', $journal) }}" method="POST"
