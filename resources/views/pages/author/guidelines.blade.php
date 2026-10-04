@@ -191,12 +191,16 @@
                             <p class="text-blue-100 mb-10 max-w-xl mx-auto">Download our official scholarly templates to
                                 ensure your manuscript meets HJPARAM structural standards immediately.</p>
                             <div class="flex flex-col sm:flex-row justify-center gap-6">
-                                <a href="{{ $settings['manuscript_template_url'] ?? '#' }}"
-                                    class="bg-white text-blue-600 px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-50 transition-all shadow-xl shadow-black/10">Download
-                                    .DOCX Template</a>
-                                <a href="#"
-                                    class="bg-blue-700 text-white border border-blue-500 px-10 py-5 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-800 transition-all">Download
-                                    LaTeX Package</a>
+                                <a href="{{ $settings['manuscript_template_url'] ?? route('author.download.article-template') }}" download
+                                    class="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-50 transition-all shadow-xl shadow-black/10 inline-flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    <span>Download Article Template (.DOC)</span>
+                                </a>
+                                <a href="{{ route('author.download.copyright-form') }}" download
+                                    class="bg-blue-700 text-white border border-blue-500 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-800 transition-all inline-flex items-center justify-center gap-2">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    <span>Download Copyright Form</span>
+                                </a>
                             </div>
                         </div>
                     </div>

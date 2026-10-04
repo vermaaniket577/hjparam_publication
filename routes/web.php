@@ -45,6 +45,13 @@ Route::get('/info/{slug}', [\App\Http\Controllers\PageController::class, 'show']
 
 Route::get('/author/guidelines', [\App\Http\Controllers\PageController::class, 'guidelines'])->name('author.guidelines');
 Route::get('/author/submit', [SubmissionController::class, 'create'])->middleware('auth')->name('author.submit');
+
+// Author Downloads
+Route::get('/author/download/copyright-form', [\App\Http\Controllers\Public\DownloadController::class, 'copyrightForm'])->name('author.download.copyright-form');
+Route::get('/author/download/article-template', [\App\Http\Controllers\Public\DownloadController::class, 'articleTemplate'])->name('author.download.article-template');
+Route::get('/downloads/copyright-form', [\App\Http\Controllers\Public\DownloadController::class, 'copyrightForm'])->name('downloads.copyright-form');
+Route::get('/downloads/article-template', [\App\Http\Controllers\Public\DownloadController::class, 'articleTemplate'])->name('downloads.article-template');
+
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 
 // Journal Policies Routes
