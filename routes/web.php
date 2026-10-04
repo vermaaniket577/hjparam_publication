@@ -47,8 +47,15 @@ Route::get('/author/guidelines', [\App\Http\Controllers\PageController::class, '
 Route::get('/author/submit', [SubmissionController::class, 'create'])->middleware('auth')->name('author.submit');
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 
+// Initiatives Routes
+Route::get('/initiatives/join-us', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->defaults('slug', 'join-us')->name('initiatives.join-us');
+Route::post('/initiatives/join-us', [\App\Http\Controllers\InitiativeController::class, 'storeJoinUs'])->name('initiatives.join-us.store');
 Route::get('/initiatives/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->name('initiatives.show');
 Route::get('/about/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->name('about.page');
+
+// Public Contact Routes
+Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('contact.index');
+Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('contact.store');
 
 // Article Routes
 Route::get('/journals/{journalSlug}/{articleSlug}', [ArticleController::class, 'show'])->name('articles.show');
@@ -135,7 +142,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('news', \App\Http\Controllers\Admin\NewsController::class);
     Route::resource('countries', \App\Http\Controllers\Admin\CountryController::class);
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
-    Route::resource('contacts', \App\Http\Controllers\Admin\ContactController::class)->only(['index', 'show', 'destroy']);
+    Route::resource('contacts', \App\Http\Controllers\Admin\ContactController::class)->names('contact-messages')->only(['index', 'show', 'destroy']);
+    Route::get('contact-messages-alias', fn() => redirect()->route('admin.contact-messages.index'))->name('contacts.index');
     Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)->only(['index', 'update', 'destroy']);
 
     // System Migration Runner Helper

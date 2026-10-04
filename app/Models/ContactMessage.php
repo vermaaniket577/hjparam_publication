@@ -11,4 +11,14 @@ class ContactMessage extends Model
     protected $casts = [
         'is_read' => 'boolean',
     ];
+
+    public function getReadAtAttribute()
+    {
+        return $this->is_read ? $this->updated_at : null;
+    }
+
+    public function setReadAtAttribute($value)
+    {
+        $this->attributes['is_read'] = (bool) $value;
+    }
 }
