@@ -1,11 +1,14 @@
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
-    # If the request is for a real file or directory in the project root, serve it
-    RewriteCond %{REQUEST_URI} !^/public/
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteCond %{REQUEST_FILENAME} !-d
+    # Stop processing if the requested file or directory already exists
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # Forward everything else to public/index.php
-    RewriteRule ^(.*)$ public/$1 [L]
+    # Rewrite empty root to public/index.php
+    RewriteRule ^$ public/index.php [L]
+
+    # Rewrite any non-public request into public/ (preventing recursion)
+    RewriteRule ^((?!public/).*)$ public/$1 [L]
 </IfModule>
