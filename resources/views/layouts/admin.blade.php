@@ -76,15 +76,18 @@
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
             class="fixed inset-0 z-20 bg-gray-900 bg-opacity-50 lg:hidden" x-cloak></div>
 
-        <!-- Sidebar (Hover to Open / Auto-close) -->
+        <!-- Left Edge Hover Trigger Zone (Desktop only, visible when sidebar is hidden) -->
+        <div class="fixed inset-y-0 left-0 w-3 z-25 hidden lg:block"
+             x-show="!sidebarHovered && !isPinned"
+             @mouseenter="sidebarEnter()"></div>
+
+        <!-- Sidebar (Hover to Open / Slides off-screen on close) -->
         <aside 
             @mouseenter="sidebarEnter()"
             @mouseleave="sidebarLeave()"
             :class="{
-                'translate-x-0': sidebarOpen,
-                '-translate-x-full lg:translate-x-0': !sidebarOpen,
-                'lg:w-64 shadow-2xl overflow-y-auto': sidebarHovered || isPinned || sidebarOpen,
-                'lg:w-16 shadow-none overflow-y-hidden': !(sidebarHovered || isPinned || sidebarOpen)
+                'translate-x-0 shadow-2xl overflow-y-auto': sidebarOpen || sidebarHovered || isPinned,
+                '-translate-x-full shadow-none overflow-y-hidden': !(sidebarOpen || sidebarHovered || isPinned)
             }"
             class="fixed inset-y-0 left-0 z-30 w-64 overflow-x-hidden transition-all duration-300 ease-in-out transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
             
@@ -362,7 +365,7 @@
         </aside>
 
         <div class="flex-1 flex flex-col overflow-hidden relative transition-all duration-300 ease-in-out"
-             :class="isPinned ? 'lg:ml-64' : 'lg:ml-16'">
+             :class="isPinned ? 'lg:ml-64' : 'lg:ml-0'">
             <header
                 class="flex justify-between items-center py-3 px-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-10">
                 <div class="flex items-center flex-1">
