@@ -46,6 +46,7 @@
                                     {{ $journal->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                 <a href="{{ route('admin.journals.editorial.index', $journal) }}"
                                     class="text-emerald-600 hover:text-emerald-900 font-semibold mr-3">Editorial Team ({{ $journal->editorialBoard()->count() }})</a>
                                 <a href="{{ route('admin.journals.volumes.index', $journal) }}"
