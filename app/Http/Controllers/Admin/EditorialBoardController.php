@@ -136,7 +136,7 @@ class EditorialBoardController extends Controller
             ->with('success', 'Editorial responsibilities policy updated successfully.');
     }
 
-    protected function ensureSchemaExists(): void
+    public static function ensureSchemaExists(): void
     {
         try {
             if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'sort_order')) {
