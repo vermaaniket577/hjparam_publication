@@ -160,6 +160,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::put('journals/{journal}/editorial/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'update'])->name('journals.editorial.update');
     Route::delete('journals/{journal}/editorial/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'destroy'])->name('journals.editorial.destroy');
     Route::post('journals/{journal}/editorial/responsibilities', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updateResponsibilities'])->name('journals.editorial.responsibilities');
+
+    // Central Editorial Board Management & Page Settings
+    Route::get('editorial-board', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'manageAll'])->name('editorial-board.index');
+    Route::post('editorial-board', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'storeGlobal'])->name('editorial-board.store');
+    Route::put('editorial-board/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updateGlobal'])->name('editorial-board.update');
+    Route::delete('editorial-board/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'destroyGlobal'])->name('editorial-board.destroy');
+    Route::post('editorial-board/settings', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updatePageSettings'])->name('editorial-board.settings');
+
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
 
     // Admin Conference Management
