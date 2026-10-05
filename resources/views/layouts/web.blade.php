@@ -233,6 +233,7 @@
 
     <!-- Main Navigation (Standard Clean Academic Style) -->
     <header class="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all duration-300 shadow-xs"
+        style="position: sticky; top: 0; z-index: 50; width: 100%; background-color: #ffffff;"
         :class="{ 'shadow-md': scrolled }"
         x-data="{ open: false, activeDropdown: null, searchOpen: false, advancedSearchOpen: false, scrolled: false }"
         x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 })">
@@ -475,7 +476,7 @@
                     <!-- Action Buttons: Round Search + Pay Fee + Submit -->
                     <div style="display: flex; align-items: center; gap: 10px; margin-left: 8px; flex-shrink: 0;">
                         <!-- Round Dark Blue Search Button -->
-                        <button @click="searchOpen = !searchOpen"
+                        <button @click="searchOpen = !searchOpen; $nextTick(() => { if (searchOpen && $refs.searchInput) $refs.searchInput.focus(); })"
                             style="width: 38px; height: 38px; min-width: 38px; border-radius: 9999px; background-color: #1e293b; color: #ffffff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(30,41,59,0.25);"
                             class="hover:bg-blue-600 transition-all hover:scale-105"
                             title="Search">
@@ -503,7 +504,7 @@
                     </div>
 
                     <!-- Search Overlay Form -->
-                    <div x-show="searchOpen" x-transition:enter="transition ease-out duration-200"
+                    <div x-show="searchOpen" x-cloak x-transition:enter="transition ease-out duration-200"
                         x-transition:enter-start="opacity-0 -translate-y-2"
                         x-transition:enter-end="opacity-100 translate-y-0"
                         x-transition:leave="transition ease-in duration-150"
@@ -521,10 +522,9 @@
                                                 d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                                         </svg>
                                     </span>
-                                    <input type="text" name="q"
+                                    <input type="text" name="q" x-ref="searchInput"
                                         placeholder="Search for journals, articles, authors or DOIs..."
-                                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
-                                        autofocus>
+                                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out">
                                 </div>
                                 <button type="button" @click="advancedSearchOpen = !advancedSearchOpen"
                                     class="px-4 py-2 text-sm font-medium text-gray-600 hover:text-blue-900 flex items-center gap-1 group">
