@@ -13,9 +13,11 @@ class EditorialBoard extends Model
         'journal_id',
         'name',
         'affiliation',
+        'email',
         'role',
         'bio',
         'photo',
+        'sort_order',
     ];
 
     public function journal()

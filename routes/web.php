@@ -153,6 +153,13 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('journals/{journal}/volumes/{volume}', [\App\Http\Controllers\Admin\VolumeController::class, 'destroy'])->name('journals.volumes.destroy');
     Route::post('volumes/{volume}/issues', [\App\Http\Controllers\Admin\VolumeController::class, 'storeIssue'])->name('volumes.issues.store');
     Route::delete('volumes/{volume}/issues/{issue}', [\App\Http\Controllers\Admin\VolumeController::class, 'destroyIssue'])->name('volumes.issues.destroy');
+
+    // Journal Editorial Team & Responsibilities Management
+    Route::get('journals/{journal}/editorial', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'index'])->name('journals.editorial.index');
+    Route::post('journals/{journal}/editorial', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'store'])->name('journals.editorial.store');
+    Route::put('journals/{journal}/editorial/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'update'])->name('journals.editorial.update');
+    Route::delete('journals/{journal}/editorial/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'destroy'])->name('journals.editorial.destroy');
+    Route::post('journals/{journal}/editorial/responsibilities', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updateResponsibilities'])->name('journals.editorial.responsibilities');
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
 
     // Admin Conference Management

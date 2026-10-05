@@ -157,7 +157,20 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs sm:text-sm font-bold text-slate-600">
                 <a href="#scope" class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">Aims & Scope</a>
-                <a href="#board" class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">Editorial Board</a>
+                
+                <!-- Editorial Dropdown -->
+                <div class="relative" x-data="{ open: false }" @mouseenter="open = true" @mouseleave="open = false">
+                    <button class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap flex items-center gap-1 font-bold text-slate-600"
+                            :class="{ 'text-blue-700 bg-blue-50': open }">
+                        <span>Editorial</span>
+                        <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/></svg>
+                    </button>
+                    <div x-show="open" x-transition.opacity.duration.150ms class="absolute top-full left-0 w-56 bg-white rounded-xl shadow-xl border border-slate-200 py-2 z-50">
+                        <a href="#editorial-team" class="block px-4 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition">Editorial Team</a>
+                        <a href="#editorial-responsibilities" class="block px-4 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition">Editorial Responsibilities</a>
+                    </div>
+                </div>
+
                 <a href="#volumes" class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">Volumes & Issues</a>
                 <a href="#latest-articles" class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">Latest Articles</a>
                 <a href="{{ route('author.page', 'instructions-for-authors') }}" class="px-3.5 py-1.5 rounded-lg hover:text-blue-700 hover:bg-blue-50 transition-colors whitespace-nowrap">Guide for Authors</a>
@@ -186,10 +199,19 @@
                             </a>
                         </li>
                         <li>
-                            <a href="#board" class="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                            <a href="#editorial-team" class="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
                                 <span class="flex items-center gap-2.5">
                                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                                    Editorial Board
+                                    Editorial Team
+                                </span>
+                                <span class="text-xs bg-slate-100 text-slate-600 font-bold px-2 py-0.5 rounded-full">{{ $board->count() }}</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#editorial-responsibilities" class="flex items-center justify-between px-3 py-2 rounded-xl text-sm font-semibold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition">
+                                <span class="flex items-center gap-2.5">
+                                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                    Editorial Responsibilities
                                 </span>
                                 <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                             </a>
@@ -337,16 +359,16 @@
                     </div>
                 </section>
 
-                <!-- Editorial Board -->
-                <section id="board" class="scroll-mt-32 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+                <!-- Editorial Team -->
+                <section id="editorial-team" class="scroll-mt-32 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-4 mb-6">
                         <div class="flex items-center gap-3">
                             <div class="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-700 flex items-center justify-center flex-shrink-0">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             </div>
                             <div>
-                                <h2 class="text-xl sm:text-2xl font-serif font-black text-slate-900 tracking-tight">Editorial Board</h2>
-                                <p class="text-xs text-slate-500">Distinguished international scholars, editors, and reviewers</p>
+                                <h2 class="text-xl sm:text-2xl font-serif font-black text-slate-900 tracking-tight">Editorial Team</h2>
+                                <p class="text-xs text-slate-500">Distinguished international scholars, editors, and peer reviewers</p>
                             </div>
                         </div>
                         <a href="{{ route('author.page', 'instructions-for-authors') }}" class="text-xs font-bold text-blue-600 hover:text-blue-800 hidden sm:inline">
@@ -357,13 +379,28 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         @forelse($board as $member)
                             <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-xs transition flex items-start gap-4">
-                                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-800 text-white font-serif font-bold text-lg flex items-center justify-center flex-shrink-0 shadow-xs">
-                                    {{ substr($member->name, 0, 1) }}
+                                <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-800 text-white font-serif font-bold text-xl flex items-center justify-center flex-shrink-0 shadow-xs overflow-hidden">
+                                    @if($member->photo)
+                                        <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                                    @else
+                                        {{ substr($member->name, 0, 1) }}
+                                    @endif
                                 </div>
-                                <div class="min-w-0">
+                                <div class="min-w-0 flex-1">
+                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold 
+                                        @if(str_contains(strtolower($member->role), 'chief')) bg-amber-100 text-amber-900 border border-amber-300
+                                        @elseif(str_contains(strtolower($member->role), 'associate')) bg-blue-100 text-blue-900 border border-blue-300
+                                        @else bg-slate-100 text-slate-700 border border-slate-200 @endif mb-1">
+                                        {{ $member->role }}
+                                    </span>
                                     <h4 class="font-bold text-sm text-slate-900 truncate">{{ $member->name }}</h4>
-                                    <p class="text-xs font-semibold text-blue-700 mb-1">{{ $member->role }}</p>
-                                    <p class="text-xs text-slate-500 line-clamp-2">{{ $member->affiliation }}</p>
+                                    <p class="text-xs text-slate-500 line-clamp-2 mt-0.5">{{ $member->affiliation }}</p>
+                                    @if($member->email)
+                                        <p class="text-[11px] text-blue-600 font-mono mt-1">{{ $member->email }}</p>
+                                    @endif
+                                    @if($member->bio)
+                                        <p class="text-[11px] text-slate-400 italic line-clamp-2 mt-1">"{{ $member->bio }}"</p>
+                                    @endif
                                 </div>
                             </div>
                         @empty
@@ -372,6 +409,44 @@
                                 <p class="text-xs text-slate-400 mt-1">Academicians interested in joining the editorial board can apply via the portal.</p>
                             </div>
                         @endforelse
+                    </div>
+                </section>
+
+                <!-- Editorial Responsibilities -->
+                <section id="editorial-responsibilities" class="scroll-mt-32 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-xs">
+                    <div class="flex items-center gap-3 border-b border-slate-100 pb-4 mb-6">
+                        <div class="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                        </div>
+                        <div>
+                            <h2 class="text-xl sm:text-2xl font-serif font-black text-slate-900 tracking-tight">Editorial Responsibilities</h2>
+                            <p class="text-xs text-slate-500">Ethical duties, peer review governance, and editorial code of conduct</p>
+                        </div>
+                    </div>
+
+                    <div class="prose max-w-none text-slate-700 text-sm leading-relaxed space-y-4">
+                        @if($journal->editorial_responsibilities)
+                            {!! nl2br(e($journal->editorial_responsibilities)) !!}
+                        @else
+                            <div class="space-y-4">
+                                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <h4 class="font-bold text-slate-900 text-sm mb-1">1. Publication Decisions & Editorial Independence</h4>
+                                    <p class="text-xs text-slate-600">The Editor-in-Chief and Editorial Board are exclusively responsible for deciding which of the submitted articles should be published, guided by the policies of the journal's editorial board and constrained by legal requirements regarding libel, copyright infringement, and plagiarism.</p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <h4 class="font-bold text-slate-900 text-sm mb-1">2. Fair Review & Objectivity</h4>
+                                    <p class="text-xs text-slate-600">Manuscripts are evaluated purely on their scholarly merit and empirical integrity, without regard to the authors' institutional affiliation, race, gender, sexual orientation, religious belief, ethnic origin, or political philosophy.</p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <h4 class="font-bold text-slate-900 text-sm mb-1">3. Confidentiality & Conflicts of Interest</h4>
+                                    <p class="text-xs text-slate-600">Editors and editorial staff must not disclose any information about a submitted manuscript to anyone other than the corresponding author, reviewers, potential reviewers, and the publisher. Unpublished materials must not be used in an editor's own research without express written consent.</p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-slate-50 border border-slate-100">
+                                    <h4 class="font-bold text-slate-900 text-sm mb-1">4. Vigilance over the Published Record</h4>
+                                    <p class="text-xs text-slate-600">Editors will take all reasonable steps to identify and prevent the publication of papers where research misconduct has occurred. In the event of confirmed misconduct, appropriate corrections, retractions, or apologies will be promptly published.</p>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </section>
 

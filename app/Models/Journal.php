@@ -17,6 +17,7 @@ class Journal extends Model
         'issn',
         'impact_factor',
         'aims_and_scope',
+        'editorial_responsibilities',
         'is_active',
         'topic_id',
     ];
