@@ -64,204 +64,232 @@
             clearTimeout(this._hoverTimer);
             this._hoverTimer = setTimeout(() => {
                 this.sidebarHovered = false;
-                if (window.innerWidth >= 1024) this.sidebarOpen = false;
-            }, 200);
+                if (!this.isPinned) {
+                    this.sidebarOpen = false;
+                }
+            }, 250);
+        },
+        toggleSidebar() {
+            if (this.sidebarOpen || this.sidebarHovered) {
+                this.sidebarHovered = false;
+                this.sidebarOpen = false;
+                this.isPinned = false;
+            } else {
+                this.sidebarEnter();
+                this.sidebarOpen = true;
+                this.isPinned = true;
+            }
+        },
+        closeSidebar() {
+            clearTimeout(this._hoverTimer);
+            this.sidebarHovered = false;
+            this.sidebarOpen = false;
+            this.isPinned = false;
         }
     }">
 
         <!-- Mobile Sidebar Overlay -->
-        <div x-show="sidebarOpen" @click="sidebarOpen = false"
+        <div x-show="sidebarOpen" @click="closeSidebar()"
             x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0"
             x-transition:enter-end="opacity-100" x-transition:leave="transition-opacity ease-linear duration-300"
             x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
-            class="fixed inset-0 z-20 bg-gray-900 bg-opacity-50 lg:hidden" x-cloak></div>
+            class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden" x-cloak></div>
 
-        <!-- Left Edge Hover Trigger Zone (Desktop only, visible when sidebar is hidden) -->
-        <div class="fixed inset-y-0 left-0 w-3 z-25 hidden lg:block"
-             x-show="!sidebarHovered && !isPinned"
-             @mouseenter="sidebarEnter()"></div>
+        <!-- Left Edge Hover Trigger Zone (Desktop only) -->
+        <div class="fixed inset-y-0 left-0 w-6 hidden lg:block cursor-pointer"
+             style="z-index: 40;"
+             x-show="!sidebarHovered && !isPinned && !sidebarOpen"
+             @mouseenter="sidebarEnter()"
+             @click="toggleSidebar()"></div>
 
-        <!-- Sidebar (Hover to Open / Slides off-screen on close) -->
+        <!-- Floating Left Edge Handle / Tab (Desktop only, visible when sidebar is closed) -->
+        <div 
+            x-show="!sidebarHovered && !isPinned && !sidebarOpen"
+            x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-x-4"
+            x-transition:enter-end="opacity-100 translate-x-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-x-0"
+            x-transition:leave-end="opacity-0 -translate-x-4"
+            @mouseenter="sidebarEnter()"
+            @click="toggleSidebar()"
+            style="z-index: 45;"
+            class="fixed top-24 left-0 hidden lg:flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-2.5 py-2.5 rounded-r-xl shadow-xl cursor-pointer transition-all duration-200 group hover:pl-3.5 select-none"
+            title="Hover or click to open Left Navbar">
+            <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+            </svg>
+            <span class="tracking-wider font-bold">MENU</span>
+        </div>
+
+        <!-- Sidebar (Hover to Open / Slides to left side on auto-close) -->
         <aside 
             @mouseenter="sidebarEnter()"
             @mouseleave="sidebarLeave()"
             :class="{
                 'translate-x-0 shadow-2xl overflow-y-auto': sidebarOpen || sidebarHovered || isPinned,
-                '-translate-x-full shadow-none overflow-y-hidden': !(sidebarOpen || sidebarHovered || isPinned)
+                '-translate-x-full shadow-none overflow-y-hidden pointer-events-none': !(sidebarOpen || sidebarHovered || isPinned)
             }"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-x-hidden transition-all duration-300 ease-in-out transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+            style="z-index: 50;"
+            class="fixed inset-y-0 left-0 w-64 overflow-x-hidden transition-all duration-300 ease-in-out transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
             
-            <div class="flex items-center justify-between h-16 bg-blue-600 dark:bg-blue-800 shadow-md px-3.5 transition-all duration-300">
+            <div class="flex items-center justify-between h-16 bg-blue-600 dark:bg-blue-800 shadow-md px-3.5">
                 <div class="flex items-center space-x-2.5 overflow-hidden">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-8 bg-white rounded-md p-0.5 flex-shrink-0">
-                    <span class="text-lg font-bold text-white tracking-wide whitespace-nowrap transition-all duration-200"
-                          x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>
+                    <span class="text-lg font-bold text-white tracking-wide whitespace-nowrap">
                         HJPARAM Portal
                     </span>
                 </div>
-                <button type="button" @click="isPinned = !isPinned"
-                        class="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-blue-700/60 transition"
-                        x-show="sidebarHovered || isPinned"
-                        x-transition
-                        :title="isPinned ? 'Unpin navbar (auto-close when mouse leaves)' : 'Pin navbar open'">
-                    <svg class="w-4 h-4 transition-transform duration-200" :class="isPinned ? 'rotate-45 text-white' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
-                    </svg>
-                </button>
+                <div class="flex items-center space-x-1">
+                    <button type="button" @click="isPinned = !isPinned"
+                            class="hidden lg:flex items-center justify-center p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-blue-700 transition"
+                            :class="isPinned ? 'bg-blue-700 text-white' : ''"
+                            :title="isPinned ? 'Pinned open. Click to auto-close when mouse leaves' : 'Pin navbar to stay open'">
+                        <svg class="w-4 h-4 transition-transform duration-200" :class="isPinned ? 'rotate-45 text-white' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"></path>
+                        </svg>
+                    </button>
+                    <button type="button" @click="closeSidebar()"
+                            class="flex items-center justify-center p-1.5 rounded-lg text-blue-200 hover:text-white hover:bg-blue-700 transition"
+                            title="Close Navbar">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
             </div>
 
-            <nav class="mt-4 px-2 space-y-1">
+            <nav class="mt-4 px-3 space-y-1">
                 <a href="{{ route('home') }}"
                     title="Visit Website"
-                    class="flex items-center py-2.5 text-sm font-medium rounded-xl text-blue-600 hover:bg-blue-50 transition-all duration-150 border border-blue-100 mb-3 shadow-xs group"
-                    :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                    class="flex items-center px-3 py-2.5 text-sm font-medium rounded-xl text-blue-600 hover:bg-blue-50 transition-all duration-150 border border-blue-100 mb-3 shadow-xs group">
                     <svg class="w-5 h-5 flex-shrink-0 transition-transform group-hover:-translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                     </svg>
-                    <span class="ml-3 whitespace-nowrap transition-all duration-200 font-semibold"
-                          x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>
+                    <span class="ml-3 whitespace-nowrap font-semibold">
                         Visit Website
                     </span>
                 </a>
 
                 {{-- Common Links --}}
                 <a href="{{ route('dashboard') }}" title="Home"
-                    class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('dashboard') && !request()->routeIs('admin.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                    :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('dashboard') && !request()->routeIs('admin.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6">
                         </path>
                     </svg>
-                    <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Home</span>
+                    <span class="ml-3 whitespace-nowrap">Home</span>
                 </a>
 
                 @auth
                     @if(Auth::user()->isAdmin() || Auth::user()->isEditor())
                         <a href="{{ route('admin.dashboard') }}" title="Admin Dashboard"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.dashboard') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Admin Dashboard</span>
+                            <span class="ml-3 whitespace-nowrap">Admin Dashboard</span>
                         </a>
 
                         <div class="pt-3 pb-1">
-                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                               x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Management</p>
-                            <div class="border-t border-gray-100 dark:border-gray-700 mx-2"
-                                 x-show="!(sidebarHovered || isPinned || sidebarOpen)"></div>
+                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Management</p>
                         </div>
 
                         <a href="{{ route('admin.users.index') }}" title="Users"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.users.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.users.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Users</span>
+                            <span class="ml-3 whitespace-nowrap">Users</span>
                         </a>
 
                         <a href="{{ route('admin.journals.index') }}" title="Journals"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.journals.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.journals.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Journals</span>
+                            <span class="ml-3 whitespace-nowrap">Journals</span>
                         </a>
 
                         <a href="{{ route('admin.editorial-board.index') }}" title="Editorial Board"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.editorial-board.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.editorial-board.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
                             :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Editorial Board</span>
+                            <span class="ml-3 whitespace-nowrap">Editorial Board</span>
                         </a>
 
                         <a href="{{ route('admin.articles.index') }}" title="Articles"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.articles.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.articles.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Articles</span>
+                            <span class="ml-3 whitespace-nowrap">Articles</span>
                         </a>
 
                         <div class="pt-3 pb-1">
-                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                               x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Workflow</p>
-                            <div class="border-t border-gray-100 dark:border-gray-700 mx-2"
-                                 x-show="!(sidebarHovered || isPinned || sidebarOpen)"></div>
+                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Workflow</p>
                         </div>
 
                         <a href="{{ route('admin.submissions.index') }}" title="Submissions"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.submissions.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.submissions.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Submissions</span>
+                            <span class="ml-3 whitespace-nowrap">Submissions</span>
                         </a>
 
                         <div class="pt-3 pb-1">
-                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                               x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Content</p>
-                            <div class="border-t border-gray-100 dark:border-gray-700 mx-2"
-                                 x-show="!(sidebarHovered || isPinned || sidebarOpen)"></div>
+                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">Content</p>
                         </div>
 
                         <a href="{{ route('admin.topics.index') }}" title="Manage Topics"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.topics.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.topics.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Manage Topics</span>
+                            <span class="ml-3 whitespace-nowrap">Manage Topics</span>
                         </a>
 
                         <a href="{{ route('admin.pages.index') }}" title="Manage Pages"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.pages.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.pages.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Manage Pages</span>
+                            <span class="ml-3 whitespace-nowrap">Manage Pages</span>
                         </a>
 
                         <a href="{{ route('admin.partners.index') }}" title="Partners"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.partners.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.partners.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Partners</span>
+                            <span class="ml-3 whitespace-nowrap">Partners</span>
                         </a>
 
                         <a href="{{ route('admin.news.index') }}" title="News & Announcements"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.news.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.news.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -271,41 +299,35 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 8h3m-3 4h6m-6 4h6">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>News & Announcements</span>
+                            <span class="ml-3 whitespace-nowrap">News & Announcements</span>
                         </a>
 
                         <a href="{{ route('admin.reviews.index') }}" title="Review Management"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.reviews.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.reviews.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Review Management</span>
+                            <span class="ml-3 whitespace-nowrap">Review Management</span>
                         </a>
 
                         <div class="pt-3 pb-1">
-                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                               x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>System</p>
-                            <div class="border-t border-gray-100 dark:border-gray-700 mx-2"
-                                 x-show="!(sidebarHovered || isPinned || sidebarOpen)"></div>
+                            <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">System</p>
                         </div>
 
                         <a href="{{ route('admin.analytics.index') }}" title="Analytics"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.analytics.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.analytics.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Analytics</span>
+                            <span class="ml-3 whitespace-nowrap">Analytics</span>
                         </a>
 
                         <a href="{{ route('admin.settings.index') }}" title="Settings"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.settings.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.settings.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
@@ -313,51 +335,45 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>Settings</span>
+                            <span class="ml-3 whitespace-nowrap">Settings</span>
                         </a>
                     @endif
                 @endauth
 
                 {{-- Author Links --}}
                 <div class="pt-3 pb-1">
-                    <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap"
-                       x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>My Workflow</p>
-                    <div class="border-t border-gray-100 dark:border-gray-700 mx-2"
-                         x-show="!(sidebarHovered || isPinned || sidebarOpen)"></div>
+                    <p class="px-3 text-[11px] font-bold text-gray-400 uppercase tracking-wider whitespace-nowrap">My Workflow</p>
                 </div>
 
                 <a href="{{ route('submission.create') }}" title="New Submission"
-                    class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('submission.create') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                    :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('submission.create') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                     </svg>
-                    <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>New Submission</span>
+                    <span class="ml-3 whitespace-nowrap">New Submission</span>
                 </a>
 
                 <a href="{{ route('submission.index') }}" title="My Submissions"
-                    class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('submission.index') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                    :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                    class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('submission.index') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                     <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                         </path>
                     </svg>
-                    <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>My Submissions</span>
+                    <span class="ml-3 whitespace-nowrap">My Submissions</span>
                 </a>
 
                 @auth
                     @if(Auth::user()->isReviewer() || Auth::user()->isEditor())
                         <a href="{{ route('reviews.index') }}" title="My Review Assignments"
-                            class="flex items-center py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('reviews.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}"
-                            :class="(sidebarHovered || isPinned || sidebarOpen) ? 'px-3 justify-start' : 'px-0 justify-center'">
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('reviews.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
                                 </path>
                             </svg>
-                            <span class="ml-3 whitespace-nowrap" x-show="sidebarHovered || isPinned || sidebarOpen" x-transition>My Review Assignments</span>
+                            <span class="ml-3 whitespace-nowrap">My Review Assignments</span>
                         </a>
                     @endif
                 @endauth
@@ -369,22 +385,18 @@
             <header
                 class="flex justify-between items-center py-3 px-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm z-10">
                 <div class="flex items-center flex-1">
-                    <!-- Mobile Hamburger -->
-                    <button @click="sidebarOpen = true"
-                        class="text-gray-500 hover:text-gray-600 focus:outline-none lg:hidden mr-4">
-                        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M4 6H20M4 12H20M4 18H11" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round" />
+                    <!-- Hamburger / Menu Toggle Button (Hover or Click to Open) -->
+                    <button 
+                        @mouseenter="sidebarEnter()" 
+                        @click="toggleSidebar()"
+                        type="button"
+                        class="flex items-center space-x-2 px-3 py-1.5 rounded-xl bg-blue-50 hover:bg-blue-100 dark:bg-gray-700 dark:hover:bg-gray-600 text-blue-600 dark:text-blue-400 font-semibold text-sm transition-all shadow-xs border border-blue-100 dark:border-gray-600 mr-3.5 cursor-pointer flex-shrink-0"
+                        title="Hover to open left navbar (click to pin/lock)">
+                        <svg class="w-5 h-5 flex-shrink-0 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
                         </svg>
-                    </button>
-
-                    <!-- Desktop Pin/Unpin Quick Toggle -->
-                    <button type="button" @click="isPinned = !isPinned"
-                        class="hidden lg:flex text-gray-400 hover:text-blue-600 dark:text-gray-400 p-2 rounded-xl hover:bg-gray-100 dark:hover:bg-gray-700 mr-3 transition"
-                        :title="isPinned ? 'Unpin navbar (auto-close when mouse leaves)' : 'Pin navbar open'">
-                        <svg class="w-5 h-5 transition-transform" :class="isPinned ? 'text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
-                        </svg>
+                        <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-5 w-5 rounded flex-shrink-0">
+                        <span class="hidden md:inline font-bold tracking-tight">HJPARAM</span>
                     </button>
 
                     <!-- Global Search Bar -->
