@@ -51,7 +51,23 @@
 
     @include('components.web-loader')
 
-    <div class="flex h-screen overflow-hidden" x-data="{ sidebarOpen: false, sidebarHovered: false, isPinned: false }">
+    <div class="flex h-screen overflow-hidden" x-data="{ 
+        sidebarOpen: false, 
+        sidebarHovered: false, 
+        isPinned: false,
+        _hoverTimer: null,
+        sidebarEnter() {
+            clearTimeout(this._hoverTimer);
+            this.sidebarHovered = true;
+        },
+        sidebarLeave() {
+            clearTimeout(this._hoverTimer);
+            this._hoverTimer = setTimeout(() => {
+                this.sidebarHovered = false;
+                if (window.innerWidth >= 1024) this.sidebarOpen = false;
+            }, 200);
+        }
+    }">
 
         <!-- Mobile Sidebar Overlay -->
         <div x-show="sidebarOpen" @click="sidebarOpen = false"
@@ -62,15 +78,15 @@
 
         <!-- Sidebar (Hover to Open / Auto-close) -->
         <aside 
-            @mouseenter="sidebarHovered = true"
-            @mouseleave="sidebarHovered = false"
+            @mouseenter="sidebarEnter()"
+            @mouseleave="sidebarLeave()"
             :class="{
                 'translate-x-0': sidebarOpen,
                 '-translate-x-full lg:translate-x-0': !sidebarOpen,
-                'lg:w-64 shadow-2xl': sidebarHovered || isPinned || sidebarOpen,
-                'lg:w-16 shadow-xs': !(sidebarHovered || isPinned || sidebarOpen)
+                'lg:w-64 shadow-2xl overflow-y-auto': sidebarHovered || isPinned || sidebarOpen,
+                'lg:w-16 shadow-none overflow-y-hidden': !(sidebarHovered || isPinned || sidebarOpen)
             }"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto overflow-x-hidden transition-all duration-300 ease-in-out transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-x-hidden transition-all duration-300 ease-in-out transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 flex-shrink-0">
             
             <div class="flex items-center justify-between h-16 bg-blue-600 dark:bg-blue-800 shadow-md px-3.5 transition-all duration-300">
                 <div class="flex items-center space-x-2.5 overflow-hidden">
