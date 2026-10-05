@@ -221,6 +221,17 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
 Route::get('/rss-feed', [\App\Http\Controllers\RSSFeedController::class, 'index'])->name('rss.feed');
 
+// Public cache clear utility for deployment
+Route::get('/clear-cache', function () {
+    try {
+        \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+        $output = \Illuminate\Support\Facades\Artisan::output();
+        return response('<pre style="font-family:sans-serif;background:#f0fdf4;padding:24px;border:1px solid #86efac;border-radius:12px;color:#166534;font-size:14px;"><strong>Cache Cleared Successfully!</strong><br><br>' . htmlspecialchars($output ?: 'Done') . '<br><br><a href="/" style="display:inline-block;padding:8px 16px;background:#16a34a;color:#fff;text-decoration:none;border-radius:6px;font-weight:bold;">&larr; Go to Home</a></pre>');
+    } catch (\Throwable $e) {
+        return response('<pre style="color:red;padding:20px;">Cache clear error: ' . htmlspecialchars($e->getMessage()) . '</pre>');
+    }
+});
+
 require __DIR__ . '/auth.php';
 require __DIR__ . '/ecosystem.php';
 

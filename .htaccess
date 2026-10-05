@@ -1,14 +1,28 @@
 <IfModule mod_rewrite.c>
+    <IfModule mod_negotiation.c>
+        Options -MultiViews -Indexes
+    </IfModule>
+
     RewriteEngine On
 
-    # Stop processing if the requested file or directory already exists
+    # Handle Authorization Header
+    RewriteCond %{HTTP:Authorization} .
+    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+
+    # Redirect Trailing Slashes If Not A Folder...
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteCond %{REQUEST_URI} (.+)/$
+    RewriteRule ^ %1 [L,R=301]
+
+    # If the file or directory exists in root, serve it directly
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Rewrite empty root to public/index.php
-    RewriteRule ^$ public/index.php [L]
+    # If the file exists in public/ (e.g. assets, downloads), serve from public/
+    RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+    RewriteRule ^(.*)$ public/$1 [L]
 
-    # Rewrite any non-public request into public/ (preventing recursion)
-    RewriteRule ^((?!public/).*)$ public/$1 [L]
+    # Send all other requests to root index.php
+    RewriteRule ^ index.php [L]
 </IfModule>
