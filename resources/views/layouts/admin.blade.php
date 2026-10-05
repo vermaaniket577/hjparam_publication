@@ -62,7 +62,20 @@
 
         <!-- Sidebar -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'"
-            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition-transform duration-300 transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:translate-x-0 lg:static lg:inset-0 flex-shrink-0 shadow-sm">
+            class="fixed inset-y-0 left-0 z-30 w-64 overflow-y-auto transition-transform duration-300 transform bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 lg:translate-x-0 lg:static lg:inset-0 flex-shrink-0 shadow-sm"
+            x-data="{
+                activeHover: '{{ request()->routeIs('admin.users.*') ? 'users' : (request()->routeIs('admin.journals.*') ? 'journals' : (request()->routeIs('admin.editorial-board.*') ? 'editorial' : (request()->routeIs('admin.articles.*') ? 'articles' : (request()->routeIs('admin.submissions.*') ? 'submissions' : (request()->routeIs('admin.pages.*') ? 'pages' : ''))))) }}',
+                hoverTimer: null,
+                enterMenu(menu) {
+                    clearTimeout(this.hoverTimer);
+                    this.activeHover = menu;
+                },
+                leaveMenu() {
+                    this.hoverTimer = setTimeout(() => {
+                        this.activeHover = '{{ request()->routeIs('admin.users.*') ? 'users' : (request()->routeIs('admin.journals.*') ? 'journals' : (request()->routeIs('admin.editorial-board.*') ? 'editorial' : (request()->routeIs('admin.articles.*') ? 'articles' : (request()->routeIs('admin.submissions.*') ? 'submissions' : (request()->routeIs('admin.pages.*') ? 'pages' : ''))))) }}';
+                    }, 250);
+                }
+            }">
             <div class="flex items-center justify-center h-16 bg-blue-600 dark:bg-blue-800 shadow-md">
                 <div class="flex items-center space-x-2 px-4">
                     <img src="{{ asset('images/logo.png') }}" alt="Logo" class="h-8 w-auto bg-white rounded-sm p-0.5">
@@ -107,59 +120,257 @@
                             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Management</p>
                         </div>
 
-                        <a href="{{ route('admin.users.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.users.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
-                                </path>
-                            </svg>
-                            Users
-                        </a>
+                        <!-- Users with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('users')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.users.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.users.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                        </path>
+                                    </svg>
+                                    <span>Users</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'users' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
 
-                        <a href="{{ route('admin.journals.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.journals.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
-                                </path>
-                            </svg>
-                            Journals
-                        </a>
+                            <div x-show="activeHover === 'users'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.users.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Users
+                                </a>
+                                <a href="{{ route('admin.users.create') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    + Add New User
+                                </a>
+                                <div class="pt-1.5 pb-0.5 px-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    Roles
+                                </div>
+                                <a href="{{ route('admin.users.index', ['role' => 'editor']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-blue-500 mr-2"></span>
+                                    Editors
+                                </a>
+                                <a href="{{ route('admin.users.index', ['role' => 'reviewer']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-amber-500 mr-2"></span>
+                                    Reviewers
+                                </a>
+                                <a href="{{ route('admin.users.index', ['role' => 'author']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-purple-500 mr-2"></span>
+                                    Authors
+                                </a>
+                            </div>
+                        </div>
 
-                        <a href="{{ route('admin.editorial-board.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.editorial-board.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
-                                </path>
-                            </svg>
-                            Editorial Board
-                        </a>
+                        <!-- Journals with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('journals')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.journals.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.journals.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z">
+                                        </path>
+                                    </svg>
+                                    <span>Journals</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'journals' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
 
-                        <a href="{{ route('admin.articles.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.articles.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            Articles
-                        </a>
+                            <div x-show="activeHover === 'journals'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.journals.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Journals
+                                </a>
+                                <a href="{{ route('admin.journals.create') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    + Add New Journal
+                                </a>
+                                @if(isset($featured_journals) && $featured_journals->count() > 0)
+                                    <div class="pt-1.5 pb-0.5 px-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        Journal Editorial Teams
+                                    </div>
+                                    <div class="max-h-40 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                        @foreach($featured_journals as $fj)
+                                            <a href="{{ route('admin.journals.editorial.index', $fj) }}"
+                                                title="Editorial team for {{ $fj->title }}"
+                                                class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg truncate transition">
+                                                <span class="w-1 h-1 rounded-full bg-gray-400 mr-2 flex-shrink-0"></span>
+                                                <span class="truncate">{{ $fj->title }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Editorial Board with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('editorial')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.editorial-board.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.editorial-board.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z">
+                                        </path>
+                                    </svg>
+                                    <span>Editorial Board</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'editorial' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+
+                            <div x-show="activeHover === 'editorial'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.editorial-board.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Board Members
+                                </a>
+                                <a href="{{ route('admin.editorial-board.index', ['journal_id' => 'global']) }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-2"></span>
+                                    Publisher Leadership
+                                </a>
+                                <a href="{{ route('about.page', 'editorial-board') }}" target="_blank"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    View Public Page ↗
+                                </a>
+                                @if(isset($featured_journals) && $featured_journals->count() > 0)
+                                    <div class="pt-1.5 pb-0.5 px-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                        By Journal
+                                    </div>
+                                    <div class="max-h-40 overflow-y-auto space-y-0.5 custom-scrollbar">
+                                        @foreach($featured_journals as $fj)
+                                            <a href="{{ route('admin.editorial-board.index', ['journal_id' => $fj->id]) }}"
+                                                title="{{ $fj->title }}"
+                                                class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg truncate transition">
+                                                <span class="w-1 h-1 rounded-full bg-gray-400 mr-2 flex-shrink-0"></span>
+                                                <span class="truncate">{{ $fj->title }}</span>
+                                            </a>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+
+                        <!-- Articles with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('articles')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.articles.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.articles.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    <span>Articles</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'articles' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+
+                            <div x-show="activeHover === 'articles'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.articles.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Articles
+                                </a>
+                                <a href="{{ route('admin.articles.create') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    + Add New Article
+                                </a>
+                            </div>
+                        </div>
 
                         <div class="pt-4 pb-2">
                             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Workflow</p>
                         </div>
 
-                        <a href="{{ route('admin.submissions.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.submissions.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
-                                </path>
-                            </svg>
-                            Submissions
-                        </a>
+                        <!-- Submissions with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('submissions')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.submissions.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.submissions.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01">
+                                        </path>
+                                    </svg>
+                                    <span>Submissions</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'submissions' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+
+                            <div x-show="activeHover === 'submissions'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.submissions.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Submissions
+                                </a>
+                                <a href="{{ route('admin.submissions.index', ['status' => 'pending']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-amber-500 mr-2"></span>
+                                    Pending Review
+                                </a>
+                                <a href="{{ route('admin.submissions.index', ['status' => 'under_review']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-indigo-500 mr-2"></span>
+                                    Under Review
+                                </a>
+                                <a href="{{ route('admin.submissions.index', ['status' => 'accepted']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-emerald-500 mr-2"></span>
+                                    Accepted
+                                </a>
+                            </div>
+                        </div>
 
                         <div class="pt-4 pb-2">
                             <p class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider">Content</p>
@@ -175,15 +386,60 @@
                             Manage Topics
                         </a>
 
-                        <a href="{{ route('admin.pages.index') }}"
-                            class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.pages.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
-                            <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                </path>
-                            </svg>
-                            Manage Pages
-                        </a>
+                        <!-- Manage Pages with Hover Dropdown -->
+                        <div class="relative" @mouseenter="enterMenu('pages')" @mouseleave="leaveMenu()">
+                            <a href="{{ route('admin.pages.index') }}"
+                                class="flex items-center justify-between px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.pages.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                                <div class="flex items-center">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                                        </path>
+                                    </svg>
+                                    <span>Manage Pages</span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 transition-transform duration-200"
+                                    :class="activeHover === 'pages' ? 'rotate-90 text-blue-600' : 'text-gray-400'"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
+                                </svg>
+                            </a>
+
+                            <div x-show="activeHover === 'pages'" x-cloak
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 -translate-y-1"
+                                 x-transition:enter-end="opacity-100 translate-y-0"
+                                 class="mt-1 ml-4 pl-3 border-l-2 border-blue-200 dark:border-gray-700 space-y-0.5 py-1">
+                                <a href="{{ route('admin.pages.index') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-blue-600 mr-2"></span>
+                                    All Pages
+                                </a>
+                                <a href="{{ route('admin.pages.create') }}"
+                                    class="flex items-center px-2.5 py-1.5 text-xs font-semibold rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 hover:text-blue-700 dark:hover:bg-gray-700 transition">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2"></span>
+                                    + Add New Page
+                                </a>
+                                <div class="pt-1.5 pb-0.5 px-2.5 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                                    Categories
+                                </div>
+                                <a href="{{ route('admin.pages.index', ['category' => 'about']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-blue-500 mr-2"></span>
+                                    About Pages
+                                </a>
+                                <a href="{{ route('admin.pages.index', ['category' => 'policies']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-amber-500 mr-2"></span>
+                                    Journal Policies
+                                </a>
+                                <a href="{{ route('admin.pages.index', ['category' => 'author']) }}"
+                                    class="flex items-center px-2.5 py-1 text-xs text-gray-600 dark:text-gray-400 hover:text-blue-600 hover:bg-blue-50/60 dark:hover:bg-gray-700/50 rounded-lg transition">
+                                    <span class="w-1 h-1 rounded-full bg-purple-500 mr-2"></span>
+                                    Author Guidelines
+                                </a>
+                            </div>
+                        </div>
 
                         <a href="{{ route('admin.partners.index') }}"
                             class="flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors duration-150 {{ request()->routeIs('admin.partners.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
