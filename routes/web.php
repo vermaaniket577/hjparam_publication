@@ -199,3 +199,37 @@ Route::get('/rss-feed', [\App\Http\Controllers\RSSFeedController::class, 'index'
 
 require __DIR__ . '/auth.php';
 require __DIR__ . '/ecosystem.php';
+
+// Asset fallback handler for shared hosting (when docroot is not set to /public)
+Route::get('/build/{path}', function ($path) {
+    $filePath = public_path('build/' . $path);
+    if (!file_exists($filePath)) {
+        $filePath = base_path('build/' . $path);
+    }
+    if (file_exists($filePath) && !is_dir($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'css'   => 'text/css; charset=utf-8',
+            'js'    => 'application/javascript; charset=utf-8',
+            'json'  => 'application/json',
+            'svg'   => 'image/svg+xml',
+            'png'   => 'image/png',
+            'jpg'   => 'image/jpeg',
+            'jpeg'  => 'image/jpeg',
+            'gif'   => 'image/gif',
+            'ico'   => 'image/x-icon',
+            'woff'  => 'font/woff',
+            'woff2' => 'font/woff2',
+            'ttf'   => 'font/ttf',
+            'eot'   => 'application/vnd.ms-fontobject',
+        ];
+        $contentType = $mimes[$ext] ?? 'text/plain';
+
+        return response()->file($filePath, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=31536000, immutable',
+        ]);
+    }
+    abort(404);
+})->where('path', '.*');
+
