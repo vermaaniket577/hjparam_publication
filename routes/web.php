@@ -46,11 +46,35 @@ Route::get('/info/{slug}', [\App\Http\Controllers\PageController::class, 'show']
 Route::get('/author/guidelines', [\App\Http\Controllers\PageController::class, 'guidelines'])->name('author.guidelines');
 Route::get('/author/submit', [SubmissionController::class, 'create'])->middleware('auth')->name('author.submit');
 
-// Author Downloads
-Route::get('/author/download/copyright-form', [\App\Http\Controllers\Public\DownloadController::class, 'copyrightForm'])->name('author.download.copyright-form');
-Route::get('/author/download/article-template', [\App\Http\Controllers\Public\DownloadController::class, 'articleTemplate'])->name('author.download.article-template');
-Route::get('/downloads/copyright-form', [\App\Http\Controllers\Public\DownloadController::class, 'copyrightForm'])->name('downloads.copyright-form');
-Route::get('/downloads/article-template', [\App\Http\Controllers\Public\DownloadController::class, 'articleTemplate'])->name('downloads.article-template');
+// Author Downloads (Self-contained, no external controller dependency)
+Route::get('/author/download/copyright-form', function () {
+    $file = public_path('downloads/HJPARAM_Copyright_Form.doc');
+    if (!file_exists($file)) {
+        $file = base_path('public/downloads/HJPARAM_Copyright_Form.doc');
+    }
+    if (file_exists($file)) {
+        return response()->download($file, 'HJPARAM_Copyright_Transfer_Form.doc', [
+            'Content-Type' => 'application/msword',
+        ]);
+    }
+    abort(404, 'Copyright form not found.');
+})->name('author.download.copyright-form');
+
+Route::get('/author/download/article-template', function () {
+    $file = public_path('downloads/HJPARAM_Article_Template.doc');
+    if (!file_exists($file)) {
+        $file = base_path('public/downloads/HJPARAM_Article_Template.doc');
+    }
+    if (file_exists($file)) {
+        return response()->download($file, 'HJPARAM_Manuscript_Template.doc', [
+            'Content-Type' => 'application/msword',
+        ]);
+    }
+    abort(404, 'Article template not found.');
+})->name('author.download.article-template');
+
+Route::get('/downloads/copyright-form', fn() => redirect()->route('author.download.copyright-form'))->name('downloads.copyright-form');
+Route::get('/downloads/article-template', fn() => redirect()->route('author.download.article-template'))->name('downloads.article-template');
 
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 
