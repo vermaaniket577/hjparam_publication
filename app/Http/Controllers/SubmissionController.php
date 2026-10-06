@@ -40,6 +40,43 @@ class SubmissionController extends Controller
         // Read binary content
         $binaryData = file_get_contents($file->getRealPath());
 
+        // Prepare structured author attribution data
+        $authorsData = [];
+        if ($request->has('authors') && is_array($request->authors)) {
+            $authorsData = $request->authors;
+        } else {
+            $authorsData[] = [
+                'name' => $request->input('author_name', Auth::user()->name),
+                'email' => $request->input('official_email', Auth::user()->email),
+                'department' => $request->input('department'),
+                'institution' => $request->input('institution'),
+                'city_state_country' => $request->input('city_state_country'),
+                'orcid' => $request->input('orcid'),
+                'is_corresponding' => true,
+            ];
+
+            if ($request->has('co_authors') && is_array($request->co_authors)) {
+                foreach ($request->co_authors as $co) {
+                    if (!empty($co['name']) || !empty($co['email'])) {
+                        $authorsData[] = [
+                            'name' => $co['name'] ?? '',
+                            'email' => $co['email'] ?? '',
+                            'department' => $co['department'] ?? '',
+                            'institution' => $co['institution'] ?? '',
+                            'city_state_country' => $co['city_state_country'] ?? '',
+                            'orcid' => $co['orcid'] ?? '',
+                            'is_corresponding' => false,
+                        ];
+                    }
+                }
+            }
+        }
+
+        // Save affiliation to user profile if user affiliation is empty
+        if ($request->filled('institution') && empty(Auth::user()->affiliation)) {
+            Auth::user()->update(['affiliation' => $request->institution]);
+        }
+
         Submission::create([
             'user_id' => Auth::id(),
             'journal_id' => $request->journal_id,
@@ -52,6 +89,7 @@ class SubmissionController extends Controller
             'mime_type' => $file->getClientMimeType(),
             'file_size' => $file->getSize(),
             'binary_content' => $binaryData,
+            'authors_data' => $authorsData,
         ]);
 
         return redirect()->route('dashboard')->with('success', 'Manuscript submitted successfully.');
