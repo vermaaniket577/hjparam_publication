@@ -6,11 +6,42 @@ use App\Http\Controllers\Controller;
 use App\Models\Submission;
 use App\Models\User;
 use App\Models\Review;
+use App\Mail\SubmissionStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SubmissionController extends Controller
 {
+    /**
+     * Dispatch an informational notification email to the author whenever submission status/details change.
+     */
+    protected function notifyAuthor(Submission $submission, string $type, array $data = []): bool
+    {
+        try {
+            $submission->loadMissing(['user', 'journal', 'conference']);
+
+            $authorEmail = $submission->user->email ?? null;
+            if (!$authorEmail || !filter_var($authorEmail, FILTER_VALIDATE_EMAIL)) {
+                Log::warning("Submission status notification skipped: Author email missing or invalid for submission #{$submission->id}");
+                return false;
+            }
+
+            Mail::to($authorEmail)->send(new SubmissionStatusNotification($submission, $type, $data));
+
+            Log::info("Submission notification email sent successfully to {$authorEmail} for submission #{$submission->id} ({$type})");
+            return true;
+        } catch (\Throwable $e) {
+            Log::error("Failed to send submission status notification email: " . $e->getMessage(), [
+                'submission_id' => $submission->id,
+                'type' => $type,
+                'exception' => $e,
+            ]);
+            return false;
+        }
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -67,6 +98,7 @@ class SubmissionController extends Controller
             'revision_comments' => 'nullable|string',
         ]);
 
+        $oldStatus = $submission->status;
         $updateData = ['status' => $request->status];
         if ($request->filled('revision_comments')) {
             $updateData['revision_comments'] = $request->revision_comments;
@@ -74,7 +106,15 @@ class SubmissionController extends Controller
 
         $submission->update($updateData);
 
-        return back()->with('success', 'Submission status updated successfully.');
+        // Send information email to the user
+        $this->notifyAuthor($submission, 'status_change', [
+            'old_status' => $oldStatus,
+            'new_status' => $submission->status,
+            'comments' => $request->revision_comments,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
+        return back()->with('success', "Submission status updated successfully. Information email sent to {$authorEmail}.");
     }
 
     /**
@@ -109,6 +149,9 @@ class SubmissionController extends Controller
 
         if ($submission->status === 'submitted') {
             $submission->update(['status' => 'under_review']);
+            $this->notifyAuthor($submission, 'assignment', [
+                'new_status' => 'under_review',
+            ]);
         }
 
         return back()->with('success', 'Editor / Reviewer assignment updated successfully.');
@@ -130,10 +173,17 @@ class SubmissionController extends Controller
         }
         $submission->save();
 
+        // Send notification email to the author
+        $this->notifyAuthor($submission, 'decision', [
+            'decision' => $request->decision,
+            'comments' => $request->comments,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
         $message = match($request->decision) {
-            'accepted' => 'Paper approved! Author can now proceed with registration fee payment.',
-            'revision_requested' => 'Revision requested. Author has been notified to re-submit with corrections.',
-            'rejected' => 'Paper rejected.',
+            'accepted' => "Paper approved! An acceptance email has been sent to {$authorEmail} with instructions to complete fee payment.",
+            'revision_requested' => "Revision requested. An email with reviewer remarks has been sent to {$authorEmail} to submit corrections.",
+            'rejected' => "Paper rejected. A decision notice email has been sent to {$authorEmail}.",
         };
 
         return back()->with('success', $message);
@@ -151,7 +201,13 @@ class SubmissionController extends Controller
         $submission->payment_status = $request->payment_status;
         $submission->save();
 
-        return back()->with('success', 'Fee payment verification updated: ' . ucfirst($request->payment_status));
+        // Send payment update email to author
+        $this->notifyAuthor($submission, 'payment', [
+            'payment_status' => $request->payment_status,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
+        return back()->with('success', 'Fee payment verification updated: ' . ucfirst($request->payment_status) . ". Notification email sent to {$authorEmail}.");
     }
 
     /**
@@ -170,7 +226,15 @@ class SubmissionController extends Controller
         $submission->presentation_time = $request->presentation_time;
         $submission->save();
 
-        return back()->with('success', 'Conference meeting link and presentation schedule saved.');
+        // Send schedule email with conference meeting link to author
+        $this->notifyAuthor($submission, 'presentation_schedule', [
+            'conference_link' => $request->conference_link,
+            'presentation_day' => $request->presentation_day,
+            'presentation_time' => $request->presentation_time,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
+        return back()->with('success', "Conference meeting link and presentation schedule saved. Schedule email sent to {$authorEmail}.");
     }
 
     /**
@@ -197,7 +261,14 @@ class SubmissionController extends Controller
 
         $submission->save();
 
-        return back()->with('success', 'Attendance & presentation status marked successfully.');
+        // Send attendance & certificate email to author
+        $this->notifyAuthor($submission, 'attendance', [
+            'attendance_status' => $request->attendance_status,
+            'presentation_status' => $request->presentation_status,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
+        return back()->with('success', "Attendance & presentation status marked successfully. Notification email sent to {$authorEmail}.");
     }
 
     /**
@@ -215,7 +286,13 @@ class SubmissionController extends Controller
 
         $submission->save();
 
-        return back()->with('success', ucfirst($type) . ' certificate issued.');
+        // Send certificate code notification to author
+        $this->notifyAuthor($submission, 'certificate', [
+            'type' => $type,
+        ]);
+
+        $authorEmail = $submission->user->email ?? 'author';
+        return back()->with('success', ucfirst($type) . " certificate issued. Notification email sent to {$authorEmail}.");
     }
 
     /**
