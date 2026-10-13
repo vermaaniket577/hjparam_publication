@@ -169,7 +169,9 @@
                             <td class="py-3.5 px-4">
                                 <div class="flex items-center gap-3">
                                     @if($m->photo)
-                                        <img src="{{ asset('storage/' . $m->photo) }}" alt="{{ $m->name }}" class="w-10 h-10 rounded-xl object-cover border border-gray-200 shadow-xs">
+                                        <img src="{{ $m->photo_url }}" alt="{{ $m->name }}" 
+                                             onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($m->photo, '/')) }}';}"
+                                             class="w-10 h-10 rounded-xl object-cover border border-gray-200 shadow-xs">
                                     @else
                                         <div class="w-10 h-10 rounded-xl bg-slate-800 text-white font-serif font-bold text-sm flex items-center justify-center shadow-xs">
                                             {{ strtoupper(substr($m->name, 0, 1)) }}
@@ -229,7 +231,7 @@
 
                             <td class="py-3.5 px-4 text-right whitespace-nowrap">
                                 <button type="button" 
-                                    @click="openEdit({{ json_encode($m) }}, '{{ $m->photo ? asset('storage/' . $m->photo) : '' }}')"
+                                    @click="openEdit({{ json_encode($m) }}, '{{ $m->photo_url ?? '' }}')"
                                     class="text-blue-600 hover:text-blue-800 font-semibold text-xs px-2.5 py-1 rounded-lg hover:bg-blue-50 transition mr-1">
                                     Edit
                                 </button>

@@ -4,15 +4,180 @@
 @section('meta_description', 'Learn about HJPARAM Publication, our mission, publishing ethics, and our commitment to advancing open access research globally.')
 
 @section('content')
-    <section class="bg-slate-950 text-white py-24">
-        <div class="container mx-auto px-6 lg:px-12">
-            <p class="text-xs font-black uppercase tracking-[0.3em] text-emerald-400 mb-6">About HJPARAM Publication</p>
-            <h1 class="text-4xl md:text-7xl font-serif font-black tracking-tight max-w-5xl leading-tight">
-                Advancing the Frontiers of <span class="text-blue-400">Open Science</span> through Integrity and Innovation.
-            </h1>
-            <p class="mt-8 max-w-4xl text-xl leading-relaxed text-slate-300 font-light">
-                HJPARAM is a premier academic publishing platform dedicated to accelerating the global dissemination of peer-reviewed research. We empower scholars with the tools and visibility needed to make a lasting impact on their disciplines.
-            </p>
+    <!-- Hero Section with Integrated Showcase Video -->
+    <section class="relative bg-slate-950 text-white py-16 lg:py-24 overflow-hidden border-b border-slate-800/80">
+        <!-- Subtle Ambient Background Glows -->
+        <div class="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute top-1/2 -right-32 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(#1e293b_1px,transparent_1px)] [background-size:24px_24px] opacity-25 pointer-events-none"></div>
+
+        <div class="container mx-auto px-6 lg:px-12 relative z-10">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-14 items-center">
+                
+                <!-- Left Column: Title, Subtitle & Key Highlights -->
+                <div class="lg:col-span-7 space-y-6">
+                    <!-- Category Badge -->
+                    <div class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-black uppercase tracking-[0.25em]">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                        About HJPARAM Publication
+                    </div>
+
+                    <!-- Main Heading -->
+                    <h1 class="text-3xl sm:text-5xl lg:text-6xl font-serif font-black tracking-tight leading-[1.15]">
+                        Advancing the Frontiers of <span class="bg-gradient-to-r from-blue-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">Open Science</span> through Integrity and Innovation.
+                    </h1>
+
+                    <!-- Lead Paragraph -->
+                    <p class="text-base sm:text-lg lg:text-xl leading-relaxed text-slate-300 font-light max-w-2xl">
+                        HJPARAM is a premier academic publishing platform dedicated to accelerating the global dissemination of peer-reviewed research. We empower scholars with the tools, ethical rigor, and international visibility needed to make an enduring impact across disciplines.
+                    </p>
+
+                    <!-- Trust Signals / Metric Badges -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center backdrop-blur-sm">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Review</div>
+                            <div class="text-sm font-black text-emerald-400 mt-0.5">Double-Blind</div>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center backdrop-blur-sm">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Access</div>
+                            <div class="text-sm font-black text-blue-400 mt-0.5">100% Open</div>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center backdrop-blur-sm">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">License</div>
+                            <div class="text-sm font-black text-amber-400 mt-0.5">CC BY 4.0</div>
+                        </div>
+                        <div class="bg-slate-900/80 border border-slate-800 rounded-xl p-3 text-center backdrop-blur-sm">
+                            <div class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Ethics</div>
+                            <div class="text-sm font-black text-purple-400 mt-0.5">COPE Aligned</div>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="flex flex-wrap items-center gap-4 pt-2">
+                        <a href="{{ route('journals.index') }}" 
+                           class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-sm shadow-lg shadow-blue-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                            </svg>
+                            Explore Journals
+                        </a>
+                        <a href="{{ route('about.page', 'editorial-board') }}" 
+                           class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-800/80 hover:bg-slate-800 text-slate-200 border border-slate-700 font-bold text-sm transition-all hover:scale-[1.02]">
+                            <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Editorial Board
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Interactive Video Showcase Player -->
+                <div class="lg:col-span-5">
+                    <div class="relative group">
+                        <!-- Glowing Backlight / Ambient Aura -->
+                        <div class="absolute -inset-2 bg-gradient-to-tr from-blue-600 via-indigo-500 to-emerald-500 rounded-3xl blur-2xl opacity-35 group-hover:opacity-55 transition duration-700"></div>
+
+                        <!-- Card Wrapper -->
+                        <div class="relative rounded-2xl sm:rounded-3xl overflow-hidden border border-white/20 bg-slate-900/95 shadow-2xl shadow-blue-950/80 backdrop-blur-xl p-3 sm:p-4">
+                            
+                            <!-- Video Container (16:9) - Pure & Unobstructed -->
+                            <div class="relative aspect-video w-full rounded-xl sm:rounded-2xl overflow-hidden bg-black select-none cursor-pointer group/video" id="aboutVideoWrapper">
+                                <video id="aboutHeroVideo"
+                                       autoplay
+                                       muted
+                                       loop
+                                       playsinline
+                                       preload="auto"
+                                       class="w-full h-full object-cover">
+                                    <source src="{{ asset('videos/about-hero.mp4') }}" type="video/mp4">
+                                    Your browser does not support the video tag.
+                                </video>
+
+                                <!-- Play/Pause Center Indicator (shows on hover or when paused) -->
+                                <div id="centerPlayIndicator"
+                                     class="absolute inset-0 m-auto w-16 h-16 rounded-full bg-blue-600/90 text-white flex items-center justify-center shadow-xl shadow-blue-600/50 backdrop-blur-md border border-white/30 opacity-0 group-hover/video:opacity-100 transition-all duration-300 transform group-hover/video:scale-105 pointer-events-none z-10">
+                                    <svg id="centerPlayIcon" class="w-7 h-7 ml-0.5 hidden" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M8 5v14l11-7z"/>
+                                    </svg>
+                                    <svg id="centerPauseIcon" class="w-7 h-7" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                    </svg>
+                                </div>
+
+                                <!-- Floating Sound Toggle Pill (Top-Right, compact, unobtrusive) -->
+                                <button type="button" 
+                                        id="quickSoundBtn"
+                                        aria-label="Toggle Sound"
+                                        class="absolute top-3 right-3 z-20 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-slate-950/80 hover:bg-slate-900 text-xs font-semibold text-slate-200 border border-white/20 backdrop-blur-md shadow-lg transition-all hover:scale-105 cursor-pointer">
+                                    <svg id="quickMutedIcon" class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                                    </svg>
+                                    <svg id="quickUnmutedIcon" class="w-3.5 h-3.5 text-emerald-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                    </svg>
+                                    <span id="quickSoundText">Unmute</span>
+                                </button>
+                            </div>
+
+                            <!-- Dedicated External Control Deck (Located BELOW video so video text is NEVER blocked) -->
+                            <div class="mt-3 px-1.5 pt-1 pb-1 space-y-2">
+                                <!-- Progress Bar (Scrubber) -->
+                                <div class="relative w-full bg-slate-800 hover:bg-slate-700/80 rounded-full h-1.5 overflow-hidden cursor-pointer transition-colors group/progress" id="videoProgressBar" title="Click to seek">
+                                    <div id="videoProgressFill" class="bg-gradient-to-r from-blue-500 to-cyan-400 h-full w-0 transition-all duration-100 rounded-full"></div>
+                                </div>
+
+                                <!-- Control Buttons & Timers Row -->
+                                <div class="flex items-center justify-between text-xs text-slate-300">
+                                    <!-- Left: Play/Pause & Time -->
+                                    <div class="flex items-center gap-2.5">
+                                        <button type="button" 
+                                                id="ctrlPlayBtn" 
+                                                class="w-7 h-7 rounded-lg bg-white/10 hover:bg-blue-600 hover:text-white flex items-center justify-center transition-all focus:outline-none cursor-pointer"
+                                                aria-label="Play/Pause">
+                                            <svg id="ctrlPlayIcon" class="w-3.5 h-3.5 hidden ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M8 5v14l11-7z"/>
+                                            </svg>
+                                            <svg id="ctrlPauseIcon" class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>
+                                            </svg>
+                                        </button>
+                                        <span id="videoTimeDisplay" class="font-mono text-[11px] text-slate-400">00:00 / 00:10</span>
+                                    </div>
+
+                                    <!-- Right: Sound & Fullscreen -->
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" 
+                                                id="ctrlMuteBtn" 
+                                                class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[11px] font-semibold text-slate-200 transition-colors focus:outline-none cursor-pointer" 
+                                                aria-label="Toggle Sound">
+                                            <svg id="ctrlMutedIcon" class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                                            </svg>
+                                            <svg id="ctrlUnmutedIcon" class="w-3.5 h-3.5 text-emerald-400 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+                                            </svg>
+                                            <span id="ctrlMuteText">Unmute</span>
+                                        </button>
+
+                                        <button type="button" 
+                                                id="ctrlFullscreenBtn" 
+                                                class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center transition-colors focus:outline-none cursor-pointer" 
+                                                aria-label="Fullscreen" 
+                                                title="Fullscreen">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-5h-4m4 0v4m0-4l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </section>
 
@@ -144,5 +309,148 @@
             </div>
         </div>
     </section>
+
+    <!-- Video Showcase Controller Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const video = document.getElementById('aboutHeroVideo');
+            if (!video) return;
+
+            const centerPlayIndicator = document.getElementById('centerPlayIndicator');
+            const centerPlayIcon = document.getElementById('centerPlayIcon');
+            const centerPauseIcon = document.getElementById('centerPauseIcon');
+
+            const ctrlPlayBtn = document.getElementById('ctrlPlayBtn');
+            const ctrlPlayIcon = document.getElementById('ctrlPlayIcon');
+            const ctrlPauseIcon = document.getElementById('ctrlPauseIcon');
+
+            const ctrlMuteBtn = document.getElementById('ctrlMuteBtn');
+            const ctrlMutedIcon = document.getElementById('ctrlMutedIcon');
+            const ctrlUnmutedIcon = document.getElementById('ctrlUnmutedIcon');
+            const ctrlMuteText = document.getElementById('ctrlMuteText');
+
+            const quickSoundBtn = document.getElementById('quickSoundBtn');
+            const quickMutedIcon = document.getElementById('quickMutedIcon');
+            const quickUnmutedIcon = document.getElementById('quickUnmutedIcon');
+            const quickSoundText = document.getElementById('quickSoundText');
+
+            const progressBar = document.getElementById('videoProgressBar');
+            const progressFill = document.getElementById('videoProgressFill');
+            const timeDisplay = document.getElementById('videoTimeDisplay');
+            const fullscreenBtn = document.getElementById('ctrlFullscreenBtn');
+            const wrapper = document.getElementById('aboutVideoWrapper');
+
+            function formatTime(seconds) {
+                if (isNaN(seconds)) return '00:00';
+                const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const s = Math.floor(seconds % 60).toString().padStart(2, '0');
+                return `${m}:${s}`;
+            }
+
+            function updatePlayState() {
+                if (video.paused) {
+                    if (centerPlayIcon) centerPlayIcon.classList.remove('hidden');
+                    if (centerPauseIcon) centerPauseIcon.classList.add('hidden');
+                    if (ctrlPlayIcon) ctrlPlayIcon.classList.remove('hidden');
+                    if (ctrlPauseIcon) ctrlPauseIcon.classList.add('hidden');
+                    if (centerPlayIndicator) centerPlayIndicator.classList.remove('opacity-0');
+                } else {
+                    if (centerPlayIcon) centerPlayIcon.classList.add('hidden');
+                    if (centerPauseIcon) centerPauseIcon.classList.remove('hidden');
+                    if (ctrlPlayIcon) ctrlPlayIcon.classList.add('hidden');
+                    if (ctrlPauseIcon) ctrlPauseIcon.classList.remove('hidden');
+                    if (centerPlayIndicator) centerPlayIndicator.classList.add('opacity-0');
+                }
+            }
+
+            function togglePlay() {
+                if (video.paused) {
+                    video.play();
+                } else {
+                    video.pause();
+                }
+                updatePlayState();
+            }
+
+            function updateSoundState() {
+                if (video.muted) {
+                    if (ctrlMutedIcon) ctrlMutedIcon.classList.remove('hidden');
+                    if (ctrlUnmutedIcon) ctrlUnmutedIcon.classList.add('hidden');
+                    if (ctrlMuteText) ctrlMuteText.textContent = 'Unmute';
+
+                    if (quickMutedIcon) quickMutedIcon.classList.remove('hidden');
+                    if (quickUnmutedIcon) quickUnmutedIcon.classList.add('hidden');
+                    if (quickSoundText) quickSoundText.textContent = 'Unmute';
+                } else {
+                    if (ctrlMutedIcon) ctrlMutedIcon.classList.add('hidden');
+                    if (ctrlUnmutedIcon) ctrlUnmutedIcon.classList.remove('hidden');
+                    if (ctrlMuteText) ctrlMuteText.textContent = 'Mute';
+
+                    if (quickMutedIcon) quickMutedIcon.classList.add('hidden');
+                    if (quickUnmutedIcon) quickUnmutedIcon.classList.remove('hidden');
+                    if (quickSoundText) quickSoundText.textContent = 'Mute';
+                }
+            }
+
+            function toggleMute(e) {
+                if (e) e.stopPropagation();
+                video.muted = !video.muted;
+                updateSoundState();
+            }
+
+            if (ctrlPlayBtn) ctrlPlayBtn.addEventListener('click', togglePlay);
+            if (video) video.addEventListener('click', togglePlay);
+
+            if (ctrlMuteBtn) ctrlMuteBtn.addEventListener('click', toggleMute);
+            if (quickSoundBtn) quickSoundBtn.addEventListener('click', toggleMute);
+
+            video.addEventListener('play', updatePlayState);
+            video.addEventListener('pause', updatePlayState);
+
+            video.addEventListener('timeupdate', function () {
+                if (!video.duration) return;
+                const percent = (video.currentTime / video.duration) * 100;
+                if (progressFill) progressFill.style.width = percent + '%';
+                if (timeDisplay) {
+                    timeDisplay.textContent = `${formatTime(video.currentTime)} / ${formatTime(video.duration || 10)}`;
+                }
+            });
+
+            video.addEventListener('loadedmetadata', function () {
+                if (timeDisplay) {
+                    timeDisplay.textContent = `00:00 / ${formatTime(video.duration || 10)}`;
+                }
+            });
+
+            if (progressBar) {
+                progressBar.addEventListener('click', function (e) {
+                    const rect = progressBar.getBoundingClientRect();
+                    const clickPos = (e.clientX - rect.left) / rect.width;
+                    if (video.duration) {
+                        video.currentTime = clickPos * video.duration;
+                    }
+                });
+            }
+
+            if (fullscreenBtn) {
+                fullscreenBtn.addEventListener('click', function () {
+                    const target = wrapper || video;
+                    if (!document.fullscreenElement) {
+                        if (target.requestFullscreen) {
+                            target.requestFullscreen();
+                        } else if (target.webkitRequestFullscreen) {
+                            target.webkitRequestFullscreen();
+                        } else if (video.webkitEnterFullscreen) {
+                            video.webkitEnterFullscreen();
+                        }
+                    } else {
+                        if (document.exitFullscreen) {
+                            document.exitFullscreen();
+                        }
+                    }
+                });
+            }
+        });
+    </script>
 @endsection
 

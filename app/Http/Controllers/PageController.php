@@ -74,6 +74,16 @@ class PageController extends Controller
             ));
         }
 
+        // Special handling for About Us static page
+        if ($category === 'about' && in_array($slug, ['about', 'about-us', 'about-hjparam', ''])) {
+            if (view()->exists('pages.about.about')) {
+                return view('pages.about.about');
+            }
+            if (view()->exists('pages.about.about-hjparam')) {
+                return view('pages.about.about-hjparam');
+            }
+        }
+
         // 1. Check for specific static view first (Highest priority/design)
         $viewName = "pages.{$category}" . ($slug ? ".{$slug}" : ".index");
         if (view()->exists($viewName)) {

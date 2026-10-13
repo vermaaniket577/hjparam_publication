@@ -134,7 +134,9 @@
                             <!-- Avatar / Photo -->
                             <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-700 to-indigo-800 text-white font-serif font-black text-xl flex items-center justify-center flex-shrink-0 shadow-xs overflow-hidden">
                                 @if($member->photo)
-                                    <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                                    <img src="{{ $member->photo_url }}" alt="{{ $member->name }}" 
+                                         onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($member->photo, '/')) }}';}"
+                                         class="w-full h-full object-cover">
                                 @else
                                     {{ substr($member->name, 0, 1) }}
                                 @endif
@@ -175,7 +177,7 @@
                                                 email: '{{ addslashes($member->email ?? '') }}',
                                                 bio: '{{ addslashes($member->bio ?? '') }}',
                                                 sort_order: {{ $member->sort_order ?? 0 }},
-                                                photo_url: '{{ $member->photo ? asset('storage/' . $member->photo) : '' }}'
+                                                photo_url: '{{ $member->photo_url ?? '' }}'
                                             };
                                             editModalOpen = true;
                                         "

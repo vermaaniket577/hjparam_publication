@@ -81,8 +81,12 @@
 
                     <div class="bg-white rounded-3xl shadow-xl shadow-slate-200/50 p-8 border border-slate-100 mb-12 flex flex-col md:flex-row items-center md:items-start gap-8">
                         @if($chief->photo)
-                            <img src="{{ asset('storage/' . $chief->photo) }}" alt="{{ $chief->name }}" 
+                            <img src="{{ $chief->photo_url }}" alt="{{ $chief->name }}" 
+                                 onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($chief->photo, '/')) }}';}else{this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='flex';}"
                                  class="w-32 h-32 rounded-2xl object-cover flex-shrink-0 border border-slate-200 shadow-md">
+                            <div class="w-32 h-32 bg-slate-900 rounded-2xl flex-shrink-0 items-center justify-center text-white text-3xl font-bold font-serif shadow-md" style="display: none;">
+                                {{ $initials }}
+                            </div>
                         @else
                             <div class="w-32 h-32 bg-slate-900 rounded-2xl flex-shrink-0 flex items-center justify-center text-white text-3xl font-bold font-serif shadow-md">
                                 {{ $initials }}
@@ -161,8 +165,12 @@
                         <div class="bg-white rounded-2xl shadow-lg shadow-slate-100 p-6 border border-slate-50 hover:-translate-y-1 transition duration-300">
                             <div class="flex items-center gap-4 mb-4">
                                 @if($editor->photo)
-                                    <img src="{{ asset('storage/' . $editor->photo) }}" alt="{{ $editor->name }}" 
+                                    <img src="{{ $editor->photo_url }}" alt="{{ $editor->name }}" 
+                                         onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($editor->photo, '/')) }}';}else{this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='flex';}"
                                          class="w-12 h-12 rounded-xl object-cover border border-slate-200">
+                                    <div class="w-12 h-12 bg-slate-100 rounded-xl items-center justify-center font-bold text-slate-500 font-serif text-lg" style="display: none;">
+                                        {{ $initial }}
+                                    </div>
                                 @else
                                     <div class="w-12 h-12 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500 font-serif text-lg">
                                         {{ $initial }}
@@ -211,8 +219,12 @@
                         <div class="bg-white rounded-2xl shadow-sm p-5 border border-slate-100 hover:shadow-md transition">
                             <div class="flex items-center gap-3 mb-3">
                                 @if($member->photo)
-                                    <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" 
+                                    <img src="{{ $member->photo_url }}" alt="{{ $member->name }}" 
+                                         onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($member->photo, '/')) }}';}else{this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='flex';}"
                                          class="w-10 h-10 rounded-xl object-cover border border-slate-200">
+                                    <div class="w-10 h-10 bg-slate-100 rounded-xl items-center justify-center font-bold text-slate-500 font-serif text-base" style="display: none;">
+                                        {{ strtoupper(substr($member->name, 0, 1)) }}
+                                    </div>
                                 @else
                                     <div class="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-500 font-serif text-base">
                                         {{ strtoupper(substr($member->name, 0, 1)) }}

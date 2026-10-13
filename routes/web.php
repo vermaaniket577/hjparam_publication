@@ -87,6 +87,7 @@ Route::get('/policies/{slug}', [\App\Http\Controllers\PageController::class, 'sh
 Route::get('/initiatives/join-us', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->defaults('slug', 'join-us')->name('initiatives.join-us');
 Route::post('/initiatives/join-us', [\App\Http\Controllers\InitiativeController::class, 'storeJoinUs'])->name('initiatives.join-us.store');
 Route::get('/initiatives/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'initiatives')->name('initiatives.show');
+Route::get('/about', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->defaults('slug', 'about')->name('about');
 Route::get('/about/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->name('about.page');
 
 // Public Contact Routes
@@ -282,4 +283,50 @@ Route::get('/build/{path}', function ($path) {
     }
     abort(404);
 })->where('path', '.*');
+
+// Storage fallback handler for shared hosting (when symlink is absent or docroot is root)
+Route::get('/storage/{path}', function ($path) {
+    if (str_contains($path, '..')) {
+        abort(403);
+    }
+
+    $cleanPath = ltrim($path, '/');
+
+    // 1. Check in storage/app/public/ (standard upload target)
+    $filePath = storage_path('app/public/' . $cleanPath);
+
+    // 2. Check in public/storage/
+    if (!file_exists($filePath)) {
+        $filePath = public_path('storage/' . $cleanPath);
+    }
+
+    // 3. Check in storage/app/
+    if (!file_exists($filePath)) {
+        $filePath = storage_path('app/' . $cleanPath);
+    }
+
+    if (file_exists($filePath) && !is_dir($filePath)) {
+        $ext = strtolower(pathinfo($filePath, PATHINFO_EXTENSION));
+        $mimes = [
+            'jpg'   => 'image/jpeg',
+            'jpeg'  => 'image/jpeg',
+            'png'   => 'image/png',
+            'gif'   => 'image/gif',
+            'webp'  => 'image/webp',
+            'svg'   => 'image/svg+xml',
+            'pdf'   => 'application/pdf',
+            'doc'   => 'application/msword',
+            'docx'  => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ];
+        $contentType = $mimes[$ext] ?? (function_exists('mime_content_type') ? mime_content_type($filePath) : 'application/octet-stream');
+
+        return response()->file($filePath, [
+            'Content-Type' => $contentType,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    abort(404);
+})->where('path', '.*');
+
 

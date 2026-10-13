@@ -381,7 +381,10 @@
                             <div class="p-4 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-white hover:shadow-xs transition flex items-start gap-4">
                                 <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-700 to-indigo-800 text-white font-serif font-bold text-xl flex items-center justify-center flex-shrink-0 shadow-xs overflow-hidden">
                                     @if($member->photo)
-                                        <img src="{{ asset('storage/' . $member->photo) }}" alt="{{ $member->name }}" class="w-full h-full object-cover">
+                                        <img src="{{ $member->photo_url }}" alt="{{ $member->name }}" 
+                                             onerror="if(!this.dataset.retry){this.dataset.retry=1;this.src='{{ asset('storage/app/public/' . ltrim($member->photo, '/')) }}';}else{this.style.display='none';var s=this.nextElementSibling;if(s)s.style.display='inline';}"
+                                             class="w-full h-full object-cover">
+                                        <span style="display: none;">{{ substr($member->name, 0, 1) }}</span>
                                     @else
                                         {{ substr($member->name, 0, 1) }}
                                     @endif
