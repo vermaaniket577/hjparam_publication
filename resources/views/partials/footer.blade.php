@@ -65,6 +65,8 @@
                     </li>
                     <li><a href="{{ route('about.page', 'contact') }}"
                             class="hover:text-blue-400 transition-colors flex items-center gap-2">Contact Us</a></li>
+                    <li><a href="{{ route('blogs.index') }}"
+                            class="hover:text-blue-400 transition-colors flex items-center gap-2">Blog & Articles</a></li>
                 </ul>
             </div>
 

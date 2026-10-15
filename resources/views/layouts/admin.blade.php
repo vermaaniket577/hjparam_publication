@@ -302,6 +302,15 @@
                             <span class="ml-3 whitespace-nowrap">News & Announcements</span>
                         </a>
 
+                        <a href="{{ route('admin.blogs.index') }}" title="Manage Blogs"
+                            class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.blogs.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
+                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
+                            </svg>
+                            <span class="ml-3 whitespace-nowrap">Manage Blogs</span>
+                        </a>
+
                         <a href="{{ route('admin.reviews.index') }}" title="Review Management"
                             class="flex items-center px-3 py-2 text-sm font-medium rounded-xl transition-colors duration-150 {{ request()->routeIs('admin.reviews.*') ? 'bg-blue-50 text-blue-700 dark:bg-gray-700 dark:text-white' : 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-700' }}">
                             <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">

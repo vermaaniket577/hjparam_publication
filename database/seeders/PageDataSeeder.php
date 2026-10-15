@@ -46,6 +46,7 @@ class PageDataSeeder extends Seeder
 
         // Initiatives Pages
         $initiativesPages = [
+            'Join Us',
             'Global Sustainability Initiative',
         ];
 

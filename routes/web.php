@@ -90,6 +90,12 @@ Route::get('/initiatives/{slug}', [\App\Http\Controllers\PageController::class, 
 Route::get('/about', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->defaults('slug', 'about')->name('about');
 Route::get('/about/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'about')->name('about.page');
 
+// Public Blog Routes
+Route::get('/blogs', [\App\Http\Controllers\Public\BlogController::class, 'index'])->name('blogs.index');
+Route::get('/blogs/{slug}', [\App\Http\Controllers\Public\BlogController::class, 'show'])->name('blogs.show');
+Route::get('/blog', fn() => redirect()->route('blogs.index'))->name('blog.index');
+Route::get('/blog/{slug}', fn($slug) => redirect()->route('blogs.show', $slug));
+
 // Public Contact Routes
 Route::get('/contact', [\App\Http\Controllers\Public\ContactController::class, 'index'])->name('contact.index');
 Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 'store'])->name('contact.store');
@@ -198,6 +204,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('pages', \App\Http\Controllers\Admin\PageController::class)->except(['show']);
     Route::resource('partners', \App\Http\Controllers\Admin\PartnerController::class);
     Route::resource('news', \App\Http\Controllers\Admin\NewsController::class);
+    Route::resource('blogs', \App\Http\Controllers\Admin\BlogController::class);
+    Route::post('blogs/{blog}/toggle-publish', [\App\Http\Controllers\Admin\BlogController::class, 'togglePublish'])->name('blogs.toggle-publish');
     Route::resource('countries', \App\Http\Controllers\Admin\CountryController::class);
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
     Route::resource('contacts', \App\Http\Controllers\Admin\ContactController::class)->names('contact-messages')->only(['index', 'show', 'destroy']);

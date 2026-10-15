@@ -436,12 +436,13 @@
                             class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($menu_initiatives as $page)
-                                    <a href="{{ route('initiatives.show', $page->slug) }}"
-                                        class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
+                                    @if($page->slug !== 'blog' && $page->slug !== 'blogs')
+                                        <a href="{{ route('initiatives.show', $page->slug) }}"
+                                            class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">{{ $page->title }}</a>
+                                    @endif
                                 @endforeach
-                                @if($menu_initiatives->isEmpty())
-                                    <span class="block px-4 py-2 text-xs text-slate-400">No initiatives</span>
-                                @endif
+                                <a href="{{ route('blogs.index') }}"
+                                    class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs {{ request()->routeIs('blogs.*') ? 'text-blue-700 bg-blue-50/60 font-semibold' : '' }}">Blog</a>
                             </div>
                         </div>
                     </div>
@@ -636,6 +637,20 @@
                     @foreach($menu_author as $page)
                         <a href="{{ route('author.page', $page->slug) }}" class="block py-1 hover:text-blue-700">{{ $page->title }}</a>
                     @endforeach
+                </div>
+            </div>
+            <div x-data="{ initiativesOpen: false }">
+                <button @click="initiativesOpen = !initiativesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                    <span>Initiatives</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': initiativesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="initiativesOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600">
+                    @foreach($menu_initiatives as $page)
+                        @if($page->slug !== 'blog' && $page->slug !== 'blogs')
+                            <a href="{{ route('initiatives.show', $page->slug) }}" class="block py-1 hover:text-blue-700">{{ $page->title }}</a>
+                        @endif
+                    @endforeach
+                    <a href="{{ route('blogs.index') }}" class="block py-1 hover:text-blue-700 font-bold text-blue-700">Blog</a>
                 </div>
             </div>
             <a href="{{ route('about.page', 'contact') }}" class="block font-bold text-gray-800">About</a>
