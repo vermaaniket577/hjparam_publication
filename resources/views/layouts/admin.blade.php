@@ -45,6 +45,7 @@
             }
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased bg-gray-50 dark:bg-gray-900 text-gray-900">
@@ -624,6 +625,7 @@
             </main>
         </div>
     </div>
+    @stack('scripts')
 </body>
 
 </html>

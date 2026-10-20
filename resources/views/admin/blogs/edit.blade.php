@@ -2,6 +2,44 @@
 @section('title', 'Edit Blog: ' . $blog->title)
 @section('breadcrumb', 'Edit Blog')
 
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet" />
+<style>
+    .ql-toolbar.ql-snow {
+        border-top-left-radius: 0.75rem;
+        border-top-right-radius: 0.75rem;
+        background-color: #f8fafc;
+        border-color: #e2e8f0;
+    }
+    .ql-container.ql-snow {
+        border-bottom-left-radius: 0.75rem;
+        border-bottom-right-radius: 0.75rem;
+        border-color: #e2e8f0;
+        font-family: inherit;
+        font-size: 0.95rem;
+        min-height: 420px;
+        background: #ffffff;
+    }
+    .ql-editor {
+        min-height: 420px;
+        line-height: 1.8;
+    }
+    .ql-editor table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1rem 0;
+    }
+    .ql-editor th, .ql-editor td {
+        border: 1px solid #cbd5e1;
+        padding: 0.5rem 0.75rem;
+    }
+    .ql-editor th {
+        background-color: #f1f5f9;
+        font-weight: 700;
+    }
+</style>
+@endpush
+
 @section('content')
     <div class="mb-6">
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -92,49 +130,53 @@
                 </div>
 
                 <!-- Rich Content Card -->
-                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs" x-data="{ mode: 'write' }">
-                    <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3 mb-4">
-                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
-                            Article Content (HTML / Text) <span class="text-rose-500">*</span>
-                        </label>
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl border border-gray-200 dark:border-gray-700 shadow-xs space-y-4"
+                     x-data="{ mode: 'visual' }">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-gray-100 dark:border-gray-700 pb-3 mb-2">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase tracking-wider">
+                                Article Body Content <span class="text-rose-500">*</span>
+                            </label>
+                            <span class="text-[11px] text-gray-500">Pasting from Word/Google Docs automatically preserves tables, bold, and lists</span>
+                        </div>
                         <div class="flex items-center bg-gray-100 dark:bg-gray-700 p-1 rounded-xl text-xs font-semibold">
-                            <button type="button" @click="mode = 'write'"
-                                :class="mode === 'write' ? 'bg-white dark:bg-gray-800 shadow-xs text-blue-600' : 'text-gray-500'"
-                                class="px-3 py-1 rounded-lg transition">
-                                Editor
+                            <button type="button" @click="mode = 'visual'; syncTextareaToQuill();"
+                                :class="mode === 'visual' ? 'bg-white dark:bg-gray-800 shadow-xs text-blue-600 font-bold' : 'text-gray-500'"
+                                class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                <span>Rich Editor (Word Paste)</span>
+                            </button>
+                            <button type="button" @click="mode = 'code'; syncQuillToTextarea();"
+                                :class="mode === 'code' ? 'bg-white dark:bg-gray-800 shadow-xs text-blue-600 font-bold' : 'text-gray-500'"
+                                class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                                <span>HTML Code</span>
                             </button>
                             <button type="button" @click="mode = 'preview'; updatePreview();"
-                                :class="mode === 'preview' ? 'bg-white dark:bg-gray-800 shadow-xs text-blue-600' : 'text-gray-500'"
-                                class="px-3 py-1 rounded-lg transition">
-                                Live Preview
+                                :class="mode === 'preview' ? 'bg-white dark:bg-gray-800 shadow-xs text-blue-600 font-bold' : 'text-gray-500'"
+                                class="px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                <span>Live Preview</span>
                             </button>
                         </div>
                     </div>
 
-                    <!-- Toolbar Helpers -->
-                    <div x-show="mode === 'write'" class="flex flex-wrap items-center gap-1.5 p-2 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl mb-3 text-xs">
-                        <button type="button" onclick="wrapText('<strong>', '</strong>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100 font-bold" title="Bold">B</button>
-                        <button type="button" onclick="wrapText('<em>', '</em>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100 italic" title="Italic">I</button>
-                        <div class="h-4 w-px bg-gray-300 mx-1"></div>
-                        <button type="button" onclick="wrapText('<h2>', '</h2>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100 font-bold" title="Heading 2">H2</button>
-                        <button type="button" onclick="wrapText('<h3>', '</h3>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100 font-bold" title="Heading 3">H3</button>
-                        <button type="button" onclick="wrapText('<p>', '</p>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100" title="Paragraph">&para;</button>
-                        <div class="h-4 w-px bg-gray-300 mx-1"></div>
-                        <button type="button" onclick="wrapText('<blockquote>', '</blockquote>')" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100" title="Quote">&ldquo; Quote</button>
-                        <button type="button" onclick="insertList()" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100" title="Bulleted List">&bull; List</button>
-                        <button type="button" onclick="insertLink()" class="px-2 py-1 bg-white dark:bg-gray-800 rounded border hover:bg-gray-100" title="Link">&infin; Link</button>
+                    <!-- Quill Visual Rich Editor -->
+                    <div x-show="mode === 'visual'" class="space-y-1">
+                        <div id="quill-editor"></div>
                     </div>
 
-                    <!-- Content Textarea -->
-                    <div x-show="mode === 'write'">
-                        <textarea id="content" name="content" rows="18" required
-                            class="w-full font-mono text-sm px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none">{{ old('content', $blog->content) }}</textarea>
+                    <!-- HTML Code Textarea -->
+                    <div x-show="mode === 'code'" class="space-y-1">
+                        <textarea id="content" name="content" rows="20" required
+                            placeholder="Write or paste HTML code here. All HTML tags (h2, p, table, ul, ol, blockquote) are fully supported."
+                            class="w-full font-mono text-xs px-4 py-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:outline-none leading-relaxed">{{ old('content', $blog->content) }}</textarea>
                     </div>
 
                     <!-- Live Preview Box -->
                     <div x-show="mode === 'preview'" class="p-6 bg-slate-50 dark:bg-gray-900 rounded-xl min-h-[400px] border border-gray-200 dark:border-gray-700">
-                        <div id="previewContent" class="prose prose-slate max-w-none text-slate-800 dark:text-gray-200">
-                            <!-- Injected by updatePreview() -->
+                        <div id="previewContent" class="blog-content max-w-none text-slate-800 dark:text-gray-200">
+                            <!-- Preview injected here -->
                         </div>
                     </div>
                 </div>
@@ -360,10 +402,57 @@
             }
         }
 
+        // Initialize Quill Rich Text Editor
+        let quill = null;
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof Quill !== 'undefined' && document.getElementById('quill-editor')) {
+                quill = new Quill('#quill-editor', {
+                    theme: 'snow',
+                    placeholder: 'Write or paste your article here. You can paste directly from Word or Google Docs...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['link', 'blockquote', 'code-block'],
+                            [{ 'align': [] }],
+                            ['clean']
+                        ]
+                    }
+                });
+
+                const textarea = document.getElementById('content');
+                if (textarea.value) {
+                    quill.root.innerHTML = textarea.value;
+                }
+
+                quill.on('text-change', function() {
+                    textarea.value = quill.root.innerHTML;
+                });
+            }
+        });
+
+        function syncQuillToTextarea() {
+            if (quill) {
+                document.getElementById('content').value = quill.root.innerHTML;
+            }
+        }
+
+        function syncTextareaToQuill() {
+            if (quill) {
+                quill.root.innerHTML = document.getElementById('content').value;
+            }
+        }
+
         function updatePreview() {
+            syncQuillToTextarea();
             const content = document.getElementById('content').value;
             document.getElementById('previewContent').innerHTML = content || '<p class="text-gray-400 italic">No content written yet.</p>';
         }
+
+        document.getElementById('blogForm').addEventListener('submit', function() {
+            syncQuillToTextarea();
+        });
 
         function previewUploadedImage(input) {
             if (input.files && input.files[0]) {
@@ -391,4 +480,5 @@
             }
         }
     </script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
 @endsection

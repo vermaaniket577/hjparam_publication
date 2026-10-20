@@ -35,6 +35,7 @@
             scrollbar-color: #cbd5e1 #f8fafc;
         }
     </style>
+    @stack('styles')
 </head>
 
 <body class="font-sans antialiased text-gray-700 bg-white flex flex-col min-h-screen">

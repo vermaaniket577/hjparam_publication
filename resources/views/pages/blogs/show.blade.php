@@ -2,6 +2,176 @@
 @section('title', $blog->title . ' | HJPARAM Blog')
 @section('meta_description', $blog->summary ?: Str::limit(strip_tags($blog->content), 160))
 
+@push('styles')
+<style>
+    /* Academic Blog Rich Content Typography */
+    .blog-content {
+        color: #334155;
+        font-size: 1.0625rem;
+        line-height: 1.85;
+    }
+    .blog-content h1 {
+        font-size: 2.15rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-top: 2.5rem;
+        margin-bottom: 1.25rem;
+        line-height: 1.25;
+        font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    }
+    .blog-content h2 {
+        font-size: 1.625rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-top: 2.75rem;
+        margin-bottom: 1.15rem;
+        line-height: 1.35;
+        font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+        border-bottom: 2px solid #e2e8f0;
+        padding-bottom: 0.5rem;
+    }
+    .blog-content h3 {
+        font-size: 1.28rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-top: 2rem;
+        margin-bottom: 0.75rem;
+        line-height: 1.4;
+    }
+    .blog-content h4 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: #334155;
+        margin-top: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+    .blog-content p {
+        margin-top: 1.15rem;
+        margin-bottom: 1.15rem;
+        line-height: 1.85;
+    }
+    .blog-content ul {
+        list-style-type: disc !important;
+        margin-top: 1.15rem !important;
+        margin-bottom: 1.25rem !important;
+        padding-left: 1.75rem !important;
+    }
+    .blog-content ul li {
+        list-style-type: disc !important;
+        margin-top: 0.5rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.75;
+        padding-left: 0.25rem;
+    }
+    .blog-content ul ul {
+        list-style-type: circle !important;
+        margin-top: 0.35rem !important;
+        margin-bottom: 0.35rem !important;
+        padding-left: 1.5rem !important;
+    }
+    .blog-content ul ul li {
+        list-style-type: circle !important;
+    }
+    .blog-content ol {
+        list-style-type: decimal !important;
+        margin-top: 1.15rem !important;
+        margin-bottom: 1.25rem !important;
+        padding-left: 1.75rem !important;
+    }
+    .blog-content ol li {
+        list-style-type: decimal !important;
+        margin-top: 0.65rem;
+        margin-bottom: 0.65rem;
+        line-height: 1.75;
+        padding-left: 0.25rem;
+    }
+    .blog-content ol ol {
+        list-style-type: lower-alpha !important;
+        margin-top: 0.35rem !important;
+        margin-bottom: 0.35rem !important;
+        padding-left: 1.5rem !important;
+    }
+    .blog-content ol ol li {
+        list-style-type: lower-alpha !important;
+    }
+    .blog-content strong, .blog-content b {
+        font-weight: 700;
+        color: #0f172a;
+    }
+    .blog-content em, .blog-content i {
+        font-style: italic;
+    }
+    .blog-content a {
+        color: #2563eb;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+        font-weight: 600;
+        transition: color 0.15s ease;
+    }
+    .blog-content a:hover {
+        color: #1d4ed8;
+    }
+    .blog-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1.75rem;
+        margin-bottom: 1.75rem;
+        font-size: 0.95rem;
+        line-height: 1.6;
+        border: 1px solid #cbd5e1;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    .blog-content th {
+        background-color: #f1f5f9;
+        color: #0f172a;
+        font-weight: 700;
+        padding: 0.85rem 1.15rem;
+        border: 1px solid #cbd5e1;
+        text-align: left;
+    }
+    .blog-content td {
+        padding: 0.85rem 1.15rem;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        vertical-align: top;
+    }
+    .blog-content tbody tr:nth-child(even) {
+        background-color: #f8fafc;
+    }
+    .blog-content tbody tr:hover {
+        background-color: #f1f5f9;
+    }
+    .blog-content blockquote {
+        border-left: 4px solid #2563eb;
+        background-color: #f8fafc;
+        padding: 1rem 1.5rem;
+        margin: 1.5rem 0;
+        border-radius: 0 0.75rem 0.75rem 0;
+        font-style: italic;
+        color: #475569;
+    }
+    .blog-content hr {
+        border: 0;
+        border-top: 1px solid #e2e8f0;
+        margin: 2.5rem 0;
+    }
+    .blog-content .table-responsive {
+        width: 100%;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+    .blog-content .table-responsive table {
+        margin: 0;
+        border: none;
+    }
+</style>
+@endpush
+
 @section('content')
     <article class="bg-white min-h-screen py-12 lg:py-16">
         <div class="container mx-auto px-4 sm:px-6 max-w-4xl">
@@ -128,8 +298,12 @@
             @endif
 
             <!-- Main Article Body -->
-            <div class="prose prose-slate prose-lg max-w-none mb-12 text-slate-800 leading-relaxed font-normal">
-                {!! $blog->content !!}
+            <div class="blog-content prose prose-slate prose-lg max-w-none mb-12 text-slate-800 leading-relaxed font-normal">
+                @if(strip_tags($blog->content) === $blog->content)
+                    {!! nl2br(e($blog->content)) !!}
+                @else
+                    {!! $blog->content !!}
+                @endif
             </div>
 
             <!-- Tags -->
