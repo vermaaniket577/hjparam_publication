@@ -85,19 +85,26 @@
                     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-md overflow-hidden hover:shadow-xl transition-all duration-300">
                         <div class="grid grid-cols-1 lg:grid-cols-12">
                             <!-- Image Column -->
-                            <div class="lg:col-span-7 relative h-72 sm:h-96 lg:h-auto overflow-hidden bg-slate-100">
+                            <div class="lg:col-span-7 relative overflow-hidden bg-slate-900/5 flex items-center justify-center min-h-[280px] sm:min-h-[380px] lg:min-h-[420px]">
                                 @if($featuredBlog->image_url)
-                                    <img src="{{ $featuredBlog->image_url }}" alt="{{ $featuredBlog->title }}"
-                                        class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                                    <!-- Ambient subtle blurred backdrop to seamlessly fill any aspect-ratio differences -->
+                                    <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-25 scale-110 pointer-events-none"
+                                         style="background-image: url('{{ $featuredBlog->image_url }}');"></div>
+                                    <div class="absolute inset-0 bg-slate-900/5 pointer-events-none"></div>
+
+                                    <a href="{{ route('blogs.show', $featuredBlog->slug) }}" class="relative z-10 w-full h-full flex items-center justify-center">
+                                        <img src="{{ $featuredBlog->image_url }}" alt="{{ $featuredBlog->title }}"
+                                            class="w-full h-full max-h-[500px] object-contain group-hover:scale-[1.02] transition-transform duration-500">
+                                    </a>
                                 @else
-                                    <div class="w-full h-full bg-gradient-to-br from-blue-700 via-indigo-700 to-sky-600 flex items-center justify-center p-8 text-white">
+                                    <div class="w-full h-full min-h-[300px] bg-gradient-to-br from-blue-700 via-indigo-700 to-sky-600 flex items-center justify-center p-8 text-white">
                                         <div class="text-center">
                                             <span class="text-4xl font-serif font-bold opacity-30">HJPARAM</span>
                                             <p class="text-sm tracking-widest uppercase font-semibold mt-2 opacity-80">Featured Insight</p>
                                         </div>
                                     </div>
                                 @endif
-                                <div class="absolute top-4 left-4">
+                                <div class="absolute top-4 left-4 z-20 pointer-events-none">
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-extrabold uppercase tracking-wider bg-white/95 text-blue-700 shadow-md backdrop-blur-xs">
                                         <span class="w-2 h-2 rounded-full bg-blue-600"></span>
                                         Featured Story

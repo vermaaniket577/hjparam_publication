@@ -120,8 +120,10 @@
 
             <!-- Featured Image (if present) -->
             @if($blog->image_url)
-                <div class="mb-12 rounded-3xl overflow-hidden shadow-lg border border-slate-200">
-                    <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="w-full max-h-[500px] object-cover">
+                <div class="mb-12 rounded-3xl overflow-hidden shadow-lg border border-slate-200 bg-slate-900/5 relative flex items-center justify-center">
+                    <div class="absolute inset-0 bg-cover bg-center blur-2xl opacity-20 scale-110 pointer-events-none"
+                         style="background-image: url('{{ $blog->image_url }}');"></div>
+                    <img src="{{ $blog->image_url }}" alt="{{ $blog->title }}" class="relative z-10 w-full h-auto max-h-[620px] object-contain">
                 </div>
             @endif
 
