@@ -17,6 +17,10 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        html, body {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
         .custom-scrollbar::-webkit-scrollbar {
             width: 5px;
         }
@@ -43,16 +47,16 @@
     @include('components.web-loader')
 
     <!-- Top Academic Ecosystem Bar -->
-    <div class="text-white relative z-[60] transition-all duration-300 transform"
+    <div class="text-white relative z-[60] transition-all duration-300 transform w-full overflow-hidden"
         style="background-color: #0b132b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 0; min-height: 40px;"
         x-data="{ visible: true }" x-show="visible"
         x-init="window.addEventListener('scroll', () => { visible = window.scrollY < 100 })"
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-y-full opacity-0"
         x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="-translate-y-full opacity-0">
-        <div class="container mx-auto px-4 lg:px-8 flex flex-wrap justify-between items-center gap-2" style="max-width: 1400px;">
-            <!-- Left Ecosystem Links -->
-            <div class="flex items-center overflow-x-auto py-0.5 no-scrollbar" style="display: flex; align-items: center; gap: 20px; flex-wrap: nowrap; -webkit-overflow-scrolling: touch;">
+        <div class="container mx-auto px-4 lg:px-8 flex justify-between items-center gap-2 max-w-[1400px]">
+            <!-- Left Ecosystem Links (Horizontal Scroll on Mobile without breaking page width) -->
+            <div class="flex items-center overflow-x-auto py-0.5 no-scrollbar flex-nowrap max-w-[65%] sm:max-w-none" style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap; -webkit-overflow-scrolling: touch;">
                 <a href="{{ route('sciforum.index') }}"
                     style="font-size: 11px; font-weight: 800; letter-spacing: 0.05em; color: #ffffff; text-transform: uppercase; text-decoration: none; white-space: nowrap;"
                     class="hover:text-blue-400 transition-colors">Sciforum</a>
@@ -288,18 +292,16 @@
         :class="{ 'shadow-md': scrolled }"
         x-data="{ open: false, activeDropdown: null, searchOpen: false, advancedSearchOpen: false, scrolled: false }"
         x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 })">
-        <div class="container mx-auto px-4 lg:px-8" style="max-width: 1400px;">
+        <div class="container mx-auto px-4 lg:px-8 max-w-[1400px]">
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
                 <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex items-center gap-3 group min-w-max" style="text-decoration: none;">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 sm:gap-3 group shrink-0" style="text-decoration: none;">
                     <img src="{{ asset('images/logo.png') }}" alt="HJPARAM Logo"
-                        style="height: 48px; max-height: 48px; width: auto; object-fit: contain; flex-shrink: 0;"
-                        class="transition-all duration-300">
+                        class="h-9 sm:h-12 w-auto object-contain shrink-0 transition-all duration-300">
                     <div class="flex flex-col justify-center">
-                        <span style="font-size: 24px; font-weight: 900; font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif; color: #0f172a; line-height: 1; letter-spacing: -0.02em;"
-                            class="group-hover:text-blue-900 transition">HJPARAM</span>
-                        <span style="font-size: 8.5px; font-weight: 700; color: #64748b; letter-spacing: 0.12em; text-transform: uppercase; margin-top: 3px; white-space: nowrap;">Academic Open Access Publishing</span>
+                        <span class="text-lg sm:text-2xl font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none">HJPARAM</span>
+                        <span class="text-[7.5px] sm:text-[8.5px] font-bold text-slate-500 tracking-wider uppercase mt-0.5 whitespace-nowrap">Academic Open Access Publishing</span>
                     </div>
                 </a>
 
@@ -631,26 +633,47 @@
                 </nav>
 
                 <!-- Mobile Menu Button -->
-                <button @click="open = !open" class="lg:hidden text-gray-500 hover:text-blue-800 focus:outline-none">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                <button @click="open = !open" class="lg:hidden p-2 text-slate-700 hover:text-blue-800 focus:outline-none rounded-lg hover:bg-slate-100 transition shrink-0" aria-label="Toggle Navigation">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M4 6h16M4 12h16M4 18h16"></path>
+                        <path x-show="open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                            d="M6 18L18 6M6 6l12 12" x-cloak></path>
                     </svg>
                 </button>
             </div>
         </div>
 
-        <!-- Mobile Navigation -->
-        <div x-show="open" class="lg:hidden bg-white border-t border-gray-200 shadow-inner p-4 space-y-4">
+        <!-- Mobile Navigation Drawer -->
+        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
+            x-transition:enter-start="opacity-0 -translate-y-2"
+            x-transition:enter-end="opacity-100 translate-y-0"
+            x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 translate-y-0"
+            x-transition:leave-end="opacity-0 -translate-y-2"
+            class="lg:hidden bg-white border-t border-slate-200 shadow-xl max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4">
+            
+            <!-- Quick Action Buttons -->
             <div class="grid grid-cols-2 gap-3 pb-3 border-b border-gray-100">
-                <a href="{{ route('author.submit') }}" class="py-2.5 px-3 bg-blue-600 text-white rounded-xl text-center font-bold text-xs shadow-md">
-                    Submit Manuscript
+                <a href="{{ route('author.submit') }}" class="py-2.5 px-3 bg-gradient-to-r from-blue-600 to-emerald-600 text-white rounded-xl text-center font-bold text-xs shadow-md">
+                    + Submit
                 </a>
-                <a href="{{ route('payments.create') }}" class="py-2.5 px-3 bg-slate-100 text-slate-800 rounded-xl text-center font-bold text-xs border border-slate-200">
+                <a href="{{ route('payments.create') }}" class="py-2.5 px-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl text-center font-bold text-xs shadow-md">
                     Pay Fees
                 </a>
             </div>
-            <a href="{{ route('journals.index') }}" class="block font-bold text-gray-800">Journals</a>
+
+            <!-- Mobile Search Bar -->
+            <form action="{{ route('search') }}" method="GET" class="relative">
+                <input type="text" name="q" placeholder="Search journals, articles, authors..."
+                    class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <svg class="w-4 h-4 text-slate-400 absolute left-3 top-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </form>
+
+            <a href="{{ route('journals.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Journals</a>
+
             <div x-data="{ policiesOpen: false }">
                 <button @click="policiesOpen = !policiesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
                     <span>Journal Policies</span>
@@ -667,8 +690,10 @@
                     <a href="{{ route('policies.index') }}" class="block py-1 font-bold text-blue-700">All Policies Overview &rarr;</a>
                 </div>
             </div>
-            <a href="{{ route('topics.index') }}" class="block font-bold text-gray-800">Topics</a>
-            <a href="{{ route('conferences.index') }}" class="block font-bold text-gray-800">Conferences</a>
+
+            <a href="{{ route('topics.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Topics</a>
+            <a href="{{ route('conferences.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Conferences</a>
+
             <div x-data="{ authorsOpen: false }">
                 <button @click="authorsOpen = !authorsOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
                     <span>Author Services</span>
@@ -690,6 +715,7 @@
                     @endforeach
                 </div>
             </div>
+
             <div x-data="{ initiativesOpen: false }">
                 <button @click="initiativesOpen = !initiativesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
                     <span>Initiatives</span>
@@ -704,7 +730,20 @@
                     <a href="{{ route('blogs.index') }}" class="block py-1 hover:text-blue-700 font-bold text-blue-700">Blog</a>
                 </div>
             </div>
-            <a href="{{ route('about.page', 'contact') }}" class="block font-bold text-gray-800">About</a>
+
+            <!-- About Section on Mobile -->
+            <div x-data="{ aboutOpen: false }">
+                <button @click="aboutOpen = !aboutOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                    <span>About</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': aboutOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="aboutOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600">
+                    @foreach($menu_about as $page)
+                        <a href="{{ route('about.page', $page->slug) }}" class="block py-1 hover:text-blue-700">{{ $page->title }}</a>
+                    @endforeach
+                    <a href="{{ route('about.page', 'contact-information') }}" class="block py-1 hover:text-blue-700 font-medium">Contact Information</a>
+                </div>
+            </div>
         </div>
     </header>
 

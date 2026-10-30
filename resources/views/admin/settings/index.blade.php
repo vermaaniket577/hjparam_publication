@@ -109,7 +109,7 @@
 
             <!-- Contact Page Details -->
             <div class="bg-white rounded-lg shadow-sm border border-gray-100 overflow-hidden mb-8">
-                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+                <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
                     <div class="flex items-center gap-3">
                         <div class="p-2 bg-emerald-100 text-emerald-600 rounded-lg">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -120,27 +120,64 @@
                         </div>
                         <div>
                             <h3 class="text-lg font-medium text-gray-900">Contact & Support Details</h3>
-                            <p class="text-sm text-gray-500">Manage information displayed on the contact page.</p>
+                            <p class="text-sm text-gray-500">Manage information displayed on the /about/contact-information page.</p>
                         </div>
                     </div>
+                    <a href="{{ route('about.page', 'contact-information') }}" target="_blank" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1">
+                        View Page
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                    </a>
                 </div>
                 <div class="p-6 space-y-6">
+                    <!-- Page Header Options -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                            <label for="contact_badge" class="block text-sm font-medium text-gray-700">Page Badge / Pill</label>
+                            <input type="text" name="contact_badge" id="contact_badge"
+                                value="{{ $settings['contact_badge'] ?? 'Support Center' }}"
+                                placeholder="Support Center"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        </div>
+                        <div>
+                            <label for="contact_subtitle" class="block text-sm font-medium text-gray-700">Header Subtitle</label>
+                            <input type="text" name="contact_subtitle" id="contact_subtitle"
+                                value="{{ $settings['contact_subtitle'] ?? 'Have questions about submission, formatting, or peer review? Our dedicated support team is here to help.' }}"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                        </div>
+                    </div>
+
+                    <hr class="border-gray-100">
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Editorial -->
                         <div class="space-y-4">
                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Editorial Office</h4>
                             <div>
+                                <label for="editorial_title" class="block text-sm font-medium text-gray-700">Office Title</label>
+                                <input type="text" name="editorial_title" id="editorial_title"
+                                    value="{{ $settings['editorial_title'] ?? 'Editorial Office' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="editorial_description" class="block text-sm font-medium text-gray-700">Short Description</label>
+                                <input type="text" name="editorial_description" id="editorial_description"
+                                    value="{{ $settings['editorial_description'] ?? 'For questions related to article status, reviewer comments, or editorial policies.' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            </div>
+                            <div>
                                 <label for="editorial_email" class="block text-sm font-medium text-gray-700">Email
                                     Address</label>
                                 <input type="email" name="editorial_email" id="editorial_email"
-                                    value="{{ $settings['editorial_email'] ?? '' }}"
+                                    value="{{ $settings['editorial_email'] ?? 'editorial@hjparam.com' }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             </div>
                             <div>
                                 <label for="editorial_response_time"
                                     class="block text-sm font-medium text-gray-700">Response Description</label>
                                 <input type="text" name="editorial_response_time" id="editorial_response_time"
-                                    value="{{ $settings['editorial_response_time'] ?? '' }}"
+                                    value="{{ $settings['editorial_response_time'] ?? 'Response time: Within 24-48 hours' }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             </div>
                         </div>
@@ -149,17 +186,29 @@
                         <div class="space-y-4">
                             <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest">Technical Support</h4>
                             <div>
+                                <label for="support_title" class="block text-sm font-medium text-gray-700">Support Title</label>
+                                <input type="text" name="support_title" id="support_title"
+                                    value="{{ $settings['support_title'] ?? 'Technical Support' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="support_description" class="block text-sm font-medium text-gray-700">Short Description</label>
+                                <input type="text" name="support_description" id="support_description"
+                                    value="{{ $settings['support_description'] ?? 'For issues regarding the submission portal, account login, or digital archiving.' }}"
+                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
+                            </div>
+                            <div>
                                 <label for="support_email" class="block text-sm font-medium text-gray-700">Email
                                     Address</label>
                                 <input type="email" name="support_email" id="support_email"
-                                    value="{{ $settings['support_email'] ?? '' }}"
+                                    value="{{ $settings['support_email'] ?? 'support@hjparam.com' }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             </div>
                             <div>
                                 <label for="support_hours" class="block text-sm font-medium text-gray-700">Available
                                     Hours</label>
                                 <input type="text" name="support_hours" id="support_hours"
-                                    value="{{ $settings['support_hours'] ?? '' }}"
+                                    value="{{ $settings['support_hours'] ?? 'Available Mon-Fri, 9AM-5PM GMT' }}"
                                     class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                             </div>
                         </div>
@@ -168,10 +217,14 @@
                     <hr class="border-gray-100">
 
                     <div>
+                        <label for="office_title" class="block text-sm font-medium text-gray-700">Headquarters Title</label>
+                        <input type="text" name="office_title" id="office_title"
+                            value="{{ $settings['office_title'] ?? 'Global Headquarters' }}"
+                            class="mt-1 mb-3 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">
                         <label for="office_address" class="block text-sm font-medium text-gray-700">Global Headquarters
                             Address</label>
                         <textarea name="office_address" id="office_address" rows="3"
-                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ $settings['office_address'] ?? '' }}</textarea>
+                            class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm">{{ $settings['office_address'] ?? "HJPARAM Publication Services\n124 Academic Way, Tech District\nInnovation Park, UK 50493" }}</textarea>
                     </div>
                 </div>
             </div>

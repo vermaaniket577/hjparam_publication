@@ -74,6 +74,15 @@ class PageController extends Controller
             ));
         }
 
+        // Special handling for dynamic Contact Information page
+        if ($category === 'about' && in_array($slug, ['contact-information', 'contact'])) {
+            $page = \App\Models\Page::where('category', 'about')
+                ->whereIn('slug', ['contact-information', 'contact'])
+                ->first();
+
+            return view('pages.about.contact', compact('page'));
+        }
+
         // Special handling for About Us static page
         if ($category === 'about' && in_array($slug, ['about', 'about-us', 'about-hjparam', ''])) {
             if (view()->exists('pages.about.about')) {
