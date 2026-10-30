@@ -296,12 +296,12 @@
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
                 <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex items-center gap-2 sm:gap-3 group shrink-0" style="text-decoration: none;">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 group min-w-0" style="text-decoration: none;">
                     <img src="{{ asset('images/logo.png') }}" alt="HJPARAM Logo"
-                        class="h-9 sm:h-12 w-auto object-contain shrink-0 transition-all duration-300">
-                    <div class="flex flex-col justify-center">
-                        <span class="text-lg sm:text-2xl font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none">HJPARAM</span>
-                        <span class="text-[7.5px] sm:text-[8.5px] font-bold text-slate-500 tracking-wider uppercase mt-0.5 whitespace-nowrap">Academic Open Access Publishing</span>
+                        class="h-8 sm:h-11 w-auto object-contain shrink-0 transition-all duration-300">
+                    <div class="flex flex-col justify-center min-w-0">
+                        <span class="text-base sm:text-2xl font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none truncate">HJPARAM</span>
+                        <span class="text-[6.5px] sm:text-[8.5px] font-bold text-slate-500 tracking-wider uppercase mt-0.5 truncate">Academic Open Access Publishing</span>
                     </div>
                 </a>
 
@@ -633,7 +633,10 @@
                 </nav>
 
                 <!-- Mobile Menu Button -->
-                <button @click="open = !open" class="lg:hidden p-2 text-slate-700 hover:text-blue-800 focus:outline-none rounded-lg hover:bg-slate-100 transition shrink-0" aria-label="Toggle Navigation">
+                <button type="button" @click="open = !open"
+                    class="lg:hidden flex items-center justify-center p-2 rounded-xl border border-slate-200 bg-slate-50 text-slate-800 hover:bg-slate-100 hover:text-blue-900 focus:outline-none shrink-0 z-20"
+                    style="min-width: 44px; min-height: 44px;"
+                    aria-label="Toggle Navigation">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path x-show="!open" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                             d="M4 6h16M4 12h16M4 18h16"></path>
