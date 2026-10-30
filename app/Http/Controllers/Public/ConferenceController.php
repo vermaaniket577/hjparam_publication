@@ -9,9 +9,12 @@ use App\Models\Topic;
 use App\Models\ConferenceEnquiry;
 use App\Models\Submission;
 use App\Models\User;
+use App\Mail\SubmissionStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class ConferenceController extends Controller
@@ -204,6 +207,17 @@ class ConferenceController extends Controller
             'binary_content' => $binaryData,
         ]);
 
+        // Send submission confirmation email to author
+        try {
+            $userEmail = $user->email;
+            if ($userEmail && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+                $submission->loadMissing(['user', 'conference']);
+                Mail::to($userEmail)->send(new SubmissionStatusNotification($submission, 'created'));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send conference manuscript submission notification email: ' . $e->getMessage());
+        }
+
         return redirect()->route('conferences.show', $conference->slug)->with('success', 'Manuscript submitted successfully! Your submission ID is #SUB-' . str_pad($submission->id, 5, '0', STR_PAD_LEFT) . '. You can track review progress in your dashboard.');
     }
 
@@ -273,6 +287,17 @@ class ConferenceController extends Controller
             'file_size' => $file->getSize(),
             'binary_content' => $binaryData,
         ]);
+
+        // Send revision received notification email to author
+        try {
+            $userEmail = Auth::user()->email ?? ($submission->user->email ?? null);
+            if ($userEmail && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+                $submission->loadMissing(['user', 'conference', 'journal']);
+                Mail::to($userEmail)->send(new SubmissionStatusNotification($submission, 'resubmitted'));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send resubmission notification email: ' . $e->getMessage());
+        }
 
         return redirect()->route('dashboard')->with('success', 'Revised manuscript re-submitted successfully for final editorial review.');
     }

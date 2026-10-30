@@ -52,6 +52,24 @@ class SubmissionStatusNotification extends Mailable
         $this->actionText = 'View Submission Details';
 
         switch ($this->updateType) {
+            case 'created':
+                $this->subjectLine = "[HJPARAM] Manuscript Submission Received - #SUB-{$subId}";
+                $this->headline = 'Manuscript Successfully Received';
+                $this->badgeText = 'Submitted';
+                $this->badgeColor = '#2563eb'; // Blue
+                $this->messageBody = 'Thank you for submitting your research work to HJPARAM. Your manuscript has been received and entered into our initial screening workflow. You will receive email notifications as it progresses through each stage.';
+                $this->actionText = 'View Submission in Author Portal';
+                break;
+
+            case 'resubmitted':
+                $this->subjectLine = "[HJPARAM] Revised Manuscript Received - #SUB-{$subId}";
+                $this->headline = 'Revised Manuscript Successfully Received';
+                $this->badgeText = 'Revision Uploaded';
+                $this->badgeColor = '#d97706'; // Amber
+                $this->messageBody = 'We have received your revised manuscript and author rebuttal/response notes. The handling editor and reviewers have been notified to re-evaluate your revised work.';
+                $this->actionText = 'Track Revision Progress';
+                break;
+
             case 'decision':
                 $decision = $this->data['decision'] ?? $this->submission->status;
                 $this->remarks = $this->data['comments'] ?? $this->submission->revision_comments;

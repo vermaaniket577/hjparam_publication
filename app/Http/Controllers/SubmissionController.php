@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Journal;
 use App\Models\Submission;
+use App\Mail\SubmissionStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class SubmissionController extends Controller
 {
@@ -77,7 +80,7 @@ class SubmissionController extends Controller
             Auth::user()->update(['affiliation' => $request->institution]);
         }
 
-        Submission::create([
+        $submission = Submission::create([
             'user_id' => Auth::id(),
             'journal_id' => $request->journal_id,
             'title' => $request->title,
@@ -91,6 +94,17 @@ class SubmissionController extends Controller
             'binary_content' => $binaryData,
             'authors_data' => $authorsData,
         ]);
+
+        // Send submission confirmation email to author
+        try {
+            $userEmail = Auth::user()->email;
+            if ($userEmail && filter_var($userEmail, FILTER_VALIDATE_EMAIL)) {
+                $submission->loadMissing(['user', 'journal']);
+                Mail::to($userEmail)->send(new SubmissionStatusNotification($submission, 'created'));
+            }
+        } catch (\Throwable $e) {
+            Log::warning('Failed to send manuscript submission notification email: ' . $e->getMessage());
+        }
 
         return redirect()->route('dashboard')->with('success', 'Manuscript submitted successfully.');
     }
