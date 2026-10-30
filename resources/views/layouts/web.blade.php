@@ -10,6 +10,11 @@
     <!-- SEO & Open Graph Metadata -->
     @include('partials.og-metadata')
 
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
     <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-2772066538696984"
          crossorigin="anonymous"></script>
@@ -296,12 +301,14 @@
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
                 <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex items-center gap-2 group shrink-0" style="text-decoration: none;">
+                <a href="{{ route('home') }}" class="flex items-center gap-3 group shrink-0" style="text-decoration: none;">
                     <img src="{{ asset('images/logo.png') }}" alt="HJPARAM Logo"
-                        class="h-7 sm:h-9 w-auto object-contain shrink-0 transition-all duration-300">
-                    <div class="flex flex-col justify-center">
-                        <span class="text-base sm:text-lg font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none tracking-tight">HJPARAM</span>
-                        <span class="text-[5px] sm:text-[6.5px] font-semibold text-slate-500 tracking-[0.14em] uppercase mt-0.5 whitespace-nowrap">Academic Open Access Publishing</span>
+                        class="h-9 sm:h-11 w-auto object-contain shrink-0 transition-all duration-300">
+                    <div class="flex flex-col justify-center" style="font-family: 'Poppins', sans-serif;">
+                        <span class="text-xl sm:text-2xl font-extrabold text-slate-900 group-hover:text-blue-900 transition leading-none tracking-tight"
+                            style="font-family: 'Poppins', sans-serif; font-weight: 800; letter-spacing: -0.02em;">HJPARAM</span>
+                        <span class="text-[8px] sm:text-[9.5px] font-semibold text-slate-500 tracking-[0.14em] uppercase mt-1 whitespace-nowrap"
+                            style="font-family: 'Poppins', sans-serif; font-weight: 600;">Academic Open Access Publishing</span>
                     </div>
                 </a>
 
