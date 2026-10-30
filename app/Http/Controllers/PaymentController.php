@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\PaymentSetting;
 use App\Models\PaymentSubmission;
+use App\Mail\PaymentReceiptMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
 class PaymentController extends Controller
@@ -61,6 +63,13 @@ class PaymentController extends Controller
             'screenshot_original_name' => $file->getClientOriginalName(),
             'status' => PaymentSubmission::STATUS_PENDING,
         ]);
+
+        // Send payment receipt acknowledgment email to user
+        try {
+            Mail::to($payment->email)->send(new PaymentReceiptMail($payment));
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send payment submission receipt email: ' . $e->getMessage());
+        }
 
         return redirect()
             ->route('payments.receipt', $payment->id)
@@ -223,6 +232,13 @@ class PaymentController extends Controller
             'reviewed_at' => now(),
             'admin_note' => 'Automatically verified via ' . ucfirst($setting->gateway_provider) . ' online payment gateway.',
         ]);
+
+        // Send payment receipt confirmation email to user
+        try {
+            Mail::to($payment->email)->send(new PaymentReceiptMail($payment));
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send verified online payment receipt email: ' . $e->getMessage());
+        }
 
         return response()->json([
             'success' => true,

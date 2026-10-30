@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\PaymentSetting;
 use App\Models\PaymentSubmission;
+use App\Mail\PaymentReceiptMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -124,6 +126,13 @@ class PaymentController extends Controller
             'reviewed_at' => now(),
             'reviewed_by' => auth()->id(),
         ]);
+
+        // Send updated status/receipt email to user when approved or rejected by admin
+        try {
+            Mail::to($payment->email)->send(new PaymentReceiptMail($payment));
+        } catch (\Throwable $e) {
+            \Log::warning('Failed to send admin payment verification email: ' . $e->getMessage());
+        }
 
         return back()->with('success', 'Payment status updated successfully.');
     }
