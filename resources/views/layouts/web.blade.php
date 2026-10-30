@@ -54,7 +54,7 @@
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-y-full opacity-0"
         x-transition:enter-end="translate-y-0 opacity-100" x-transition:leave="transition ease-in duration-300"
         x-transition:leave-start="translate-y-0 opacity-100" x-transition:leave-end="-translate-y-full opacity-0">
-        <div class="container mx-auto px-4 lg:px-8 flex justify-between items-center gap-2 max-w-[1400px]">
+        <div class="w-full px-4 sm:px-6 lg:px-8 flex justify-between items-center gap-2">
             <!-- Left Ecosystem Links (Horizontal Scroll on Mobile without breaking page width) -->
             <div class="flex items-center overflow-x-auto py-0.5 no-scrollbar flex-nowrap max-w-[65%] sm:max-w-none" style="display: flex; align-items: center; gap: 16px; flex-wrap: nowrap; -webkit-overflow-scrolling: touch;">
                 <a href="{{ route('sciforum.index') }}"
@@ -292,7 +292,7 @@
         :class="{ 'shadow-md': scrolled }"
         x-data="{ open: false, activeDropdown: null, searchOpen: false, advancedSearchOpen: false, scrolled: false }"
         x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 })">
-        <div class="container mx-auto px-4 lg:px-8 max-w-[1400px]">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
                 <!-- Logo -->
@@ -308,14 +308,14 @@
                 <!-- Desktop Menu -->
                 <nav
                     class="hidden lg:flex items-center h-full"
-                    style="display: flex; align-items: center; gap: 16px; white-space: nowrap; margin-left: 16px;">
+                    style="display: flex; align-items: center; gap: 12px; white-space: nowrap; margin-left: 12px;">
 
                     <!-- Journals Dropdown -->
                     <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'journals'"
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'journals' }">
                             <span>Journals</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -348,7 +348,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'policies' }">
                             <span>Journal Policies</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,7 +383,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'topics' }">
                             <span>Topics</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -410,7 +410,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'conferences' }">
                             <span>Conferences</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -435,7 +435,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'authors' }">
                             <span>Author Services</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,7 +477,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'initiatives' }">
                             <span>Initiatives</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -505,7 +505,7 @@
                         @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
                         <button
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
-                            style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 4px; display: flex; align-items: center; gap: 4px;"
+                            style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'about' }">
                             <span>About</span>
                             <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -528,10 +528,10 @@
                     </div>
 
                     <!-- Action Buttons: Round Search + Pay Fee + Submit -->
-                    <div style="display: flex; align-items: center; gap: 10px; margin-left: 8px; flex-shrink: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-left: 6px; flex-shrink: 0;">
                         <!-- Round Dark Blue Search Button -->
                         <button @click="searchOpen = !searchOpen; $nextTick(() => { if (searchOpen && $refs.searchInput) $refs.searchInput.focus(); })"
-                            style="width: 38px; height: 38px; min-width: 38px; border-radius: 9999px; background-color: #1e293b; color: #ffffff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(30,41,59,0.25);"
+                            style="width: 36px; height: 36px; min-width: 36px; border-radius: 9999px; background-color: #1e293b; color: #ffffff; display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; flex-shrink: 0; box-shadow: 0 2px 8px rgba(30,41,59,0.25);"
                             class="hover:bg-blue-600 transition-all hover:scale-105"
                             title="Search">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -542,7 +542,7 @@
 
                         <!-- Orange / Amber Gradient Pay Fee Pill Button -->
                         <a href="{{ route('payments.create') }}"
-                            style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; padding: 8px 18px; border-radius: 9999px; font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);"
+                            style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: #ffffff; padding: 7px 15px; border-radius: 9999px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px rgba(234, 88, 12, 0.35);"
                             class="hover:opacity-95 hover:scale-105 transition-all">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                             <span>Pay Fee</span>
@@ -550,7 +550,7 @@
 
                         <!-- Emerald / Teal Gradient Submit Button -->
                         <a href="{{ route('author.submit') }}"
-                            style="background: linear-gradient(135deg, #0284c7 0%, #059669 100%); color: #ffffff; padding: 8px 20px; border-radius: 9999px; font-weight: 800; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);"
+                            style="background: linear-gradient(135deg, #0284c7 0%, #059669 100%); color: #ffffff; padding: 7px 16px; border-radius: 9999px; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; white-space: nowrap; flex-shrink: 0; box-shadow: 0 4px 12px rgba(5, 150, 105, 0.35);"
                             class="hover:opacity-95 hover:scale-105 transition-all">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M12 4v16m8-8H4"/></svg>
                             <span>Submit</span>
