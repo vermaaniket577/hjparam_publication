@@ -296,12 +296,12 @@
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
                 <!-- Logo -->
-                <a href="{{ route('home') }}" class="flex items-center gap-2.5 group shrink-0" style="text-decoration: none;">
+                <a href="{{ route('home') }}" class="flex items-center gap-2 group shrink-0" style="text-decoration: none;">
                     <img src="{{ asset('images/logo.png') }}" alt="HJPARAM Logo"
-                        class="h-8 sm:h-11 w-auto object-contain shrink-0 transition-all duration-300">
+                        class="h-7 sm:h-9 w-auto object-contain shrink-0 transition-all duration-300">
                     <div class="flex flex-col justify-center">
-                        <span class="text-lg sm:text-2xl font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none">HJPARAM</span>
-                        <span class="text-[5.5px] sm:text-[7.5px] font-bold text-slate-500 tracking-wider uppercase mt-1 whitespace-nowrap">Academic Open Access Publishing</span>
+                        <span class="text-base sm:text-lg font-serif font-black text-slate-900 group-hover:text-blue-900 transition leading-none tracking-tight">HJPARAM</span>
+                        <span class="text-[5px] sm:text-[6.5px] font-semibold text-slate-500 tracking-[0.14em] uppercase mt-0.5 whitespace-nowrap">Academic Open Access Publishing</span>
                     </div>
                 </a>
 
