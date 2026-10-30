@@ -53,13 +53,14 @@
     @include('components.web-loader')
 
     <div class="flex h-screen overflow-hidden" x-data="{ 
-        sidebarOpen: true, 
+        sidebarOpen: false, 
         sidebarHovered: false, 
-        isPinned: true,
+        isPinned: false,
         _hoverTimer: null,
         sidebarEnter() {
             clearTimeout(this._hoverTimer);
             this.sidebarHovered = true;
+            this.sidebarOpen = true;
         },
         sidebarLeave() {
             clearTimeout(this._hoverTimer);
@@ -68,7 +69,7 @@
                 if (!this.isPinned) {
                     this.sidebarOpen = false;
                 }
-            }, 250);
+            }, 300);
         },
         toggleSidebar() {
             if (this.sidebarOpen || this.sidebarHovered) {
@@ -97,8 +98,8 @@
             class="fixed inset-0 z-40 bg-gray-900 bg-opacity-50 lg:hidden" x-cloak></div>
 
         <!-- Left Edge Hover Trigger Zone (Desktop only) -->
-        <div class="fixed inset-y-0 left-0 w-6 hidden lg:block cursor-pointer"
-             style="z-index: 40;"
+        <div class="fixed inset-y-0 left-0 w-8 hidden lg:block cursor-pointer"
+             style="z-index: 45;"
              x-show="!sidebarHovered && !isPinned && !sidebarOpen"
              @mouseenter="sidebarEnter()"
              @click="toggleSidebar()"></div>
@@ -114,7 +115,7 @@
             x-transition:leave-end="opacity-0 -translate-x-4"
             @mouseenter="sidebarEnter()"
             @click="toggleSidebar()"
-            style="z-index: 45;"
+            style="z-index: 46;"
             class="fixed top-24 left-0 hidden lg:flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-2.5 py-2.5 rounded-r-xl shadow-xl cursor-pointer transition-all duration-200 group hover:pl-3.5 select-none"
             title="Hover or click to open Left Navbar">
             <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
