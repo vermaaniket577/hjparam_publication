@@ -53,9 +53,9 @@
     @include('components.web-loader')
 
     <div class="flex h-screen overflow-hidden" x-data="{ 
-        sidebarOpen: false, 
+        sidebarOpen: true, 
         sidebarHovered: false, 
-        isPinned: false,
+        isPinned: true,
         _hoverTimer: null,
         sidebarEnter() {
             clearTimeout(this._hoverTimer);
@@ -424,7 +424,19 @@
                     </form>
                 </div>
 
-                <div class="flex items-center space-x-4">
+                <div class="flex items-center space-x-3">
+                    <!-- Quick Main Website Links -->
+                    <div class="hidden lg:flex items-center space-x-2 text-xs font-bold mr-2">
+                        <a href="{{ route('home') }}" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition-colors">
+                            Website Home
+                        </a>
+                        <a href="{{ route('journals.index') }}" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition-colors">
+                            Journals
+                        </a>
+                        <a href="{{ route('conferences.index') }}" class="px-2.5 py-1.5 rounded-lg text-slate-700 hover:text-blue-600 hover:bg-slate-100 transition-colors">
+                            Conferences
+                        </a>
+                    </div>
                     <!-- Notifications Dropdown -->
                     <div class="relative" x-data="{ notificationOpen: false }">
                         <button @click="notificationOpen = !notificationOpen"
