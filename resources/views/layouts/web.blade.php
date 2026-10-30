@@ -190,36 +190,86 @@
                             </div>
                         </div>
 
-                        <!-- Reviewer Portal Button -->
-                        <a href="{{ route('reviews.index') }}"
-                            style="background-color: #4f46e5; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);"
-                            class="hover:bg-indigo-600 transition-all">
-                            <svg class="w-3.5 h-3.5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                            <span>Reviewer Portal</span>
-                        </a>
+                        <!-- Reviewer Portal Button (Only visible if user has reviewer role/permissions) -->
+                        @if(Auth::user()->isReviewer())
+                            <a href="{{ route('reviews.index') }}"
+                                style="background-color: #4f46e5; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);"
+                                class="hover:bg-indigo-600 transition-all">
+                                <svg class="w-3.5 h-3.5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                                <span>Reviewer Portal</span>
+                            </a>
+                        @endif
 
-                        <!-- Dashboard Button -->
-                        <a href="{{ route('dashboard') }}"
-                            style="background-color: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; text-decoration: none; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);"
-                            class="hover:bg-sky-500 transition-all">Dashboard</a>
+                        <!-- Profile Dropdown -->
+                        <div class="relative" x-data="{ profileOpen: false }" @click.outside="profileOpen = false">
+                            <button @click="profileOpen = !profileOpen"
+                                type="button"
+                                style="background-color: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);"
+                                class="hover:bg-sky-500 transition-all">
+                                <span>Profile</span>
+                                <svg class="w-3 h-3 transition-transform" :class="{ 'rotate-180': profileOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7" />
+                                </svg>
+                            </button>
 
-                        <form method="POST" action="{{ route('logout') }}" class="inline">
-                            @csrf
-                            <button type="submit"
-                                style="font-size: 11px; font-weight: 700; letter-spacing: 0.05em; color: #cbd5e1; text-transform: uppercase;"
-                                class="hover:text-red-400 transition-colors ml-1">Logout</button>
-                        </form>
+                            <div x-show="profileOpen"
+                                x-transition:enter="transition ease-out duration-100"
+                                x-transition:enter-start="transform opacity-0 scale-95"
+                                x-transition:enter-end="transform opacity-100 scale-100"
+                                x-transition:leave="transition ease-in duration-75"
+                                x-transition:leave-start="transform opacity-100 scale-100"
+                                x-transition:leave-end="transform opacity-0 scale-95"
+                                style="display: none;"
+                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-slate-100 text-left">
+                                
+                                <div class="px-4 py-2 border-b border-gray-100">
+                                    <p class="text-xs font-bold text-gray-800 truncate">{{ Auth::user()->name }}</p>
+                                    <p class="text-[11px] text-gray-500 truncate">{{ Auth::user()->email }}</p>
+                                </div>
+
+                                <a href="{{ route('profile.edit') }}"
+                                    class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
+                                    Profile Settings
+                                </a>
+
+                                <a href="{{ route('dashboard') }}"
+                                    class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-gray-700 hover:bg-slate-50 hover:text-blue-600 transition-colors">
+                                    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
+                                    Dashboard
+                                </a>
+
+                        @if(Auth::user()->isReviewer())
+                                    <a href="{{ route('reviews.index') }}"
+                                        class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition-colors">
+                                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                        Reviewer Portal
+                                    </a>
+                                @endif
+
+                                @if(Auth::user()->isAdmin() || Auth::user()->isEditor())
+                                    <a href="{{ route('admin.dashboard') }}"
+                                        class="flex items-center gap-2 px-4 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-50 transition-colors">
+                                        <svg class="w-4 h-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
+                                        Admin Panel
+                                    </a>
+                                @endif
+
+                                <div class="border-t border-gray-100 my-1"></div>
+
+                                <form method="POST" action="{{ route('logout') }}">
+                                    @csrf
+                                    <button type="submit"
+                                        class="w-full flex items-center gap-2 px-4 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 text-left transition-colors">
+                                        <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+                                        Logout
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 @else
                     <div class="flex items-center" style="display: flex; align-items: center; gap: 8px;">
-                        <!-- Reviewer Portal Link for Guests -->
-                        <a href="{{ route('login') }}"
-                            style="background-color: #4f46e5; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 5px; text-decoration: none; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.35);"
-                            class="hover:bg-indigo-600 transition-all">
-                            <svg class="w-3.5 h-3.5 text-indigo-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
-                            <span>Reviewer Portal</span>
-                        </a>
-
                         <a href="{{ route('login') }}"
                             style="background-color: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; text-decoration: none;"
                             class="hover:bg-sky-500 transition-all">Login</a>
