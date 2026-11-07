@@ -390,6 +390,12 @@
 
                     <!-- Call to action button inside alert -->
                     <div class="shrink-0 flex items-center gap-2">
+                        @if(in_array($submission->status, ['published', 'accepted']))
+                            <a href="{{ route('certificates.publication.submission', $submission) }}" target="_blank"
+                                class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-emerald-600/30 flex items-center gap-2">
+                                ?? View Certificate(s)
+                            </a>
+                        @endif
                         @if($submission->status === 'accepted')
                             <a href="{{ route('payments.create', ['submission_id' => $submission->id, 'journal_id' => $submission->journal_id]) }}"
                                 class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-emerald-600/30 flex items-center gap-2">

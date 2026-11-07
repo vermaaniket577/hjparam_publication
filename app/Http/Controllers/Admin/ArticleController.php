@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Services\CertificateIssuanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class ArticleController extends Controller
 {
@@ -72,6 +74,15 @@ class ArticleController extends Controller
             $article->authors()->create($authorData);
         }
 
+        // Issue certificates automatically if published
+        if ($article->status === 'published') {
+            try {
+                CertificateIssuanceService::issueForArticle($article);
+            } catch (\Throwable $e) {
+                Log::warning('Automatic certificate issuance error on article create: ' . $e->getMessage());
+            }
+        }
+
         return redirect()->route('admin.articles.index')
             ->with('success', 'Manuscript and author records successfully registered.');
     }
@@ -134,6 +145,15 @@ class ArticleController extends Controller
         $article->authors()->delete();
         foreach ($request->authors as $authorData) {
             $article->authors()->create($authorData);
+        }
+
+        // Issue certificates automatically if published
+        if ($article->status === 'published') {
+            try {
+                CertificateIssuanceService::issueForArticle($article);
+            } catch (\Throwable $e) {
+                Log::warning('Automatic certificate issuance error on article update: ' . $e->getMessage());
+            }
         }
 
         return redirect()->route('admin.articles.index')

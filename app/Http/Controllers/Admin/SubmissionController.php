@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Submission;
 use App\Models\User;
 use App\Models\Review;
+use App\Models\Certificate;
+use App\Services\CertificateIssuanceService;
 use App\Mail\SubmissionStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -105,6 +107,15 @@ class SubmissionController extends Controller
         }
 
         $submission->update($updateData);
+
+        // Automatically issue certificates for author and co-authors when status becomes accepted or published
+        if (in_array($request->status, ['accepted', 'published'])) {
+            try {
+                CertificateIssuanceService::issueForSubmission($submission);
+            } catch (\Throwable $e) {
+                Log::warning('Automatic certificate issuance error on submission update: ' . $e->getMessage());
+            }
+        }
 
         // Send information email to the user
         $this->notifyAuthor($submission, 'status_change', [

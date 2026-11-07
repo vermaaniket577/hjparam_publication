@@ -36,6 +36,9 @@ Route::post('/conferences/{slug}/submit', [PublicConferenceController::class, 's
 // Certificates Public Routes
 Route::get('/certificates/attendee/{submission}', [CertificateController::class, 'attendee'])->name('certificates.attendee');
 Route::get('/certificates/presentation/{submission}', [CertificateController::class, 'presentation'])->name('certificates.presentation');
+Route::get('/certificates/publication/{certificate}', [CertificateController::class, 'show'])->name('certificates.publication.show');
+Route::get('/submissions/{submission}/certificate', [CertificateController::class, 'forSubmission'])->name('certificates.publication.submission');
+Route::get('/articles/{article}/certificate', [CertificateController::class, 'forArticle'])->name('certificates.publication.article');
 Route::get('/certificates/verify/{code}', [CertificateController::class, 'verify'])->name('certificates.verify');
 
 Route::get('/topics', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'topics')->name('topics.index');

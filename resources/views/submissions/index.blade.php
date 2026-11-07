@@ -73,6 +73,11 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-right text-xs font-bold">
+                                    @if(in_array($submission->status, ['published', 'accepted']))
+                                    <a href="{{ route('certificates.publication.submission', $submission) }}" target="_blank" class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[11px] font-bold shadow-sm transition mr-2">
+                                        ?? Certificate
+                                    </a>
+                                    @endif
                                     <a href="{{ route('submission.show', $submission) }}" class="text-blue-600 hover:text-blue-800">
                                         View &rarr;
                                     </a>

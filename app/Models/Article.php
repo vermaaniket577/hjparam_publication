@@ -53,6 +53,11 @@ class Article extends Model
         return $this->hasMany(Author::class);
     }
 
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
+
     public function getApaCitationAttribute()
     {
         $year = $this->published_at ? $this->published_at->format('Y') : date('Y');

@@ -109,4 +109,9 @@ class Submission extends Model
     {
         return $this->hasMany(Review::class);
     }
+
+    public function certificates()
+    {
+        return $this->hasMany(Certificate::class);
+    }
 }
