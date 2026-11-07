@@ -128,6 +128,10 @@ Route::get('/downloads/article-template', fn() => redirect()->route('author.down
 Route::get('/downloads/docx-template', fn() => redirect()->route('author.download.docx-template'))->name('downloads.docx-template');
 Route::get('/downloads/latex-template', fn() => redirect()->route('author.download.latex-template'))->name('downloads.latex-template');
 
+Route::get('/author/sample-certificate', function () {
+    return view('certificates.sample');
+})->name('author.sample-certificate');
+
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 
 // Journal Policies Routes

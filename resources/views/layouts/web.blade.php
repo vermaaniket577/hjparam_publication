@@ -474,6 +474,11 @@
                                 <span>Download LaTeX Template (.ZIP)</span>
                                 <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                             </a>
+                            <a href="{{ route('author.sample-certificate') }}" target="_blank"
+                                class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs flex items-center justify-between group">
+                                <span>View Sample Certificate</span>
+                                <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-blue-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                            </a>
                             <div class="border-t border-slate-100 my-1"></div>
                             <div class="max-h-52 overflow-y-auto custom-scrollbar" style="max-height: 210px; overflow-y: auto;">
                                 @foreach($menu_author as $page)
@@ -728,6 +733,10 @@
                     <a href="{{ route('author.download.latex-template') }}" download class="block py-1 text-purple-700 font-semibold flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         <span>Download LaTeX Template (.ZIP)</span>
+                    </a>
+                    <a href="{{ route('author.sample-certificate') }}" target="_blank" class="block py-1 text-emerald-700 font-semibold flex items-center gap-1.5">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                        <span>View Sample Certificate</span>
                     </a>
                     @foreach($menu_author as $page)
                         <a href="{{ route('author.page', $page->slug) }}" class="block py-1 hover:text-blue-700">{{ $page->title }}</a>
