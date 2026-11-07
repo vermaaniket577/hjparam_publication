@@ -22,6 +22,7 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 *.zip
+!public/downloads/*.zip
 artisan_*.txt
 scratch/
 composer.phar

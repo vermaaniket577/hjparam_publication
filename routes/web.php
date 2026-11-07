@@ -61,20 +61,72 @@ Route::get('/author/download/copyright-form', function () {
 })->name('author.download.copyright-form');
 
 Route::get('/author/download/article-template', function () {
-    $file = public_path('downloads/HJPARAM_Article_Template.doc');
+    // Prefer docx if available, fallback to doc
+    $file = public_path('downloads/HJPARAM_Article_Template.docx');
     if (!file_exists($file)) {
-        $file = base_path('public/downloads/HJPARAM_Article_Template.doc');
+        $file = base_path('public/downloads/HJPARAM_Article_Template.docx');
     }
     if (file_exists($file)) {
-        return response()->download($file, 'HJPARAM_Manuscript_Template.doc', [
+        return response()->download($file, 'HJPARAM_Manuscript_Template.docx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ]);
+    }
+
+    $fileDoc = public_path('downloads/HJPARAM_Article_Template.doc');
+    if (!file_exists($fileDoc)) {
+        $fileDoc = base_path('public/downloads/HJPARAM_Article_Template.doc');
+    }
+    if (file_exists($fileDoc)) {
+        return response()->download($fileDoc, 'HJPARAM_Manuscript_Template.doc', [
             'Content-Type' => 'application/msword',
         ]);
     }
     abort(404, 'Article template not found.');
 })->name('author.download.article-template');
 
+Route::get('/author/download/docx-template', function () {
+    $file = public_path('downloads/HJPARAM_Article_Template.docx');
+    if (!file_exists($file)) {
+        $file = base_path('public/downloads/HJPARAM_Article_Template.docx');
+    }
+    if (!file_exists($file)) {
+        $file = public_path('downloads/HJPARAM_Article_Template.doc');
+    }
+    if (!file_exists($file)) {
+        $file = base_path('public/downloads/HJPARAM_Article_Template.doc');
+    }
+    if (file_exists($file)) {
+        $filename = str_ends_with($file, '.docx') ? 'HJPARAM_Manuscript_Template.docx' : 'HJPARAM_Manuscript_Template.doc';
+        $mime = str_ends_with($file, '.docx') ? 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' : 'application/msword';
+        return response()->download($file, $filename, ['Content-Type' => $mime]);
+    }
+    abort(404, 'Word DOCX template not found.');
+})->name('author.download.docx-template');
+
+Route::get('/author/download/latex-template', function () {
+    $file = public_path('downloads/HJPARAM_LaTeX_Template.zip');
+    if (!file_exists($file)) {
+        $file = base_path('public/downloads/HJPARAM_LaTeX_Template.zip');
+    }
+    // Also look for any zip starting with latex or template in downloads
+    if (!file_exists($file)) {
+        $zips = glob(public_path('downloads/*latex*.zip'));
+        if (!empty($zips)) {
+            $file = $zips[0];
+        }
+    }
+    if (file_exists($file)) {
+        return response()->download($file, 'HJPARAM_LaTeX_Template.zip', [
+            'Content-Type' => 'application/zip',
+        ]);
+    }
+    return back()->with('info', 'The LaTeX Template package is being finalized and will be available for download shortly. In the meantime, please use the Word DOCX template.');
+})->name('author.download.latex-template');
+
 Route::get('/downloads/copyright-form', fn() => redirect()->route('author.download.copyright-form'))->name('downloads.copyright-form');
 Route::get('/downloads/article-template', fn() => redirect()->route('author.download.article-template'))->name('downloads.article-template');
+Route::get('/downloads/docx-template', fn() => redirect()->route('author.download.docx-template'))->name('downloads.docx-template');
+Route::get('/downloads/latex-template', fn() => redirect()->route('author.download.latex-template'))->name('downloads.latex-template');
 
 Route::get('/author/{slug}', [\App\Http\Controllers\PageController::class, 'show'])->defaults('category', 'author')->name('author.page');
 

@@ -115,18 +115,32 @@
                                 Preparation Requirements
                             </h2>
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
-                                <div class="p-8 bg-blue-50/30 rounded-3xl border border-blue-50">
-                                    <svg class="w-8 h-8 text-blue-600 mb-6" fill="none" stroke="currentColor"
-                                        viewBox="0 0 24 24">
-                                        <path
-                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                                            stroke-width="2"></path>
-                                    </svg>
-                                    <h4 class="text-sm font-black uppercase tracking-widest text-slate-900 mb-3">Technical
-                                        Format</h4>
-                                    <p class="text-xs text-slate-500 leading-relaxed">Manuscripts must be submitted in
-                                        Microsoft Word (.docx) or LaTeX. Scientific figures require a minimum resolution of
-                                        300 DPI.</p>
+                                <div class="p-8 bg-blue-50/30 rounded-3xl border border-blue-50 flex flex-col justify-between">
+                                    <div>
+                                        <svg class="w-8 h-8 text-blue-600 mb-6" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path
+                                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                                                stroke-width="2"></path>
+                                        </svg>
+                                        <h4 class="text-sm font-black uppercase tracking-widest text-slate-900 mb-3">Technical
+                                            Format</h4>
+                                        <p class="text-xs text-slate-500 leading-relaxed mb-6">Manuscripts must be submitted in
+                                            Microsoft Word (.docx) or LaTeX. Scientific figures require a minimum resolution of
+                                            300 DPI.</p>
+                                    </div>
+                                    <div class="pt-4 border-t border-blue-100/60 flex flex-wrap gap-2">
+                                        <a href="{{ route('author.download.docx-template') }}" download
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-blue-700 hover:bg-blue-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border border-blue-200 shadow-xs">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            <span>Word (.DOCX)</span>
+                                        </a>
+                                        <a href="{{ route('author.download.latex-template') }}" download
+                                            class="inline-flex items-center gap-1.5 px-3 py-2 bg-white text-purple-700 hover:bg-purple-600 hover:text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all border border-purple-200 shadow-xs">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                            <span>LaTeX (.ZIP)</span>
+                                        </a>
+                                    </div>
                                 </div>
                                 <div class="p-8 bg-emerald-50/30 rounded-3xl border border-emerald-50">
                                     <svg class="w-8 h-8 text-emerald-600 mb-6" fill="none" stroke="currentColor"
@@ -186,20 +200,45 @@
                         </div>
 
                         <div id="templates"
-                            class="bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-600/20 p-12 md:p-16 text-white text-center">
+                            class="bg-blue-600 rounded-[2.5rem] shadow-xl shadow-blue-600/20 p-10 md:p-14 text-white text-center">
                             <h2 class="text-3xl font-serif font-black mb-4">Registry Templates</h2>
-                            <p class="text-blue-100 mb-10 max-w-xl mx-auto">Download our official scholarly templates to
-                                ensure your manuscript meets HJPARAM structural standards immediately.</p>
-                            <div class="flex flex-col sm:flex-row justify-center gap-6">
-                                <a href="{{ $settings['manuscript_template_url'] ?? route('author.download.article-template') }}" download
-                                    class="bg-white text-blue-600 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-50 transition-all shadow-xl shadow-black/10 inline-flex items-center justify-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                    <span>Download Article Template (.DOC)</span>
+                            <p class="text-blue-100 mb-8 max-w-xl mx-auto text-sm">Download our official scholarly templates in Microsoft Word (.docx) or LaTeX format to ensure your manuscript meets HJPARAM structural standards immediately.</p>
+                            
+                            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                                <!-- Word DOCX Template -->
+                                <a href="{{ route('author.download.docx-template') }}" download
+                                    class="bg-white text-blue-900 p-5 rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-blue-50 transition-all shadow-xl shadow-black/10 flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <span>Download Word (.DOCX)</span>
+                                    <span class="text-[10px] text-slate-400 font-semibold normal-case">Official Manuscript Template</span>
                                 </a>
+
+                                <!-- LaTeX Template (ZIP) -->
+                                <a href="{{ route('author.download.latex-template') }}" download
+                                    class="bg-white text-blue-900 p-5 rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-blue-50 transition-all shadow-xl shadow-black/10 flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-10 h-10 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                                        </svg>
+                                    </div>
+                                    <span>Download LaTeX (.ZIP)</span>
+                                    <span class="text-[10px] text-slate-400 font-semibold normal-case">Full TeX Package & Style</span>
+                                </a>
+
+                                <!-- Copyright Form -->
                                 <a href="{{ route('author.download.copyright-form') }}" download
-                                    class="bg-blue-700 text-white border border-blue-500 px-8 py-4 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-blue-800 transition-all inline-flex items-center justify-center gap-2">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    class="bg-blue-700 text-white border border-blue-500/60 p-5 rounded-2xl font-black uppercase tracking-wider text-xs hover:bg-blue-800 transition-all flex flex-col items-center justify-center gap-2 group">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center group-hover:scale-110 transition-transform">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                                        </svg>
+                                    </div>
                                     <span>Download Copyright Form</span>
+                                    <span class="text-[10px] text-blue-200 font-semibold normal-case">Transfer Agreement</span>
                                 </a>
                             </div>
                         </div>
