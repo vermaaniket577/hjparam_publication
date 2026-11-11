@@ -390,12 +390,19 @@
                                     @endif
                                 </div>
                                 <div class="min-w-0 flex-1">
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold 
-                                        @if(str_contains(strtolower($member->role), 'chief')) bg-amber-100 text-amber-900 border border-amber-300
-                                        @elseif(str_contains(strtolower($member->role), 'associate')) bg-blue-100 text-blue-900 border border-blue-300
-                                        @else bg-slate-100 text-slate-700 border border-slate-200 @endif mb-1">
-                                        {{ $member->role }}
-                                    </span>
+                                    <div class="flex flex-wrap gap-1 mb-1">
+                                        @foreach(array_filter(array_map('trim', explode(',', $member->role))) as $r)
+                                            <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                                @if(str_contains(strtolower($r), 'chief')) bg-amber-100 text-amber-900 border border-amber-300
+                                                @elseif(str_contains(strtolower($r), 'associate')) bg-blue-100 text-blue-900 border border-blue-300
+                                                @elseif(str_contains(strtolower($r), 'section')) bg-purple-100 text-purple-900 border border-purple-300
+                                                @elseif(str_contains(strtolower($r), 'managing')) bg-indigo-100 text-indigo-900 border border-indigo-300
+                                                @elseif(str_contains(strtolower($r), 'review')) bg-emerald-100 text-emerald-900 border border-emerald-300
+                                                @else bg-slate-100 text-slate-700 border border-slate-200 @endif">
+                                                {{ $r }}
+                                            </span>
+                                        @endforeach
+                                    </div>
                                     <h4 class="font-bold text-sm text-slate-900 truncate">{{ $member->name }}</h4>
                                     <p class="text-xs text-slate-500 line-clamp-2 mt-0.5">{{ $member->affiliation }}</p>
                                     @if($member->email)

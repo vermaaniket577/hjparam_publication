@@ -43,9 +43,18 @@ class EditorialBoardController extends Controller
     {
         $this->ensureSchemaExists();
 
+        // Support multiple roles from checkbox dropdown or plain string
+        $rolesInput = $request->input('roles');
+        if (is_array($rolesInput) && count($rolesInput) > 0) {
+            $roleString = implode(', ', array_values(array_filter(array_map('trim', $rolesInput))));
+        } else {
+            $roleString = trim((string) $request->input('role', ''));
+        }
+        $request->merge(['role' => $roleString]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|string|max:100',
+            'role' => 'required|string|max:500',
             'affiliation' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'bio' => 'nullable|string',
@@ -77,9 +86,18 @@ class EditorialBoardController extends Controller
     {
         $this->ensureSchemaExists();
 
+        // Support multiple roles from checkbox dropdown or plain string
+        $rolesInput = $request->input('roles');
+        if (is_array($rolesInput) && count($rolesInput) > 0) {
+            $roleString = implode(', ', array_values(array_filter(array_map('trim', $rolesInput))));
+        } else {
+            $roleString = trim((string) $request->input('role', ''));
+        }
+        $request->merge(['role' => $roleString]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|string|max:100',
+            'role' => 'required|string|max:500',
             'affiliation' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
             'bio' => 'nullable|string',
@@ -157,7 +175,7 @@ class EditorialBoardController extends Controller
         }
 
         if ($request->filled('role')) {
-            $query->where('role', $request->role);
+            $query->where('role', 'like', "%{$request->role}%");
         }
 
         if ($request->filled('search')) {
@@ -196,103 +214,240 @@ class EditorialBoardController extends Controller
     }
 
     /**
-     * Store a board member from the central management page.
+     * Helper to parse journal-wise role assignments from request.
+     * Returns array like ['global' => ['Editor-in-Chief', 'Managing Editor'], '1' => ['Associate Editor']]
+     */
+    protected function parseJournalAssignments(Request $request): array
+    {
+        $assignments = [];
+
+        // 1. Try JSON input (journal_roles_json)
+        if ($request->filled('journal_roles_json')) {
+            $decoded = json_decode($request->journal_roles_json, true);
+            if (is_array($decoded)) {
+                foreach ($decoded as $jKey => $roles) {
+                    $rolesList = is_array($roles)
+                        ? array_values(array_filter(array_map('trim', $roles)))
+                        : array_values(array_filter(array_map('trim', explode(',', (string) $roles))));
+                    if (!empty($rolesList)) {
+                        $assignments[(string) $jKey] = $rolesList;
+                    }
+                }
+            }
+        }
+
+        // 2. Try nested array input (journal_roles)
+        if (empty($assignments) && $request->has('journal_roles')) {
+            $raw = $request->input('journal_roles');
+            if (is_array($raw)) {
+                foreach ($raw as $jKey => $roles) {
+                    $rolesList = is_array($roles)
+                        ? array_values(array_filter(array_map('trim', $roles)))
+                        : array_values(array_filter(array_map('trim', explode(',', (string) $roles))));
+                    if (!empty($rolesList)) {
+                        $assignments[(string) $jKey] = $rolesList;
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: single journal_id and roles/role input
+        if (empty($assignments)) {
+            $jKey = ($request->filled('journal_id') && $request->journal_id !== 'global') ? (string) $request->journal_id : 'global';
+            $rolesInput = $request->input('roles');
+            if (is_array($rolesInput) && count($rolesInput) > 0) {
+                $rolesList = array_values(array_filter(array_map('trim', $rolesInput)));
+            } else {
+                $rolesList = array_values(array_filter(array_map('trim', explode(',', (string) $request->input('role', 'Editorial Board Member')))));
+            }
+            if (empty($rolesList)) {
+                $rolesList = ['Editorial Board Member'];
+            }
+            $assignments[$jKey] = $rolesList;
+        }
+
+        return $assignments;
+    }
+
+    /**
+     * Store a board member from the central management page with multiple journal-wise roles.
      */
     public function storeGlobal(Request $request)
     {
         self::ensureSchemaExists();
 
+        $assignments = $this->parseJournalAssignments($request);
+
+        // Merge primary role for fallback/validation
+        $primaryRoles = reset($assignments) ?: ['Editorial Board Member'];
+        $roleString = implode(', ', $primaryRoles);
+        $request->merge(['role' => $roleString]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'journal_id' => 'nullable',
             'affiliation' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
-            'role' => 'required|string|max:100',
+            'role' => 'required|string|max:500',
             'bio' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if (empty($validated['journal_id']) || $validated['journal_id'] === 'global') {
-            $validated['journal_id'] = null;
-        }
-
+        $photoPath = null;
         if ($request->hasFile('photo')) {
-            $path = $request->file('photo')->store('editorial_board', 'public');
-            $validated['photo'] = $path;
+            $photoPath = $request->file('photo')->store('editorial_board', 'public');
         }
 
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'sort_order')) {
-            unset($validated['sort_order']);
+        $sortOrder = $validated['sort_order'] ?? 0;
+        $email = $validated['email'] ?? null;
+        $editorUid = 'ed_' . str_replace('-', '', (string) \Illuminate\Support\Str::uuid());
+
+        foreach ($assignments as $jKey => $rolesList) {
+            $journalId = ($jKey === 'global' || empty($jKey)) ? null : (int) $jKey;
+            $roleForJournal = implode(', ', $rolesList);
+
+            EditorialBoard::create([
+                'editor_uid' => $editorUid,
+                'journal_id' => $journalId,
+                'name' => $validated['name'],
+                'affiliation' => $validated['affiliation'],
+                'email' => $email,
+                'role' => $roleForJournal,
+                'bio' => $validated['bio'] ?? null,
+                'photo' => $photoPath,
+                'sort_order' => $sortOrder,
+            ]);
         }
 
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'email')) {
-            unset($validated['email']);
-        }
-
-        EditorialBoard::create($validated);
-
+        $count = count($assignments);
         return redirect()->route('admin.editorial-board.index')
-            ->with('success', 'Editorial board member added successfully.');
+            ->with('success', "Editorial board member added successfully with {$count} assigned journal appointment(s).");
     }
 
     /**
-     * Update a board member from the central management page.
+     * Update a board member from the central management page across assigned journals.
      */
     public function updateGlobal(Request $request, EditorialBoard $member)
     {
         self::ensureSchemaExists();
 
+        $assignments = $this->parseJournalAssignments($request);
+
+        $primaryRoles = reset($assignments) ?: ['Editorial Board Member'];
+        $roleString = implode(', ', $primaryRoles);
+        $request->merge(['role' => $roleString]);
+
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'journal_id' => 'nullable',
             'affiliation' => 'required|string|max:255',
             'email' => 'nullable|email|max:255',
-            'role' => 'required|string|max:100',
+            'role' => 'required|string|max:500',
             'bio' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
 
-        if (empty($validated['journal_id']) || $validated['journal_id'] === 'global') {
-            $validated['journal_id'] = null;
+        // Ensure editor_uid is set
+        $editorUid = $member->editor_uid;
+        if (empty($editorUid)) {
+            $editorUid = 'ed_' . $member->id;
+            $member->update(['editor_uid' => $editorUid]);
         }
 
+        // Handle photo upload
+        $photoPath = $member->photo;
         if ($request->hasFile('photo')) {
-            if ($member->photo) {
+            if ($member->photo && Storage::disk('public')->exists($member->photo)) {
                 Storage::disk('public')->delete($member->photo);
             }
-            $path = $request->file('photo')->store('editorial_board', 'public');
-            $validated['photo'] = $path;
+            $photoPath = $request->file('photo')->store('editorial_board', 'public');
         }
 
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'sort_order')) {
-            unset($validated['sort_order']);
+        $sortOrder = $validated['sort_order'] ?? 0;
+        $email = $validated['email'] ?? null;
+
+        // Find all existing records belonging to this editor
+        $existingQuery = EditorialBoard::where('editor_uid', $editorUid);
+        if (!empty($member->email)) {
+            $existingQuery->orWhere('email', $member->email);
+        }
+        $existingQuery->orWhere('id', $member->id);
+        $existingRecords = $existingQuery->get();
+
+        $existingByJournal = [];
+        foreach ($existingRecords as $rec) {
+            $k = $rec->journal_id ? (string) $rec->journal_id : 'global';
+            $existingByJournal[$k] = $rec;
         }
 
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'email')) {
-            unset($validated['email']);
+        // Synchronize each assigned journal with its selected roles
+        foreach ($assignments as $jKey => $rolesList) {
+            $journalId = ($jKey === 'global' || empty($jKey)) ? null : (int) $jKey;
+            $roleForJournal = implode(', ', $rolesList);
+
+            $payload = [
+                'editor_uid' => $editorUid,
+                'name' => $validated['name'],
+                'affiliation' => $validated['affiliation'],
+                'email' => $email,
+                'journal_id' => $journalId,
+                'role' => $roleForJournal,
+                'bio' => $validated['bio'] ?? null,
+                'photo' => $photoPath,
+                'sort_order' => $sortOrder,
+            ];
+
+            if (isset($existingByJournal[$jKey])) {
+                $existingByJournal[$jKey]->update($payload);
+                unset($existingByJournal[$jKey]); // Handled
+            } else {
+                EditorialBoard::create($payload);
+            }
         }
 
-        $member->update($validated);
+        // Any remaining records in $existingByJournal are journals that were unassigned
+        foreach ($existingByJournal as $unassignedRecord) {
+            // Delete unassigned journal record if not the only one remaining
+            if (EditorialBoard::where('editor_uid', $editorUid)->count() > 1) {
+                $unassignedRecord->delete();
+            }
+        }
 
+        $count = count($assignments);
         return redirect()->route('admin.editorial-board.index')
-            ->with('success', 'Editorial board member updated successfully.');
+            ->with('success', "Editorial board member updated successfully across {$count} assigned journal(s).");
     }
 
     /**
      * Delete a board member from the central management page.
      */
-    public function destroyGlobal(EditorialBoard $member)
+    public function destroyGlobal(Request $request, EditorialBoard $member)
     {
-        if ($member->photo) {
-            Storage::disk('public')->delete($member->photo);
+        $editorUid = $member->editor_uid;
+        $deleteAll = $request->query('all') === '1';
+
+        if ($deleteAll && !empty($editorUid)) {
+            $all = EditorialBoard::where('editor_uid', $editorUid)->get();
+            foreach ($all as $m) {
+                if ($m->photo && Storage::disk('public')->exists($m->photo)) {
+                    Storage::disk('public')->delete($m->photo);
+                }
+                $m->delete();
+            }
+            return redirect()->route('admin.editorial-board.index')
+                ->with('success', 'Editorial board member removed from all journals.');
+        }
+
+        if ($member->photo && Storage::disk('public')->exists($member->photo)) {
+            if (!EditorialBoard::where('photo', $member->photo)->where('id', '!=', $member->id)->exists()) {
+                Storage::disk('public')->delete($member->photo);
+            }
         }
 
         $member->delete();
 
         return redirect()->route('admin.editorial-board.index')
-            ->with('success', 'Editorial board member deleted successfully.');
+            ->with('success', 'Editorial board appointment removed successfully.');
     }
 
     /**
@@ -343,6 +498,14 @@ class EditorialBoardController extends Controller
                     $table->string('email')->nullable()->after('affiliation');
                 });
             }
+            if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'editor_uid')) {
+                \Illuminate\Support\Facades\Schema::table('editorial_boards', function ($table) {
+                    $table->string('editor_uid', 64)->nullable()->index()->after('id');
+                });
+            }
+            try {
+                \Illuminate\Support\Facades\DB::statement("UPDATE editorial_boards SET editor_uid = CONCAT('ed_', id) WHERE editor_uid IS NULL OR editor_uid = ''");
+            } catch (\Throwable $e) {}
             if (!\Illuminate\Support\Facades\Schema::hasColumn('journals', 'editorial_responsibilities')) {
                 \Illuminate\Support\Facades\Schema::table('journals', function ($table) {
                     $table->longText('editorial_responsibilities')->nullable()->after('aims_and_scope');
@@ -352,6 +515,11 @@ class EditorialBoardController extends Controller
             // Allow journal_id to be nullable for central/publisher board members
             try {
                 \Illuminate\Support\Facades\DB::statement("ALTER TABLE editorial_boards MODIFY journal_id BIGINT UNSIGNED NULL");
+            } catch (\Throwable $e) {}
+
+            // Ensure role column can hold multiple comma-separated roles
+            try {
+                \Illuminate\Support\Facades\DB::statement("ALTER TABLE editorial_boards MODIFY role VARCHAR(500) NOT NULL");
             } catch (\Throwable $e) {}
 
             // Seed default members if table is completely empty

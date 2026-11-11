@@ -8,7 +8,83 @@
     activeTab: 'team', 
     createModalOpen: false, 
     editModalOpen: false,
-    editMember: { id: null, name: '', role: '', affiliation: '', email: '', bio: '', sort_order: 0, photo_url: '' }
+    allRoles: {{ json_encode($roles) }},
+    createRoles: ['Editor-in-Chief'],
+    createRoleDropdownOpen: false,
+    createRoleSearch: '',
+    createCustomRoleInput: '',
+    editRoles: [],
+    editRoleDropdownOpen: false,
+    editRoleSearch: '',
+    editCustomRoleInput: '',
+    editMember: { id: null, name: '', role: '', affiliation: '', email: '', bio: '', sort_order: 0, photo_url: '' },
+    openEditModal(m, photoUrl) {
+        this.editMember = {
+            id: m.id,
+            name: m.name || '',
+            role: m.role || 'Editorial Board Member',
+            affiliation: m.affiliation || '',
+            email: m.email || '',
+            bio: m.bio || '',
+            sort_order: m.sort_order || 0,
+            photo_url: photoUrl || ''
+        };
+        let rList = [];
+        if (Array.isArray(m.roles_array) && m.roles_array.length > 0) {
+            rList = [...m.roles_array];
+        } else if (m.role) {
+            rList = m.role.split(',').map(s => s.trim()).filter(Boolean);
+        }
+        if (rList.length === 0) {
+            rList = ['Editorial Board Member'];
+        }
+        rList.forEach(r => {
+            if (!this.allRoles.includes(r)) {
+                this.allRoles.push(r);
+            }
+        });
+        this.editRoles = rList;
+        this.editRoleDropdownOpen = false;
+        this.editRoleSearch = '';
+        this.editCustomRoleInput = '';
+        this.editModalOpen = true;
+    },
+    toggleCreateRole(r) {
+        if (this.createRoles.includes(r)) {
+            this.createRoles = this.createRoles.filter(item => item !== r);
+        } else {
+            this.createRoles.push(r);
+        }
+    },
+    toggleEditRole(r) {
+        if (this.editRoles.includes(r)) {
+            this.editRoles = this.editRoles.filter(item => item !== r);
+        } else {
+            this.editRoles.push(r);
+        }
+        this.editMember.role = this.editRoles.join(', ');
+    },
+    addCustomRoleToCreate(name) {
+        name = name.trim();
+        if (!name) return;
+        if (!this.allRoles.includes(name)) {
+            this.allRoles.push(name);
+        }
+        if (!this.createRoles.includes(name)) {
+            this.createRoles.push(name);
+        }
+    },
+    addCustomRoleToEdit(name) {
+        name = name.trim();
+        if (!name) return;
+        if (!this.allRoles.includes(name)) {
+            this.allRoles.push(name);
+        }
+        if (!this.editRoles.includes(name)) {
+            this.editRoles.push(name);
+        }
+        this.editMember.role = this.editRoles.join(', ');
+    }
 }">
 
     <!-- Flash Messages -->
@@ -143,13 +219,19 @@
                             </div>
 
                             <div class="min-w-0 flex-1">
-                                <span class="inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold 
-                                    @if(str_contains(strtolower($member->role), 'chief')) bg-amber-100 text-amber-900 border border-amber-300
-                                    @elseif(str_contains(strtolower($member->role), 'associate')) bg-blue-100 text-blue-900 border border-blue-300
-                                    @elseif(str_contains(strtolower($member->role), 'section')) bg-purple-100 text-purple-900 border border-purple-300
-                                    @else bg-gray-100 text-gray-800 border border-gray-200 @endif">
-                                    {{ $member->role }}
-                                </span>
+                                <div class="flex flex-wrap gap-1 mb-1">
+                                    @foreach(array_filter(array_map('trim', explode(',', $member->role))) as $r)
+                                        <span class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold 
+                                            @if(str_contains(strtolower($r), 'chief')) bg-amber-100 text-amber-900 border border-amber-300
+                                            @elseif(str_contains(strtolower($r), 'associate')) bg-blue-100 text-blue-900 border border-blue-300
+                                            @elseif(str_contains(strtolower($r), 'section')) bg-purple-100 text-purple-900 border border-purple-300
+                                            @elseif(str_contains(strtolower($r), 'managing')) bg-indigo-100 text-indigo-900 border border-indigo-300
+                                            @elseif(str_contains(strtolower($r), 'review')) bg-emerald-100 text-emerald-900 border border-emerald-300
+                                            @else bg-gray-100 text-gray-800 border border-gray-200 @endif">
+                                            {{ $r }}
+                                        </span>
+                                    @endforeach
+                                </div>
                                 <h3 class="text-sm font-bold text-gray-900 mt-1 truncate">{{ $member->name }}</h3>
                                 <p class="text-xs text-gray-600 line-clamp-2 mt-0.5">{{ $member->affiliation }}</p>
                                 @if($member->email)
@@ -168,19 +250,7 @@
                             <span class="text-[11px] font-semibold text-gray-400">Order: {{ $member->sort_order }}</span>
                             <div class="flex items-center gap-2">
                                 <button type="button" 
-                                        @click="
-                                            editMember = {
-                                                id: {{ $member->id }},
-                                                name: '{{ addslashes($member->name) }}',
-                                                role: '{{ addslashes($member->role) }}',
-                                                affiliation: '{{ addslashes($member->affiliation) }}',
-                                                email: '{{ addslashes($member->email ?? '') }}',
-                                                bio: '{{ addslashes($member->bio ?? '') }}',
-                                                sort_order: {{ $member->sort_order ?? 0 }},
-                                                photo_url: '{{ $member->photo_url ?? '' }}'
-                                            };
-                                            editModalOpen = true;
-                                        "
+                                        @click="openEditModal({{ json_encode($member) }}, '{{ $member->photo_url ?? '' }}')"
                                         class="px-3 py-1 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-700 text-xs font-bold rounded-lg transition">
                                     Edit
                                 </button>
@@ -256,13 +326,108 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Role *</label>
-                        <select name="role" required class="w-full text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                            @foreach($roles as $roleOption)
-                                <option value="{{ $roleOption }}">{{ $roleOption }}</option>
-                            @endforeach
-                        </select>
+                    <!-- Multi-select Checkbox Dropdown: Editorial Roles -->
+                    <div class="relative" @click.away="createRoleDropdownOpen = false">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span>Role(s) *</span>
+                            <span class="text-[11px] font-semibold text-blue-600" x-text="createRoles.length + ' selected'"></span>
+                        </label>
+                        
+                        <!-- Dropdown trigger button -->
+                        <button type="button" 
+                                @click="createRoleDropdownOpen = !createRoleDropdownOpen" 
+                                class="w-full text-left text-sm border border-gray-300 rounded-xl py-2 px-3 bg-white flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs transition">
+                            <div class="flex-1 truncate pr-2">
+                                <template x-if="createRoles.length === 0">
+                                    <span class="text-gray-400">Select roles (checkbox dropdown)...</span>
+                                </template>
+                                <template x-if="createRoles.length === 1">
+                                    <span class="font-medium text-gray-800" x-text="createRoles[0]"></span>
+                                </template>
+                                <template x-if="createRoles.length > 1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-semibold text-blue-700" x-text="createRoles.length + ' roles selected'"></span>
+                                        <span class="text-xs text-gray-500 truncate" x-text="'(' + createRoles.slice(0, 2).join(', ') + (createRoles.length > 2 ? ' +' + (createRoles.length - 2) + ' more' : '') + ')'"></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform flex-shrink-0" :class="createRoleDropdownOpen ? 'rotate-180 text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Hidden inputs for submission -->
+                        <input type="hidden" name="role" :value="createRoles.join(', ')">
+                        <template x-for="r in createRoles" :key="r">
+                            <input type="hidden" name="roles[]" :value="r">
+                        </template>
+
+                        <!-- Checkbox Dropdown Menu -->
+                        <div x-show="createRoleDropdownOpen" 
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2.5 space-y-2">
+                            
+                            <div class="space-y-1.5 pb-2 border-b border-gray-100">
+                                <div class="flex items-center justify-between text-[11px] px-1 text-gray-500">
+                                    <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]">Select Multiple Roles</span>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" @click="createRoles = [...allRoles]" class="text-blue-600 hover:text-blue-800 font-semibold hover:underline">Select All</button>
+                                        <span class="text-gray-300">|</span>
+                                        <button type="button" @click="createRoles = []" class="text-gray-500 hover:text-red-600 font-semibold hover:underline">Clear</button>
+                                    </div>
+                                </div>
+                                <input type="text" x-model="createRoleSearch" placeholder="Search roles..." class="w-full text-xs py-1.5 px-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div class="max-h-52 overflow-y-auto space-y-1 pr-1">
+                                <template x-for="r in allRoles" :key="r">
+                                    <label x-show="!createRoleSearch || r.toLowerCase().includes(createRoleSearch.toLowerCase())"
+                                           class="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer transition select-none text-xs">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <input type="checkbox" 
+                                                   :value="r" 
+                                                   :checked="createRoles.includes(r)"
+                                                   @change="toggleCreateRole(r)"
+                                                   class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                            <span class="font-medium text-gray-800 truncate" x-text="r"></span>
+                                        </div>
+                                        <template x-if="r.toLowerCase().includes('chief')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Chief</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('section')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Section</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('associate')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">Associate</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('managing')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Managing</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('review')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">Review</span>
+                                        </template>
+                                    </label>
+                                </template>
+                            </div>
+
+                            <!-- Add Custom Role -->
+                            <div class="pt-2 border-t border-gray-100 flex items-center gap-1.5">
+                                <input type="text" x-model="createCustomRoleInput" @keydown.enter.prevent="if(createCustomRoleInput.trim()){ addCustomRoleToCreate(createCustomRoleInput.trim()); createCustomRoleInput = ''; }" placeholder="+ Add custom role..." class="flex-1 text-xs py-1 px-2 border border-gray-200 rounded-lg">
+                                <button type="button" @click="if(createCustomRoleInput.trim()){ addCustomRoleToCreate(createCustomRoleInput.trim()); createCustomRoleInput = ''; }" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition">Add</button>
+                            </div>
+
+                            <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+                                <span class="text-[11px] text-gray-500 font-medium" x-text="createRoles.length + ' role(s) selected'"></span>
+                                <button type="button" @click="createRoleDropdownOpen = false" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs">Done</button>
+                            </div>
+                        </div>
+                        <p x-show="createRoles.length === 0" class="text-rose-500 text-[11px] mt-1 font-semibold">Please check at least one role.</p>
                     </div>
 
                     <div>
@@ -319,13 +484,108 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Role *</label>
-                        <select name="role" x-model="editMember.role" required class="w-full text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
-                            @foreach($roles as $roleOption)
-                                <option value="{{ $roleOption }}">{{ $roleOption }}</option>
-                            @endforeach
-                        </select>
+                    <!-- Multi-select Checkbox Dropdown: Editorial Roles -->
+                    <div class="relative" @click.away="editRoleDropdownOpen = false">
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1 flex items-center justify-between">
+                            <span>Role(s) *</span>
+                            <span class="text-[11px] font-semibold text-blue-600" x-text="editRoles.length + ' selected'"></span>
+                        </label>
+                        
+                        <!-- Dropdown trigger button -->
+                        <button type="button" 
+                                @click="editRoleDropdownOpen = !editRoleDropdownOpen" 
+                                class="w-full text-left text-sm border border-gray-300 rounded-xl py-2 px-3 bg-white flex items-center justify-between focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-xs transition">
+                            <div class="flex-1 truncate pr-2">
+                                <template x-if="editRoles.length === 0">
+                                    <span class="text-gray-400">Select roles (checkbox dropdown)...</span>
+                                </template>
+                                <template x-if="editRoles.length === 1">
+                                    <span class="font-medium text-gray-800" x-text="editRoles[0]"></span>
+                                </template>
+                                <template x-if="editRoles.length > 1">
+                                    <div class="flex items-center gap-1.5 flex-wrap">
+                                        <span class="font-semibold text-blue-700" x-text="editRoles.length + ' roles selected'"></span>
+                                        <span class="text-xs text-gray-500 truncate" x-text="'(' + editRoles.slice(0, 2).join(', ') + (editRoles.length > 2 ? ' +' + (editRoles.length - 2) + ' more' : '') + ')'"></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <svg class="w-4 h-4 text-gray-400 transition-transform flex-shrink-0" :class="editRoleDropdownOpen ? 'rotate-180 text-blue-600' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+
+                        <!-- Hidden inputs for submission -->
+                        <input type="hidden" name="role" :value="editRoles.join(', ')">
+                        <template x-for="r in editRoles" :key="r">
+                            <input type="hidden" name="roles[]" :value="r">
+                        </template>
+
+                        <!-- Checkbox Dropdown Menu -->
+                        <div x-show="editRoleDropdownOpen" 
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-100"
+                             x-transition:enter-start="transform opacity-0 scale-95"
+                             x-transition:enter-end="transform opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-75"
+                             x-transition:leave-start="transform opacity-100 scale-100"
+                             x-transition:leave-end="transform opacity-0 scale-95"
+                             class="absolute left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-2xl z-50 p-2.5 space-y-2">
+                            
+                            <div class="space-y-1.5 pb-2 border-b border-gray-100">
+                                <div class="flex items-center justify-between text-[11px] px-1 text-gray-500">
+                                    <span class="font-bold text-gray-700 uppercase tracking-wider text-[10px]">Select Multiple Roles</span>
+                                    <div class="flex items-center gap-2">
+                                        <button type="button" @click="editRoles = [...allRoles]; editMember.role = editRoles.join(', ')" class="text-blue-600 hover:text-blue-800 font-semibold hover:underline">Select All</button>
+                                        <span class="text-gray-300">|</span>
+                                        <button type="button" @click="editRoles = []; editMember.role = ''" class="text-gray-500 hover:text-red-600 font-semibold hover:underline">Clear</button>
+                                    </div>
+                                </div>
+                                <input type="text" x-model="editRoleSearch" placeholder="Search roles..." class="w-full text-xs py-1.5 px-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <div class="max-h-52 overflow-y-auto space-y-1 pr-1">
+                                <template x-for="r in allRoles" :key="r">
+                                    <label x-show="!editRoleSearch || r.toLowerCase().includes(editRoleSearch.toLowerCase())"
+                                           class="flex items-center justify-between px-2.5 py-1.5 rounded-lg hover:bg-blue-50 cursor-pointer transition select-none text-xs">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <input type="checkbox" 
+                                                   :value="r" 
+                                                   :checked="editRoles.includes(r)"
+                                                   @change="toggleEditRole(r)"
+                                                   class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                            <span class="font-medium text-gray-800 truncate" x-text="r"></span>
+                                        </div>
+                                        <template x-if="r.toLowerCase().includes('chief')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-amber-100 text-amber-800">Chief</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('section')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800">Section</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('associate')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">Associate</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('managing')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800">Managing</span>
+                                        </template>
+                                        <template x-if="r.toLowerCase().includes('review')">
+                                            <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">Review</span>
+                                        </template>
+                                    </label>
+                                </template>
+                            </div>
+
+                            <!-- Add Custom Role -->
+                            <div class="pt-2 border-t border-gray-100 flex items-center gap-1.5">
+                                <input type="text" x-model="editCustomRoleInput" @keydown.enter.prevent="if(editCustomRoleInput.trim()){ addCustomRoleToEdit(editCustomRoleInput.trim()); editCustomRoleInput = ''; }" placeholder="+ Add custom role..." class="flex-1 text-xs py-1 px-2 border border-gray-200 rounded-lg">
+                                <button type="button" @click="if(editCustomRoleInput.trim()){ addCustomRoleToEdit(editCustomRoleInput.trim()); editCustomRoleInput = ''; }" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold rounded-lg transition">Add</button>
+                            </div>
+
+                            <div class="pt-2 border-t border-gray-100 flex items-center justify-between">
+                                <span class="text-[11px] text-gray-500 font-medium" x-text="editRoles.length + ' role(s) selected'"></span>
+                                <button type="button" @click="editRoleDropdownOpen = false" class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-xs">Done</button>
+                            </div>
+                        </div>
+                        <p x-show="editRoles.length === 0" class="text-rose-500 text-[11px] mt-1 font-semibold">Please check at least one role.</p>
                     </div>
 
                     <div>

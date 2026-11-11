@@ -10,6 +10,7 @@ class EditorialBoard extends Model
     use HasFactory;
 
     protected $fillable = [
+        'editor_uid',
         'journal_id',
         'name',
         'affiliation',
@@ -22,7 +23,88 @@ class EditorialBoard extends Model
 
     protected $appends = [
         'photo_url',
+        'roles_array',
+        'journal_roles_map',
+        'all_appointments_summary',
     ];
+
+    /**
+     * Get array of all roles assigned to this member.
+     */
+    public function getRolesArrayAttribute(): array
+    {
+        if (empty($this->role)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map('trim', explode(',', $this->role))));
+    }
+
+    /**
+     * Get all appointment records for this editor across all journals.
+     */
+    public function getAppointmentsAttribute()
+    {
+        if (!empty($this->editor_uid)) {
+            return self::where('editor_uid', $this->editor_uid)->with('journal')->orderBy('id')->get();
+        }
+
+        if (!empty($this->email)) {
+            return self::where('email', $this->email)->with('journal')->orderBy('id')->get();
+        }
+
+        return collect([$this]);
+    }
+
+    /**
+     * Get a map of journal_id => [roles] for this editor.
+     * e.g. ['global' => ['Advisory Board Member'], '1' => ['Editor-in-Chief', 'Section Editor']]
+     */
+    public function getJournalRolesMapAttribute(): array
+    {
+        $map = [];
+
+        // If appointments relationship is already loaded or fetch it
+        $records = $this->appointments;
+
+        foreach ($records as $rec) {
+            $key = $rec->journal_id ? (string) $rec->journal_id : 'global';
+            $roles = $rec->roles_array;
+            $map[$key] = count($roles) > 0 ? $roles : ['Editorial Board Member'];
+        }
+
+        // If map is still empty, include current record
+        if (empty($map)) {
+            $key = $this->journal_id ? (string) $this->journal_id : 'global';
+            $roles = $this->roles_array;
+            $map[$key] = count($roles) > 0 ? $roles : ['Editorial Board Member'];
+        }
+
+        return $map;
+    }
+
+    /**
+     * Get a formatted summary of all assigned journals & roles for display.
+     */
+    public function getAllAppointmentsSummaryAttribute(): array
+    {
+        $records = $this->appointments;
+        $summary = [];
+
+        foreach ($records as $rec) {
+            $journalTitle = $rec->journal ? $rec->journal->title : 'Publisher-wide / Central';
+            $summary[] = [
+                'record_id' => $rec->id,
+                'journal_id' => $rec->journal_id,
+                'journal_key' => $rec->journal_id ? (string) $rec->journal_id : 'global',
+                'journal_title' => $journalTitle,
+                'roles' => $rec->roles_array,
+                'role_string' => $rec->role,
+            ];
+        }
+
+        return $summary;
+    }
 
     public function journal()
     {

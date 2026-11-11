@@ -59,37 +59,49 @@ class UserController extends Controller
             'affiliation' => $validated['affiliation'] ?? null,
         ]);
 
-        // Automatically assign to Journal Editorial Team if journal is selected
-        if ($request->filled('journal_id')) {
-            $journal = \App\Models\Journal::find($request->journal_id);
-            if ($journal) {
-                $boardData = [
-                    'journal_id' => $journal->id,
+        // Automatically assign to Journal Editorial Team(s) with multiple roles journal-wise
+        $assignments = [];
+        if ($request->filled('journal_roles_json')) {
+            $decoded = json_decode($request->journal_roles_json, true);
+            if (is_array($decoded)) {
+                $assignments = $decoded;
+            }
+        } elseif ($request->has('journal_roles') && is_array($request->journal_roles)) {
+            $assignments = $request->journal_roles;
+        } elseif ($request->filled('journal_id')) {
+            $roles = $request->editorial_roles ?: ($request->editorial_role ? [$request->editorial_role] : ['Editorial Board Member']);
+            $assignments[(string) $request->journal_id] = (array) $roles;
+        }
+
+        if (!empty($assignments)) {
+            $editorUid = 'ed_' . str_replace('-', '', (string) \Illuminate\Support\Str::uuid());
+            foreach ($assignments as $jKey => $rolesList) {
+                $journalId = ($jKey === 'global' || empty($jKey)) ? null : (int) $jKey;
+                $rolesList = is_array($rolesList)
+                    ? array_values(array_filter(array_map('trim', $rolesList)))
+                    : array_values(array_filter(array_map('trim', explode(',', (string) $rolesList))));
+                $roleString = implode(', ', $rolesList) ?: 'Editorial Board Member';
+
+                $journalTitle = 'Publisher-wide';
+                if ($journalId) {
+                    $jObj = \App\Models\Journal::find($journalId);
+                    if ($jObj) $journalTitle = $jObj->title;
+                }
+
+                \App\Models\EditorialBoard::create([
+                    'editor_uid' => $editorUid,
+                    'journal_id' => $journalId,
                     'name' => $user->name,
-                    'affiliation' => $user->affiliation ?: ($journal->title . ' Editorial Office'),
+                    'affiliation' => $user->affiliation ?: ($journalTitle . ' Editorial Office'),
                     'email' => $user->email,
-                    'role' => $request->editorial_role ?: 'Editorial Board Member',
+                    'role' => $roleString,
                     'bio' => $request->editorial_bio ?: null,
-                ];
-
-                if (\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'sort_order')) {
-                    $boardData['sort_order'] = $request->editorial_sort_order ?? 0;
-                }
-
-                if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'email')) {
-                    unset($boardData['email']);
-                }
-
-                $existing = \App\Models\EditorialBoard::where('email', $user->email)->first();
-                if ($existing) {
-                    $existing->update($boardData);
-                } else {
-                    $journal->editorialBoard()->create($boardData);
-                }
+                    'sort_order' => $request->editorial_sort_order ?? 0,
+                ]);
             }
         }
 
-        return redirect()->route('admin.users.index')->with('success', 'User created successfully' . ($request->filled('journal_id') ? ' and appointed to journal editorial team.' : '.'));
+        return redirect()->route('admin.users.index')->with('success', 'User created successfully' . (!empty($assignments) ? ' and appointed to journal editorial team(s).' : '.'));
     }
 
     public function edit(\App\Models\User $user)
@@ -132,30 +144,62 @@ class UserController extends Controller
 
         $user->update($updateData);
 
-        // Update or assign Journal Editorial Team membership
-        if ($request->filled('journal_id')) {
-            $journal = \App\Models\Journal::find($request->journal_id);
-            if ($journal) {
+        // Update or assign Journal Editorial Team membership(s) with multiple roles journal-wise
+        $assignments = [];
+        if ($request->filled('journal_roles_json')) {
+            $decoded = json_decode($request->journal_roles_json, true);
+            if (is_array($decoded)) {
+                $assignments = $decoded;
+            }
+        } elseif ($request->has('journal_roles') && is_array($request->journal_roles)) {
+            $assignments = $request->journal_roles;
+        } elseif ($request->filled('journal_id')) {
+            $roles = $request->editorial_roles ?: ($request->editorial_role ? [$request->editorial_role] : ['Editorial Board Member']);
+            $assignments[(string) $request->journal_id] = (array) $roles;
+        }
+
+        if (!empty($assignments)) {
+            $existingRecords = \App\Models\EditorialBoard::where('email', $user->email)->get();
+            $existingByJournal = [];
+            $editorUid = null;
+            foreach ($existingRecords as $rec) {
+                $k = $rec->journal_id ? (string) $rec->journal_id : 'global';
+                $existingByJournal[$k] = $rec;
+                if (!$editorUid && $rec->editor_uid) {
+                    $editorUid = $rec->editor_uid;
+                }
+            }
+            if (!$editorUid) {
+                $editorUid = 'ed_' . str_replace('-', '', (string) \Illuminate\Support\Str::uuid());
+            }
+
+            foreach ($assignments as $jKey => $rolesList) {
+                $journalId = ($jKey === 'global' || empty($jKey)) ? null : (int) $jKey;
+                $rolesList = is_array($rolesList)
+                    ? array_values(array_filter(array_map('trim', $rolesList)))
+                    : array_values(array_filter(array_map('trim', explode(',', (string) $rolesList))));
+                $roleString = implode(', ', $rolesList) ?: 'Editorial Board Member';
+
+                $journalTitle = 'Publisher-wide';
+                if ($journalId) {
+                    $jObj = \App\Models\Journal::find($journalId);
+                    if ($jObj) $journalTitle = $jObj->title;
+                }
+
                 $boardData = [
-                    'journal_id' => $journal->id,
+                    'editor_uid' => $editorUid,
+                    'journal_id' => $journalId,
                     'name' => $user->name,
-                    'affiliation' => $user->affiliation ?: ($journal->title . ' Editorial Office'),
+                    'affiliation' => $user->affiliation ?: ($journalTitle . ' Editorial Office'),
                     'email' => $user->email,
-                    'role' => $request->editorial_role ?: 'Editorial Board Member',
+                    'role' => $roleString,
                     'bio' => $request->editorial_bio ?: null,
+                    'sort_order' => $request->editorial_sort_order ?? 0,
                 ];
 
-                if (\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'sort_order')) {
-                    $boardData['sort_order'] = $request->editorial_sort_order ?? 0;
-                }
-
-                if (!\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'email')) {
-                    unset($boardData['email']);
-                }
-
-                $existing = \App\Models\EditorialBoard::where('email', $user->email)->first();
-                if ($existing) {
-                    $existing->update($boardData);
+                if (isset($existingByJournal[$jKey])) {
+                    $existingByJournal[$jKey]->update($boardData);
+                    unset($existingByJournal[$jKey]);
                 } else {
                     \App\Models\EditorialBoard::create($boardData);
                 }
