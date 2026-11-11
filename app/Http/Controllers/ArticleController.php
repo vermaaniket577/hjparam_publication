@@ -6,6 +6,9 @@ use App\Models\Article;
 use App\Models\DownloadLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Dompdf\Dompdf;
+use Dompdf\Options;
 
 class ArticleController extends Controller
 {
@@ -24,32 +27,64 @@ class ArticleController extends Controller
         return view('articles.show', compact('article'));
     }
 
-    public function download($id)
+    public function download($id, Request $request)
     {
-        $article = Article::findOrFail($id);
+        $article = Article::with(['journal', 'issue.volume', 'authors'])->findOrFail($id);
 
         // Log download
-        DownloadLog::create([
-            'article_id' => $article->id,
-            'ip_address' => request()->ip(),
-            'user_agent' => request()->userAgent(),
-            'downloaded_at' => now(),
-        ]);
+        try {
+            DownloadLog::create([
+                'article_id' => $article->id,
+                'ip_address' => request()->ip(),
+                'user_agent' => request()->userAgent(),
+                'downloaded_at' => now(),
+            ]);
+        } catch (\Throwable $e) {
+            // Non-critical
+        }
 
         $article->increment('downloads_count');
 
-        // Logic for PDF download
-        if ($article->pdf_path && Storage::exists($article->pdf_path)) {
-            return Storage::download($article->pdf_path);
+        $journal = $article->journal;
+        $issue = $article->issue;
+        $volume = $issue ? $issue->volume : null;
+
+        $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
+        $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
+
+        // If raw file explicitly requested and present on disk
+        if ($request->has('raw') && $article->pdf_path && Storage::disk('public')->exists($article->pdf_path)) {
+            return Storage::disk('public')->download($article->pdf_path);
         }
 
-        // Demo fallback: Generate a dummy PDF file content
-        $content = "%PDF-1.4\n1 0 obj\n<< /Title (Article PDF) /Author (HJPARAM) >>\nendobj\n2 0 obj\n<< /Type /Catalog /Pages 3 0 R >>\nendobj\n3 0 obj\n<< /Type /Pages /Kids [4 0 R] /Count 1 >>\nendobj\n4 0 obj\n<< /Type /Page /Parent 3 0 R /MediaBox [0 0 612 792] /Contents 5 0 R >>\nendobj\n5 0 obj\n<< /Length 44 >>\nstream\nBT /F1 12 Tf 72 712 Td (HJPARAM Publication: {$article->title}) Tj ET\nendstream\nendobj\nxref\n0 6\n0000000000 65535 f\n0000000009 00000 n\n0000000062 00000 n\n0000000109 00000 n\n0000000166 00000 n\n0000000263 00000 n\ntrailer\n<< /Size 6 /Root 2 0 R >>\nstartxref\n356\n%%EOF";
-        $filename = "article-{$article->id}.pdf";
+        // Generate official academic PDF with complete ISSN header:
+        // Journal Title, Volume, Issue No., Month, Year, and ISSN
+        return $this->generateOfficialPdf($article, $journal, $issue, $volume, $issueMonth, $issueYear);
+    }
 
-        return response($content, 200, [
+    protected function generateOfficialPdf($article, $journal, $issue, $volume, $issueMonth, $issueYear)
+    {
+        $html = view('articles.pdf', compact('article', 'journal', 'issue', 'volume', 'issueMonth', 'issueYear'))->render();
+
+        $options = new Options();
+        $options->set('isHtml5ParserEnabled', true);
+        $options->set('isRemoteEnabled', true);
+
+        $dompdf = new Dompdf($options);
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('A4', 'portrait');
+        $dompdf->render();
+
+        $volNum = $volume ? $volume->volume_number : '1';
+        $issNum = $issue ? $issue->issue_number : '1';
+        $cleanJournalTitle = Str::slug($journal ? $journal->title : 'journal');
+        $cleanArticleTitle = Str::slug($article->title);
+        $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
+
+        return response($dompdf->output(), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
     }
 }
+

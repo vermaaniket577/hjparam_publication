@@ -1,52 +1,156 @@
 @extends('layouts.web')
-@section('title', $journal->title . ' - Vol ' . $volume->volume_number . ' Issue ' . $issue->issue_number . ' | HJPARAM')
+@section('title', $journal->title . ' - Vol. ' . $volume->volume_number . ', Issue ' . $issue->issue_number . ' (' . ($volume->month ?: \Carbon\Carbon::parse($issue->publication_date)->format('F')) . ' ' . ($volume->year ?: \Carbon\Carbon::parse($issue->publication_date)->format('Y')) . ') | HJPARAM')
 
 @section('content')
-    <div class="bg-blue-900 text-white py-12">
-        <div class="container mx-auto px-4">
-            <nav class="flex text-sm text-blue-200 mb-6" aria-label="Breadcrumb">
+    @php
+        $issueMonth = $volume->month ?: ($issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
+        $issueYear = $volume->year ?: ($issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
+    @endphp
+
+    <div class="bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 text-white py-12 border-b border-slate-800">
+        <div class="container mx-auto px-4 max-w-6xl">
+            <nav class="flex text-xs text-blue-300 font-semibold mb-6 flex-wrap" aria-label="Breadcrumb">
                 <ol class="flex items-center space-x-2">
                     <li><a href="{{ route('journals.index') }}" class="hover:text-white transition">Journals</a></li>
-                    <li><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"></path></svg></li>
+                    <li><svg class="w-4 h-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"></path></svg></li>
                     <li><a href="{{ route('journals.show', $journal->slug) }}" class="hover:text-white transition">{{ $journal->title }}</a></li>
-                    <li><svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"></path></svg></li>
-                    <li class="text-white font-medium">Vol {{ $volume->volume_number }}, Issue {{ $issue->issue_number }}</li>
+                    <li><svg class="w-4 h-4 text-slate-500" fill="currentColor" viewBox="0 0 20 20"><path d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"></path></svg></li>
+                    <li class="text-white font-medium">Vol. {{ $volume->volume_number }}, Issue No. {{ $issue->issue_number }} ({{ $issueMonth }} {{ $issueYear }})</li>
                 </ol>
             </nav>
 
-            <h1 class="text-3xl md:text-4xl font-bold mb-2">Volume {{ $volume->volume_number }}, Issue {{ $issue->issue_number }}</h1>
-            <p class="text-blue-200 mb-0 font-medium italic">Published on {{ \Carbon\Carbon::parse($issue->publication_date)->format('F d, Y') }}</p>
+            <!-- Journal Title & Issue Header (Official ISSN Archive Requirement) -->
+            <div class="space-y-2">
+                <span class="inline-block px-3 py-1 text-xs font-bold rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                    Official Archive Issue
+                </span>
+                <p class="text-sm font-bold text-slate-300 uppercase tracking-widest">
+                    Journal: <span class="text-white font-serif font-black">{{ $journal->title }}</span>
+                </p>
+                <h1 class="text-2xl md:text-4xl font-serif font-black text-white leading-tight">
+                    Volume {{ $volume->volume_number }}, Issue No. {{ $issue->issue_number }}
+                </h1>
+                <div class="flex flex-wrap items-center gap-4 text-xs sm:text-sm text-slate-300 pt-2">
+                    <span class="flex items-center gap-1.5 font-bold text-amber-300">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        Period: {{ $issueMonth }} {{ $issueYear }}
+                    </span>
+                    <span>•</span>
+                    <span class="font-medium text-slate-300">
+                        Release Date: {{ \Carbon\Carbon::parse($issue->publication_date)->format('F d, Y') }}
+                    </span>
+                    <span>•</span>
+                    <span class="font-mono text-slate-300">
+                        ISSN: {{ $journal->issn ?: 'Applied (Online)' }}
+                    </span>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="container mx-auto px-4 py-12">
-        <div class="flex flex-col lg:flex-row gap-12">
-            <!-- Sidebar (Optional, maybe journal info) -->
-            <div class="lg:w-1/4">
-                <div class="bg-white p-6 rounded shadow border-l-4 border-blue-600 sticky top-24">
-                    <h3 class="font-bold text-xl mb-4 text-gray-800">Journal Details</h3>
-                    <div class="space-y-4">
-                        <div class="flex flex-col">
-                            <span class="text-xs uppercase text-gray-500 font-bold tracking-widest">Journal</span>
-                            <a href="{{ route('journals.show', $journal->slug) }}" class="text-blue-600 font-medium hover:underline">{{ $journal->title }}</a>
+    <div class="container mx-auto px-4 py-12 max-w-6xl">
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Sidebar: Journal Details & ISSN Metadata -->
+            <div class="lg:w-1/3 flex-shrink-0">
+                <div class="bg-white p-6 rounded-2xl shadow-xs border border-slate-200 sticky top-24 space-y-4 text-xs">
+                    <h3 class="font-black text-sm uppercase tracking-wider text-slate-900 border-b border-slate-100 pb-3">
+                        Journal Information
+                    </h3>
+
+                    <div class="space-y-3 text-slate-700">
+                        <div>
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Journal Title</span>
+                            <a href="{{ route('journals.show', $journal->slug) }}" class="text-blue-700 font-bold hover:underline text-sm block">
+                                {{ $journal->title }}
+                            </a>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs uppercase text-gray-500 font-bold tracking-widest">ISSN</span>
-                            <span class="text-gray-800">{{ $journal->issn }}</span>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                            <div>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Volume</span>
+                                <span class="font-bold text-slate-900">Vol. {{ $volume->volume_number }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Issue No.</span>
+                                <span class="font-bold text-slate-900">Issue {{ $issue->issue_number }}</span>
+                            </div>
                         </div>
-                        <div class="flex flex-col">
-                            <span class="text-xs uppercase text-gray-500 font-bold tracking-widest">Impact Factor</span>
-                            <span class="text-gray-800 font-bold">{{ $journal->impact_factor }}</span>
+
+                        <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-100">
+                            <div>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Month</span>
+                                <span class="font-bold text-slate-900">{{ $issueMonth }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Year</span>
+                                <span class="font-bold text-slate-900">{{ $issueYear }}</span>
+                            </div>
                         </div>
-                        <hr>
-                        <a href="{{ route('author.submit', ['journal_id' => $journal->id]) }}" class="block text-center bg-blue-600 text-white font-bold py-2 rounded shadow hover:bg-blue-700 transition">Submit to Journal</a>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Format</span>
+                            <span class="font-medium text-slate-800">{{ $journal->effective_format }}</span>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Frequency</span>
+                            <span class="font-medium text-slate-800">{{ $journal->effective_frequency }}</span>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Language</span>
+                            <span class="font-medium text-slate-800">{{ $journal->effective_language }}</span>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Starting Year</span>
+                            <span class="font-medium text-slate-800">{{ $journal->effective_starting_year }}</span>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">Publisher</span>
+                            <span class="font-medium text-slate-800">{{ $journal->effective_publisher }}</span>
+                        </div>
+
+                        <div class="pt-1 border-t border-slate-100">
+                            <span class="text-[10px] uppercase text-slate-400 font-bold block mb-0.5">ISSN</span>
+                            <span class="font-mono font-bold text-emerald-700">{{ $journal->issn ?: 'Applied (Online)' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="pt-4 border-t border-slate-200 space-y-2">
+                        <a href="{{ route('author.submit', ['journal_id' => $journal->id]) }}" 
+                           class="block text-center bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl shadow-xs transition">
+                            Submit Manuscript
+                        </a>
+                        <a href="{{ route('journals.show', $journal->slug) }}#volumes" 
+                           class="block text-center bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-xl transition">
+                            &larr; Back to All Issues
+                        </a>
                     </div>
                 </div>
             </div>
 
             <!-- Content Area: Article List -->
-            <div class="lg:w-3/4">
-                <h2 class="text-2xl font-bold mb-8 text-gray-900 border-b pb-4">Table of Contents ({{ $articles->count() }} articles)</h2>
+            <div class="lg:w-2/3 flex-grow">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-4 mb-6">
+                    <div>
+                        <h2 class="text-xl sm:text-2xl font-bold text-gray-900">Table of Contents</h2>
+                        <p class="text-xs text-slate-500">
+                            {{ $journal->title }} &bull; Vol. {{ $volume->volume_number }}, Issue No. {{ $issue->issue_number }} ({{ $issueMonth }} {{ $issueYear }})
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-xs font-bold px-3 py-1 rounded-full bg-blue-50 text-blue-800 border border-blue-200">
+                            {{ $articles->count() }} Articles Published
+                        </span>
+                        @if($articles->count() >= 5)
+                            <span class="text-xs font-bold px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                Complete Issue ✓
+                            </span>
+                        @endif
+                    </div>
+                </div>
                 
                 <div class="space-y-10">
                     @forelse($articles as $article)

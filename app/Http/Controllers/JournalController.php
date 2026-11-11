@@ -6,6 +6,7 @@ use App\Models\Journal;
 use App\Models\Volume;
 use App\Models\Issue;
 use App\Models\Article;
+use App\Models\EditorialBoard;
 use Illuminate\Http\Request;
 
 class JournalController extends Controller
@@ -37,8 +38,15 @@ class JournalController extends Controller
         $journal = Journal::where('slug', $slug)->firstOrFail();
 
         // Load relationships needed for the view
-        $volumes = $journal->volumes()->orderBy('year', 'desc')->with('issues')->get();
-        $board = $journal->editorialBoard()->orderBy('role')->get();
+        $volumes = $journal->volumes()->orderBy('year', 'desc')->with(['issues.articles' => function($q) {
+            $q->where('status', 'published');
+        }])->get();
+        
+        // Load journal-specific and publisher-wide central editorial board members
+        $board = EditorialBoard::where(function($q) use ($journal) {
+            $q->where('journal_id', $journal->id)
+              ->orWhereNull('journal_id');
+        })->orderBy('sort_order')->orderBy('role')->get();
 
         // Get latest issue articles
         $latestIssue = $journal->issues()->latest('publication_date')->first();

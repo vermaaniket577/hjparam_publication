@@ -10,6 +10,7 @@ function editorialBoardManager() {
         addModalOpen: false, 
         settingsModalOpen: false, 
         editModalOpen: false,
+        tableMembers: {!! json_encode($members->items()) !!},
         allRoles: {!! json_encode($roles) !!},
         allJournals: [
             { id: 'global', title: 'Publisher-wide / Central Board', is_central: true },
@@ -19,6 +20,7 @@ function editorialBoardManager() {
         ],
 
         // Add Member State
+        addMemberEmail: '',
         addJournalAssignments: {
             'global': ['Editor-in-Chief']
         },
@@ -34,14 +36,32 @@ function editorialBoardManager() {
         editMember: {
             id: '',
             name: '',
-            journal_id: '',
+            designation: '',
+            department: '',
             affiliation: '',
+            postal_address: '',
+            country: '',
+            is_international: false,
+            journal_id: '',
             email: '',
             role: '',
             bio: '',
             sort_order: 0,
             photo_url: '',
             editor_uid: ''
+        },
+
+        isPersonalEmail(email) {
+            if (!email || typeof email !== 'string') return false;
+            let lower = email.trim().toLowerCase();
+            let freeDomains = ['@gmail.', '@yahoo.', '@hotmail.', '@outlook.', '@live.', '@icloud.', '@aol.', '@rediffmail.', '@zoho.', '@proton.', '@mail.', '@ymail.'];
+            return freeDomains.some(d => lower.includes(d));
+        },
+
+        openEditById(id) {
+            let member = this.tableMembers.find(m => Number(m.id) === Number(id));
+            if (!member) return;
+            this.openEdit(member, member.photo_url || '');
         },
 
         getJournalTitle(jId) {
@@ -78,8 +98,13 @@ function editorialBoardManager() {
             this.editMember = {
                 id: member.id,
                 name: member.name || '',
-                journal_id: member.journal_id || '',
+                designation: member.designation || '',
+                department: member.department || '',
                 affiliation: member.affiliation || '',
+                postal_address: member.postal_address || '',
+                country: member.country || '',
+                is_international: Boolean(member.is_international),
+                journal_id: member.journal_id || '',
                 email: member.email || '',
                 role: member.role || 'Editorial Board Member',
                 bio: member.bio || '',
@@ -329,6 +354,111 @@ function editorialBoardManager() {
         </div>
     </div>
 
+    <!-- ISSN National Centre Compliance Overview -->
+    <div class="rounded-2xl border p-4 sm:p-5 shadow-sm transition {{ ($stats['issn_compliant'] ?? false) ? 'border-emerald-200 dark:border-emerald-800/60 bg-emerald-50/40 dark:bg-emerald-950/20' : 'border-amber-200 dark:border-amber-800/60 bg-amber-50/40 dark:bg-amber-950/20' }}">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b {{ ($stats['issn_compliant'] ?? false) ? 'border-emerald-200/70 dark:border-emerald-900/40' : 'border-amber-200/70 dark:border-amber-900/40' }}">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center font-bold {{ ($stats['issn_compliant'] ?? false) ? 'bg-emerald-600 text-white shadow-xs' : 'bg-amber-500 text-white shadow-xs' }}">
+                    @if($stats['issn_compliant'] ?? false)
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    @else
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    @endif
+                </div>
+                <div>
+                    <h2 class="text-sm sm:text-base font-extrabold text-gray-900 dark:text-white flex items-center gap-2">
+                        ISSN National Centre Compliance Status
+                        @if($stats['issn_compliant'] ?? false)
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
+                                100% Compliant ✓
+                            </span>
+                        @else
+                            <span class="px-2 py-0.5 rounded-full text-[11px] font-bold bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-200">
+                                Action Recommended
+                            </span>
+                        @endif
+                    </h2>
+                    <p class="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                        Requirements for Online ISSN Application: Min 5 members, Min 2 international, full official postal addresses, and strict institutional domain emails.
+                    </p>
+                </div>
+            </div>
+            <div class="text-right">
+                <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider block">Application Status</span>
+                <span class="text-xs font-bold text-gray-800 dark:text-gray-200">
+                    {{ ($stats['issn_compliant'] ?? false) ? 'Ready for ISSN National Centre Review' : 'Missing minimum editorial criteria' }}
+                </span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 pt-3">
+            <div class="p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700/60">
+                <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>1. Board Members</span>
+                    @if(($stats['total'] ?? 0) >= 5)
+                        <span class="text-emerald-600 font-bold text-xs">✓ Pass</span>
+                    @else
+                        <span class="text-amber-600 font-bold text-xs">⚠️ Need 5</span>
+                    @endif
+                </div>
+                <div class="mt-1 flex items-baseline gap-1.5">
+                    <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $stats['total'] ?? 0 }}</span>
+                    <span class="text-xs text-gray-500">/ 5 min</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">Min 5 complete board members</p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700/60">
+                <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>2. International</span>
+                    @if(($stats['international'] ?? 0) >= 2)
+                        <span class="text-emerald-600 font-bold text-xs">✓ Pass</span>
+                    @else
+                        <span class="text-amber-600 font-bold text-xs">⚠️ Need 2</span>
+                    @endif
+                </div>
+                <div class="mt-1 flex items-baseline gap-1.5">
+                    <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $stats['international'] ?? 0 }}</span>
+                    <span class="text-xs text-gray-500">/ 2 min</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">Min 2 international scholars</p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700/60">
+                <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>3. Postal Addresses</span>
+                    @if(($stats['with_postal'] ?? 0) >= 5)
+                        <span class="text-emerald-600 font-bold text-xs">✓ Pass</span>
+                    @else
+                        <span class="text-amber-600 font-bold text-xs">⚠️ Incomplete</span>
+                    @endif
+                </div>
+                <div class="mt-1 flex items-baseline gap-1.5">
+                    <span class="text-xl font-extrabold text-gray-900 dark:text-white">{{ $stats['with_postal'] ?? 0 }}</span>
+                    <span class="text-xs text-gray-500">on file</span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">Official street/building postal</p>
+            </div>
+
+            <div class="p-3 rounded-xl bg-white/80 dark:bg-gray-800/80 border border-gray-100 dark:border-gray-700/60">
+                <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider flex items-center justify-between">
+                    <span>4. Institutional Email</span>
+                    @if(($stats['personal_emails'] ?? 0) === 0)
+                        <span class="text-emerald-600 font-bold text-xs">✓ Pass</span>
+                    @else
+                        <span class="text-rose-600 font-bold text-xs">⚠️ {{ $stats['personal_emails'] }} personal</span>
+                    @endif
+                </div>
+                <div class="mt-1 flex items-baseline gap-1.5">
+                    <span class="text-xl font-extrabold text-gray-900 dark:text-white">
+                        {{ ($stats['personal_emails'] ?? 0) === 0 ? '100%' : ($stats['personal_emails'] . ' Disallowed') }}
+                    </span>
+                </div>
+                <p class="text-[10px] text-gray-400 mt-0.5">No Gmail/Yahoo/Hotmail allowed</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Stats Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-white dark:bg-gray-800 p-5 rounded-2xl border border-gray-100 dark:border-gray-700 shadow-sm">
@@ -405,10 +535,11 @@ function editorialBoardManager() {
             <table class="w-full text-left text-sm">
                 <thead class="bg-gray-50/80 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-100 dark:border-gray-700">
                     <tr>
-                        <th class="py-3.5 px-4 font-semibold">Member</th>
-                        <th class="py-3.5 px-4 font-semibold">Designation / Role</th>
-                        <th class="py-3.5 px-4 font-semibold">Assigned Journal</th>
-                        <th class="py-3.5 px-4 font-semibold">Affiliation & Bio</th>
+                        <th class="py-3.5 px-4 font-semibold">Member & Designation</th>
+                        <th class="py-3.5 px-4 font-semibold">Institutional Email</th>
+                        <th class="py-3.5 px-4 font-semibold">Affiliation & Department</th>
+                        <th class="py-3.5 px-4 font-semibold">Postal Address & Country</th>
+                        <th class="py-3.5 px-4 font-semibold">Assigned Journal(s) & Role(s)</th>
                         <th class="py-3.5 px-4 font-semibold text-center">Order</th>
                         <th class="py-3.5 px-4 font-semibold text-right">Actions</th>
                     </tr>
@@ -429,55 +560,103 @@ function editorialBoardManager() {
                                     @endif
                                     <div>
                                         <div class="font-bold text-gray-900 dark:text-white">{{ $m->name }}</div>
-                                        @if($m->email)
-                                            <div class="text-xs text-gray-400">{{ $m->email }}</div>
+                                        @if($m->designation)
+                                            <div class="text-xs font-semibold text-blue-700 dark:text-blue-300">{{ $m->designation }}</div>
                                         @endif
                                     </div>
                                 </div>
                             </td>
 
                             <td class="py-3.5 px-4">
+                                @if($m->email)
+                                    <div class="font-mono text-xs text-gray-800 dark:text-gray-200">{{ $m->email }}</div>
+                                    @if($m->is_institutional_email)
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 dark:bg-emerald-900/30 dark:text-emerald-300 px-1.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800 mt-1">
+                                            ✓ Institutional
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center gap-1 text-[10px] font-bold text-rose-700 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-300 px-1.5 py-0.5 rounded border border-rose-200 dark:border-rose-800 mt-1"
+                                              title="ISSN guidelines prohibit personal emails (Gmail, Yahoo, etc.)">
+                                            ⚠️ Personal Domain
+                                        </span>
+                                    @endif
+                                @else
+                                    <span class="text-xs text-gray-400 italic">None</span>
+                                @endif
+                            </td>
+
+                            <td class="py-3.5 px-4 max-w-xs">
+                                <div class="text-xs font-semibold text-gray-900 dark:text-gray-100">{{ $m->affiliation }}</div>
+                                @if($m->department)
+                                    <div class="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{{ $m->department }}</div>
+                                @endif
+                                @if($m->bio)
+                                    <div class="text-[11px] text-gray-400 dark:text-gray-500 line-clamp-1 mt-0.5">{{ $m->bio }}</div>
+                                @endif
+                            </td>
+
+                            <td class="py-3.5 px-4 max-w-xs">
+                                <div class="flex items-center gap-1.5 flex-wrap">
+                                    <span class="text-xs font-bold text-gray-800 dark:text-gray-200">{{ $m->country ?: 'Not Specified' }}</span>
+                                    @if($m->is_international_member)
+                                        <span class="inline-flex items-center px-1.5 py-0.2 rounded text-[10px] font-bold bg-indigo-50 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800">
+                                            🌐 International
+                                        </span>
+                                    @endif
+                                </div>
+                                @if($m->postal_address)
+                                    <div class="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-2 mt-1" title="{{ $m->postal_address }}">
+                                        📍 {{ $m->postal_address }}
+                                    </div>
+                                @else
+                                    <div class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold mt-1">
+                                        ⚠️ Missing Postal Address
+                                    </div>
+                                @endif
+                            </td>
+
+                            <td class="py-3.5 px-4">
+                                <div class="mb-1.5">
+                                    @if($m->journal)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-emerald-50 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-200">
+                                            {{ $m->journal->title }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-purple-50 text-purple-800 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200">
+                                            Publisher-wide / Central
+                                        </span>
+                                    @endif
+                                </div>
+
                                 <div class="flex flex-wrap gap-1 max-w-xs">
                                     @foreach(array_filter(array_map('trim', explode(',', $m->role))) as $r)
                                         @if(stripos($r, 'Chief') !== false)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-800 border border-amber-200">
                                                 ★ {{ $r }}
                                             </span>
                                         @elseif(stripos($r, 'Section') !== false)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200">
                                                 {{ $r }}
                                             </span>
                                         @elseif(stripos($r, 'Associate') !== false)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-indigo-50 text-indigo-800 border border-indigo-200">
                                                 {{ $r }}
                                             </span>
                                         @elseif(stripos($r, 'Managing') !== false)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-50 text-purple-800 border border-purple-200">
                                                 {{ $r }}
                                             </span>
                                         @elseif(stripos($r, 'Review') !== false)
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
                                                 {{ $r }}
                                             </span>
                                         @else
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-100 text-gray-700 border border-gray-200">
+                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-700 border border-gray-200">
                                                 {{ $r }}
                                             </span>
                                         @endif
                                     @endforeach
                                 </div>
-                            </td>
-
-                            <td class="py-3.5 px-4">
-                                @if($m->journal)
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
-                                        {{ $m->journal->title }}
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
-                                        Publisher-wide / Central
-                                    </span>
-                                @endif
 
                                 @if(is_array($m->all_appointments_summary) && count($m->all_appointments_summary) > 1)
                                     <div class="mt-1 flex flex-wrap gap-1">
@@ -489,20 +668,13 @@ function editorialBoardManager() {
                                 @endif
                             </td>
 
-                            <td class="py-3.5 px-4 max-w-xs">
-                                <div class="text-xs font-semibold text-gray-800 dark:text-gray-200 truncate">{{ $m->affiliation }}</div>
-                                @if($m->bio)
-                                    <div class="text-xs text-gray-500 line-clamp-1 mt-0.5">{{ $m->bio }}</div>
-                                @endif
-                            </td>
-
                             <td class="py-3.5 px-4 text-center font-mono text-xs text-gray-500">
                                 {{ $m->sort_order }}
                             </td>
 
                             <td class="py-3.5 px-4 text-right whitespace-nowrap">
                                 <button type="button" 
-                                    @click="openEdit({{ json_encode($m) }}, '{{ $m->photo_url ?? '' }}')"
+                                    @click="openEditById({{ $m->id }})"
                                     class="text-blue-600 hover:text-blue-800 font-semibold text-xs px-2.5 py-1 rounded-lg hover:bg-blue-50 transition mr-1">
                                     Edit
                                 </button>
@@ -519,7 +691,7 @@ function editorialBoardManager() {
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="py-12 text-center text-gray-400">
+                            <td colspan="7" class="py-12 text-center text-gray-400">
                                 <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
                                 </svg>
@@ -560,10 +732,52 @@ function editorialBoardManager() {
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Institutional Designation *
+                            </label>
+                            <input type="text" name="designation" placeholder="e.g. Professor & Dean, Chair of Dept." 
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Department / School
+                            </label>
+                            <input type="text" name="department" placeholder="e.g. Faculty of Engineering, Dept. of Bioengineering" 
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Affiliation / Institution *</label>
-                        <input type="text" name="affiliation" required placeholder="e.g. Department of Bioengineering, University of Excellence" 
+                        <input type="text" name="affiliation" required placeholder="e.g. Imperial College London" 
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                            Complete Official Postal Address (ISSN Requirement) *
+                        </label>
+                        <textarea name="postal_address" rows="2" placeholder="e.g. Faculty of Engineering, South Kensington Campus, London SW7 2AZ, United Kingdom"
+                                  class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Required by ISSN National Centre: Official departmental/institutional postal address with street, building, city & PIN.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Country *</label>
+                            <input type="text" name="country" placeholder="e.g. United Kingdom, United States, India"
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="pt-4">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" name="is_international" value="1" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <span class="text-xs font-bold text-gray-800 dark:text-gray-200">
+                                    🌐 International Member (Min 2 required for ISSN)
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- ASSIGNED JOURNALS (DROPDOWN WITH CHECKBOXES) & ROLE CONFIGURATION -->
@@ -812,16 +1026,30 @@ function editorialBoardManager() {
                         </template>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Email (Optional)</label>
-                            <input type="email" name="email" placeholder="editor@university.edu" 
-                                   class="w-full text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Official Institutional Email *
+                            </label>
+                            <input type="email" name="email" x-model="addMemberEmail" placeholder="editor@university.edu" 
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                            
+                            <!-- Real-time Personal Email Warning -->
+                            <template x-if="isPersonalEmail(addMemberEmail)">
+                                <div class="mt-1.5 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5 shadow-xs">
+                                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>ISSN Non-Compliance:</strong> Personal emails (Gmail, Yahoo, Hotmail, etc.) are strictly prohibited by ISSN National Centre guidelines. Please use an institutional domain email.
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Sort Order</label>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Sort Order</label>
                             <input type="number" name="sort_order" value="0" min="0" placeholder="0 = top"
-                                   class="w-full text-sm border-gray-300 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                         </div>
                     </div>
 
@@ -869,10 +1097,52 @@ function editorialBoardManager() {
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Institutional Designation *
+                            </label>
+                            <input type="text" name="designation" x-model="editMember.designation" placeholder="e.g. Professor & Dean, Chair of Dept." 
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Department / School
+                            </label>
+                            <input type="text" name="department" x-model="editMember.department" placeholder="e.g. Faculty of Engineering, Dept. of Bioengineering" 
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                    </div>
+
                     <div>
                         <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Affiliation / Institution *</label>
                         <input type="text" name="affiliation" x-model="editMember.affiliation" required 
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                            Complete Official Postal Address (ISSN Requirement) *
+                        </label>
+                        <textarea name="postal_address" x-model="editMember.postal_address" rows="2" placeholder="e.g. Faculty of Engineering, South Kensington Campus, London SW7 2AZ, United Kingdom"
+                                  class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500"></textarea>
+                        <p class="text-[11px] text-gray-500 mt-0.5">Required by ISSN National Centre: Official departmental/institutional postal address with street, building, city & PIN.</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Country *</label>
+                            <input type="text" name="country" x-model="editMember.country" placeholder="e.g. United Kingdom, United States, India"
+                                   class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                        </div>
+                        <div class="pt-4">
+                            <label class="flex items-center gap-2 cursor-pointer select-none">
+                                <input type="checkbox" name="is_international" value="1" :checked="editMember.is_international" @change="editMember.is_international = $event.target.checked" class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                <span class="text-xs font-bold text-gray-800 dark:text-gray-200">
+                                    🌐 International Member (Min 2 required for ISSN)
+                                </span>
+                            </label>
+                        </div>
                     </div>
 
                     <!-- ASSIGNED JOURNALS (DROPDOWN WITH CHECKBOXES) & ROLE CONFIGURATION -->
@@ -1121,11 +1391,25 @@ function editorialBoardManager() {
                         </template>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-3">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Email (Optional)</label>
-                            <input type="email" name="email" x-model="editMember.email" 
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">
+                                Official Institutional Email *
+                            </label>
+                            <input type="email" name="email" x-model="editMember.email" placeholder="editor@university.edu" 
                                    class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
+                            
+                            <!-- Real-time Personal Email Warning -->
+                            <template x-if="isPersonalEmail(editMember.email)">
+                                <div class="mt-1.5 p-2 rounded-lg bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-800 dark:text-amber-300 flex items-start gap-1.5 shadow-xs">
+                                    <svg class="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                                    </svg>
+                                    <div>
+                                        <strong>ISSN Non-Compliance:</strong> Personal emails (Gmail, Yahoo, Hotmail, etc.) are strictly prohibited by ISSN National Centre guidelines. Please use an institutional domain email.
+                                    </div>
+                                </div>
+                            </template>
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1">Sort Order</label>

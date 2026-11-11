@@ -32,10 +32,10 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="mb-4">
-                    <label for="issn" class="block text-sm font-medium text-gray-700">ISSN</label>
+                    <label for="issn" class="block text-sm font-medium text-gray-700">ISSN (Online / Print)</label>
                     <input type="text" name="issn" id="issn" value="{{ old('issn') }}"
                         class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md"
-                        placeholder="e.g. 1234-5678">
+                        placeholder="e.g. 2584-XXXX or leave blank if applied">
                     @error('issn') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                 </div>
 
@@ -45,6 +45,70 @@
                         value="{{ old('impact_factor') }}"
                         class="mt-1 focus:ring-blue-500 focus:border-blue-500 block w-full shadow-sm sm:text-sm border-gray-300 rounded-md">
                     @error('impact_factor') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+            </div>
+
+            <!-- ISSN PRELIMINARY DETAILS CARD (REQUIRED FOR ISSN APPLICATION) -->
+            <div class="mb-6 p-4 rounded-xl border border-blue-200 bg-blue-50/40">
+                <div class="flex items-center gap-2 mb-3">
+                    <span class="p-1 rounded bg-blue-600 text-white">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    </span>
+                    <div>
+                        <h3 class="text-sm font-bold text-blue-950 uppercase tracking-wide">Preliminary Details (ISSN Application Compliance)</h3>
+                        <p class="text-xs text-blue-700">These details must match the ISSN application and are shown publicly on the journal profile.</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                        <label for="format" class="block text-xs font-bold text-gray-700 uppercase mb-1">Format *</label>
+                        <input type="text" name="format" id="format" value="{{ old('format', 'Online / Electronic (e-Journal)') }}"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. Online / Electronic (e-Journal)" required>
+                        @error('format') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="frequency" class="block text-xs font-bold text-gray-700 uppercase mb-1">Frequency *</label>
+                        <input type="text" name="frequency" id="frequency" value="{{ old('frequency', 'Monthly') }}"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. Monthly, Quarterly, Bi-annual" required>
+                        @error('frequency') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="starting_year" class="block text-xs font-bold text-gray-700 uppercase mb-1">Starting Year *</label>
+                        <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', 2024) }}"
+                            min="1900" max="2100"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. 2024" required>
+                        @error('starting_year') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label for="subject" class="block text-xs font-bold text-gray-700 uppercase mb-1">Subject / Discipline *</label>
+                        <input type="text" name="subject" id="subject" value="{{ old('subject', 'Multidisciplinary / Arts, Humanities, Science & Technology') }}"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. Multidisciplinary Studies, Applied Science, Humanities" required>
+                        @error('subject') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label for="language" class="block text-xs font-bold text-gray-700 uppercase mb-1">Language *</label>
+                        <input type="text" name="language" id="language" value="{{ old('language', 'English, Hindi') }}"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. English, Hindi" required>
+                        @error('language') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="sm:col-span-3">
+                        <label for="publisher" class="block text-xs font-bold text-gray-700 uppercase mb-1">Publisher Name *</label>
+                        <input type="text" name="publisher" id="publisher" value="{{ old('publisher', 'HJPARAM Publication') }}"
+                            class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
+                            placeholder="e.g. HJPARAM Publication" required>
+                        @error('publisher') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
                 </div>
             </div>
 

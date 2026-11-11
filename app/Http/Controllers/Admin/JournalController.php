@@ -23,13 +23,20 @@ class JournalController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:journals',
-            'issn' => 'nullable|string|max:20',
+            'issn' => 'nullable|string|max:50',
+            'format' => 'nullable|string|max:100',
+            'frequency' => 'nullable|string|max:100',
+            'subject' => 'nullable|string|max:255',
+            'language' => 'nullable|string|max:150',
+            'starting_year' => 'nullable|integer|min:1900|max:2100',
+            'publisher' => 'nullable|string|max:255',
             'impact_factor' => 'nullable|numeric',
             'description' => 'nullable|string',
             'aims_and_scope' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
 
+        $validated['is_active'] = $request->has('is_active');
         \App\Models\Journal::create($validated);
 
         return redirect()->route('admin.journals.index')->with('success', 'Journal created successfully.');
@@ -45,7 +52,13 @@ class JournalController extends Controller
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'slug' => 'required|string|max:255|unique:journals,slug,' . $journal->id,
-            'issn' => 'nullable|string|max:20',
+            'issn' => 'nullable|string|max:50',
+            'format' => 'nullable|string|max:100',
+            'frequency' => 'nullable|string|max:100',
+            'subject' => 'nullable|string|max:255',
+            'language' => 'nullable|string|max:150',
+            'starting_year' => 'nullable|integer|min:1900|max:2100',
+            'publisher' => 'nullable|string|max:255',
             'impact_factor' => 'nullable|numeric',
             'description' => 'nullable|string',
             'aims_and_scope' => 'nullable|string',

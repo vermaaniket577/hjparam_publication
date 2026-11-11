@@ -13,7 +13,12 @@ class EditorialBoard extends Model
         'editor_uid',
         'journal_id',
         'name',
+        'designation',
+        'department',
         'affiliation',
+        'postal_address',
+        'country',
+        'is_international',
         'email',
         'role',
         'bio',
@@ -21,12 +26,60 @@ class EditorialBoard extends Model
         'sort_order',
     ];
 
+    protected $casts = [
+        'is_international' => 'boolean',
+    ];
+
     protected $appends = [
         'photo_url',
         'roles_array',
         'journal_roles_map',
         'all_appointments_summary',
+        'is_institutional_email',
+        'is_international_member',
     ];
+
+    /**
+     * Check if email is an institutional domain (ISSN prohibits personal email providers).
+     */
+    public function getIsInstitutionalEmailAttribute(): bool
+    {
+        if (empty($this->email)) {
+            return false;
+        }
+
+        $email = strtolower(trim($this->email));
+        $parts = explode('@', $email);
+        if (count($parts) !== 2) {
+            return false;
+        }
+
+        $domain = $parts[1];
+        $blockedDomains = [
+            'gmail.com', 'googlemail.com', 'yahoo.com', 'yahoo.co.in', 'ymail.com', 'rocketmail.com',
+            'hotmail.com', 'outlook.com', 'live.com', 'msn.com',
+            'rediffmail.com', 'aol.com', 'icloud.com', 'mail.com', 'protonmail.com', 'zoho.com'
+        ];
+
+        return !in_array($domain, $blockedDomains);
+    }
+
+    /**
+     * Check if member is classified as an international editorial board member.
+     */
+    public function getIsInternationalMemberAttribute(): bool
+    {
+        if ($this->is_international) {
+            return true;
+        }
+
+        if (!empty($this->country)) {
+            $c = strtolower(trim($this->country));
+            return !in_array($c, ['india', 'in', 'bharat']);
+        }
+
+        return false;
+    }
 
     /**
      * Get array of all roles assigned to this member.

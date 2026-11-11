@@ -54,13 +54,20 @@ class EditorialBoardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|string|max:500',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'affiliation' => 'required|string|max:255',
+            'postal_address' => 'nullable|string|max:1000',
+            'country' => 'nullable|string|max:100',
+            'is_international' => 'nullable|boolean',
+            'role' => 'required|string|max:500',
             'email' => 'nullable|email|max:255',
             'bio' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
             'photo' => 'nullable|image|max:2048',
         ]);
+
+        $validated['is_international'] = $request->boolean('is_international');
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('editorial', 'public');
@@ -97,13 +104,20 @@ class EditorialBoardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'role' => 'required|string|max:500',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'affiliation' => 'required|string|max:255',
+            'postal_address' => 'nullable|string|max:1000',
+            'country' => 'nullable|string|max:100',
+            'is_international' => 'nullable|boolean',
+            'role' => 'required|string|max:500',
             'email' => 'nullable|email|max:255',
             'bio' => 'nullable|string',
             'sort_order' => 'nullable|integer|min:0',
             'photo' => 'nullable|image|max:2048',
         ]);
+
+        $validated['is_international'] = $request->boolean('is_international');
 
         if ($request->hasFile('photo')) {
             if ($member->photo && Storage::disk('public')->exists($member->photo)) {
@@ -194,11 +208,20 @@ class EditorialBoardController extends Controller
 
         $members = $query->orderBy('name', 'asc')->paginate(20)->withQueryString();
 
+        $allMembers = EditorialBoard::all();
+        $internationalCount = $allMembers->filter(fn($m) => (bool)$m->is_international)->count();
+        $postalCount = $allMembers->filter(fn($m) => !empty(trim((string)$m->postal_address)))->count();
+        $personalEmailCount = $allMembers->filter(fn($m) => !empty($m->email) && !$m->is_institutional_email)->count();
+
         $stats = [
-            'total' => EditorialBoard::count(),
-            'chief' => EditorialBoard::where('role', 'like', '%Chief%')->count(),
-            'section' => EditorialBoard::where('role', 'like', '%Section%')->count(),
-            'other' => EditorialBoard::where('role', 'not like', '%Chief%')->where('role', 'not like', '%Section%')->count(),
+            'total' => $allMembers->count(),
+            'chief' => $allMembers->filter(fn($m) => stripos($m->role, 'Chief') !== false)->count(),
+            'section' => $allMembers->filter(fn($m) => stripos($m->role, 'Section') !== false)->count(),
+            'other' => $allMembers->filter(fn($m) => stripos($m->role, 'Chief') === false && stripos($m->role, 'Section') === false)->count(),
+            'international' => $internationalCount,
+            'with_postal' => $postalCount,
+            'personal_emails' => $personalEmailCount,
+            'issn_compliant' => ($allMembers->count() >= 5) && ($internationalCount >= 2) && ($postalCount >= 5) && ($personalEmailCount === 0),
         ];
 
         $pageSettings = [
@@ -285,13 +308,20 @@ class EditorialBoardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'affiliation' => 'required|string|max:255',
+            'postal_address' => 'nullable|string|max:1000',
+            'country' => 'nullable|string|max:100',
+            'is_international' => 'nullable|boolean',
             'email' => 'nullable|email|max:255',
             'role' => 'required|string|max:500',
             'bio' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        $validated['is_international'] = $request->boolean('is_international');
 
         $photoPath = null;
         if ($request->hasFile('photo')) {
@@ -310,7 +340,12 @@ class EditorialBoardController extends Controller
                 'editor_uid' => $editorUid,
                 'journal_id' => $journalId,
                 'name' => $validated['name'],
+                'designation' => $validated['designation'] ?? null,
+                'department' => $validated['department'] ?? null,
                 'affiliation' => $validated['affiliation'],
+                'postal_address' => $validated['postal_address'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'is_international' => $validated['is_international'] ?? false,
                 'email' => $email,
                 'role' => $roleForJournal,
                 'bio' => $validated['bio'] ?? null,
@@ -339,13 +374,20 @@ class EditorialBoardController extends Controller
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'affiliation' => 'required|string|max:255',
+            'postal_address' => 'nullable|string|max:1000',
+            'country' => 'nullable|string|max:100',
+            'is_international' => 'nullable|boolean',
             'email' => 'nullable|email|max:255',
             'role' => 'required|string|max:500',
             'bio' => 'nullable|string',
             'photo' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
             'sort_order' => 'nullable|integer|min:0',
         ]);
+
+        $validated['is_international'] = $request->boolean('is_international');
 
         // Ensure editor_uid is set
         $editorUid = $member->editor_uid;
@@ -388,7 +430,12 @@ class EditorialBoardController extends Controller
             $payload = [
                 'editor_uid' => $editorUid,
                 'name' => $validated['name'],
+                'designation' => $validated['designation'] ?? null,
+                'department' => $validated['department'] ?? null,
                 'affiliation' => $validated['affiliation'],
+                'postal_address' => $validated['postal_address'] ?? null,
+                'country' => $validated['country'] ?? null,
+                'is_international' => $validated['is_international'] ?? false,
                 'email' => $email,
                 'journal_id' => $journalId,
                 'role' => $roleForJournal,

@@ -82,16 +82,22 @@
                         <!-- Right Information Area -->
                         <div class="flex-grow flex flex-col justify-between w-full h-full">
                             <div>
-                                <!-- Badges -->
-                                <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <span class="px-2.5 py-0.5 bg-slate-100 text-slate-700 text-[11px] font-bold font-mono rounded-md border border-slate-200">
-                                        ISSN: {{ $journal->issn ?? '2071-1050' }}
+                                <!-- Badges & Preliminary Details (ISSN) -->
+                                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-2">
+                                    <span class="px-2.5 py-0.5 bg-slate-100 text-slate-800 text-[11px] font-bold font-mono rounded-md border border-slate-200">
+                                        ISSN: {{ $journal->issn ?: 'Applied / Online' }}
                                     </span>
-                                    <span class="px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-md border border-emerald-100">
-                                        Impact Factor: {{ number_format($journal->impact_factor ?? 4.2, 2) }}
+                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-semibold rounded-md border border-blue-100">
+                                        {{ $journal->effective_format }}
                                     </span>
-                                    <span class="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[11px] font-bold rounded-md border border-blue-100">
-                                        Scopus / WoS
+                                    <span class="px-2 py-0.5 bg-purple-50 text-purple-700 text-[11px] font-semibold rounded-md border border-purple-100">
+                                        Freq: {{ $journal->effective_frequency }}
+                                    </span>
+                                    <span class="px-2 py-0.5 bg-amber-50 text-amber-800 text-[11px] font-semibold rounded-md border border-amber-100">
+                                        Est. {{ $journal->effective_starting_year }}
+                                    </span>
+                                    <span class="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[11px] font-semibold rounded-md border border-emerald-100">
+                                        {{ $journal->effective_language }}
                                     </span>
                                 </div>
 
