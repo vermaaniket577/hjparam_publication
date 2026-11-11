@@ -22,11 +22,13 @@ function editorialBoardManager() {
         addJournalAssignments: {
             'global': ['Editor-in-Chief']
         },
+        addJournalDropdownOpen: false,
         addJournalSearch: '',
         addCustomRoleInputs: {},
 
         // Edit Member State
         editJournalAssignments: {},
+        editJournalDropdownOpen: false,
         editJournalSearch: '',
         editCustomRoleInputs: {},
         editMember: {
@@ -40,6 +42,36 @@ function editorialBoardManager() {
             sort_order: 0,
             photo_url: '',
             editor_uid: ''
+        },
+
+        getJournalTitle(jId) {
+            let idStr = String(jId);
+            let found = this.allJournals.find(j => String(j.id) === idStr);
+            if (found) return found.title;
+            if (idStr === 'global') return 'Publisher-wide / Central Board';
+            return 'Journal #' + idStr;
+        },
+
+        getSelectedJournalsSummary(assignments) {
+            let keys = Object.keys(assignments || {});
+            let count = keys.length;
+            if (count === 0) return 'Select assigned journal(s)...';
+            let names = keys.map(k => this.getJournalTitle(k));
+            if (count === 1) return names[0];
+            if (count === 2) return names[0] + ', ' + names[1];
+            return count + ' journals selected (' + names[0] + ', +' + (count - 1) + ' more)';
+        },
+
+        assignedJournalsCount(assignments) {
+            return Object.keys(assignments || {}).length;
+        },
+
+        hasAssignedJournals(assignments) {
+            return Object.keys(assignments || {}).length > 0;
+        },
+
+        hasMultipleJournals(assignments) {
+            return Object.keys(assignments || {}).length > 1;
         },
 
         openEdit(member, photoUrl) {
@@ -79,6 +111,7 @@ function editorialBoardManager() {
             });
 
             this.editJournalAssignments = map;
+            this.editJournalDropdownOpen = false;
             this.editJournalSearch = '';
             this.editCustomRoleInputs = {};
             this.editModalOpen = true;
@@ -98,6 +131,11 @@ function editorialBoardManager() {
             this.addJournalAssignments = { ...this.addJournalAssignments };
         },
 
+        removeJournalAdd(jId) {
+            delete this.addJournalAssignments[String(jId)];
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
         toggleJournalEdit(jId) {
             let key = String(jId);
             if (this.editJournalAssignments.hasOwnProperty(key)) {
@@ -105,6 +143,11 @@ function editorialBoardManager() {
             } else {
                 this.editJournalAssignments[key] = ['Editorial Board Member'];
             }
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        removeJournalEdit(jId) {
+            delete this.editJournalAssignments[String(jId)];
             this.editJournalAssignments = { ...this.editJournalAssignments };
         },
 
@@ -523,8 +566,10 @@ function editorialBoardManager() {
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
-                    <!-- JOURNAL ASSIGNMENTS & EDITORIAL ROLES SECTION (JOURNAL-WISE WITH CHECKBOXES) -->
-                    <div class="border border-blue-200 dark:border-blue-900/60 rounded-2xl p-4 bg-gradient-to-b from-blue-50/50 via-slate-50/30 to-white dark:from-gray-900/80 dark:to-gray-900">
+                    <!-- ASSIGNED JOURNALS (DROPDOWN WITH CHECKBOXES) & ROLE CONFIGURATION -->
+                    <div class="border border-blue-200 dark:border-blue-900/60 rounded-2xl p-4 bg-gradient-to-b from-blue-50/40 via-slate-50/20 to-white dark:from-gray-900/80 dark:to-gray-900 space-y-4">
+                        
+                        <!-- Header with Selection Counter -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-200/80 dark:border-gray-700">
                             <div>
                                 <div class="flex items-center gap-2">
@@ -534,150 +579,224 @@ function editorialBoardManager() {
                                         </svg>
                                     </span>
                                     <span class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                                        Assigned Journals & Editorial Roles *
+                                        Assigned Journal(s) & Editorial Roles *
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                    Check journals to assign, then check multiple roles specifically for each journal.
+                                    Select journals from the dropdown list, then assign specific roles for each journal below.
                                 </p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 shadow-xs"
-                                      x-text="Object.keys(addJournalAssignments).length + ' Journal(s) Selected'">
+                                      x-text="assignedJournalsCount(addJournalAssignments) + ' Journal(s) Selected'">
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Quick Filter & Actions Bar -->
-                        <div class="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div class="relative flex-1">
-                                <input type="text" x-model="addJournalSearch" placeholder="Filter journals..." 
-                                       class="w-full text-xs py-1.5 pl-8 pr-3 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-[11px]">
-                                <button type="button" @click="selectAllJournalsAdd()" 
-                                        class="px-2 py-1 font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    + Select All
-                                </button>
-                                <span class="text-gray-300 dark:text-gray-600">|</span>
-                                <button type="button" @click="copyRolesToAllAdd()" 
-                                        title="Apply 1st journal's roles to all assigned journals"
-                                        class="px-2 py-1 font-semibold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    Copy Roles to All
-                                </button>
-                                <span class="text-gray-300 dark:text-gray-600">|</span>
-                                <button type="button" @click="clearAllJournalsAdd()" 
-                                        class="px-2 py-1 font-semibold text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
+                        <!-- 1. MULTI-SELECT DROPDOWN LIST WITH CHECKBOXES -->
+                        <div class="relative" @click.away="addJournalDropdownOpen = false">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1.5">
+                                Select Assigned Journal(s) *
+                            </label>
 
-                        <!-- Scrollable Journal List with Role Checkboxes -->
-                        <div class="mt-3 max-h-64 overflow-y-auto space-y-2 pr-1">
-                            <template x-for="j in allJournals" :key="j.id">
-                                <div x-show="!addJournalSearch || j.title.toLowerCase().includes(addJournalSearch.toLowerCase())"
-                                     class="rounded-xl border transition"
-                                     :class="isJournalAssigned(addJournalAssignments, j.id) 
-                                        ? 'border-blue-400/90 bg-white dark:bg-gray-900 shadow-xs ring-1 ring-blue-300/60 dark:ring-blue-700/60' 
-                                        : 'border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800'">
-                                    
-                                    <!-- Journal Row / Toggle Checkbox -->
-                                    <div class="p-2.5 flex items-center justify-between gap-2 cursor-pointer select-none"
-                                         @click="toggleJournalAdd(j.id)">
-                                        <div class="flex items-center gap-2.5 min-w-0">
-                                            <input type="checkbox" 
-                                                   :checked="isJournalAssigned(addJournalAssignments, j.id)"
-                                                   @click.stop="toggleJournalAdd(j.id)"
-                                                   class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                            <span class="text-xs font-semibold truncate"
-                                                  :class="isJournalAssigned(addJournalAssignments, j.id) ? 'text-blue-900 dark:text-blue-300 font-bold' : 'text-gray-700 dark:text-gray-300'"
-                                                  x-text="j.title"></span>
+                            <!-- Dropdown Trigger Button -->
+                            <button type="button" 
+                                    @click="addJournalDropdownOpen = !addJournalDropdownOpen"
+                                    class="w-full flex items-center justify-between text-left px-3.5 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow-xs hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <div class="flex items-center gap-2 min-w-0 pr-2">
+                                    <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    <span class="truncate font-medium"
+                                          :class="!hasAssignedJournals(addJournalAssignments) ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'"
+                                          x-text="getSelectedJournalsSummary(addJournalAssignments)">
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <template x-if="hasAssignedJournals(addJournalAssignments)">
+                                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                                              x-text="assignedJournalsCount(addJournalAssignments) + ' selected'">
+                                        </span>
+                                    </template>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                                         :class="addJournalDropdownOpen ? 'transform rotate-180' : ''"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </button>
+
+                            <!-- Floating Dropdown Panel with Checkbox List -->
+                            <div x-show="addJournalDropdownOpen" 
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                                 class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-2.5 space-y-2"
+                                 style="display: none;">
+                                
+                                <!-- Search and Quick Actions inside dropdown -->
+                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                    <div class="relative flex-1">
+                                        <input type="text" x-model="addJournalSearch" placeholder="Search journals..." 
+                                               @click.stop
+                                               class="w-full text-xs py-1.5 pl-7 pr-2 border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:text-gray-200">
+                                        <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <button type="button" @click.stop="selectAllJournalsAdd()" 
+                                            class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-md transition">
+                                        All
+                                    </button>
+                                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                                    <button type="button" @click.stop="clearAllJournalsAdd()" 
+                                            class="text-[11px] font-semibold text-gray-500 hover:text-rose-600 px-2 py-1 hover:bg-rose-50 dark:hover:bg-gray-700 rounded-md transition">
+                                        Clear
+                                    </button>
+                                </div>
+
+                                <!-- Scrollable Checkbox List -->
+                                <div class="max-h-56 overflow-y-auto space-y-1 pr-1">
+                                    <template x-for="j in allJournals" :key="j.id">
+                                        <label x-show="!addJournalSearch || j.title.toLowerCase().includes(addJournalSearch.toLowerCase())"
+                                               @click.stop
+                                               class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer select-none transition group text-xs"
+                                               :class="isJournalAssigned(addJournalAssignments, j.id) ? 'bg-blue-50/50 dark:bg-gray-700/60 font-semibold' : ''">
+                                            <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                                                <input type="checkbox"
+                                                       :checked="isJournalAssigned(addJournalAssignments, j.id)"
+                                                       @change="toggleJournalAdd(j.id)"
+                                                       class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                                <span class="truncate" 
+                                                      :class="isJournalAssigned(addJournalAssignments, j.id) ? 'text-blue-900 dark:text-blue-200' : 'text-gray-700 dark:text-gray-300'"
+                                                      x-text="j.title"></span>
+                                            </div>
                                             <template x-if="j.is_central">
-                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 flex-shrink-0">
                                                     Central
                                                 </span>
                                             </template>
-                                        </div>
+                                        </label>
+                                    </template>
+                                </div>
 
-                                        <div class="flex items-center gap-2 flex-shrink-0">
-                                            <template x-if="isJournalAssigned(addJournalAssignments, j.id)">
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                      :class="(addJournalAssignments[j.id] && addJournalAssignments[j.id].length > 0) ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-100 text-amber-800 border border-amber-300'"
-                                                      x-text="(addJournalAssignments[j.id] && addJournalAssignments[j.id].length > 0) ? addJournalAssignments[j.id].length + ' role(s)' : 'No role selected!'">
-                                                </span>
-                                            </template>
-                                            <template x-if="!isJournalAssigned(addJournalAssignments, j.id)">
-                                                <span class="text-[10px] text-gray-400">Click to assign</span>
-                                            </template>
-                                        </div>
-                                    </div>
+                                <!-- Done bar -->
+                                <div class="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-[11px]">
+                                    <span class="text-gray-500 dark:text-gray-400" x-text="assignedJournalsCount(addJournalAssignments) + ' selected'"></span>
+                                    <button type="button" @click="addJournalDropdownOpen = false" 
+                                            class="px-3 py-1 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-xs transition">
+                                        Done
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Role Options (Shown when journal is checked) -->
-                                    <div x-show="isJournalAssigned(addJournalAssignments, j.id)" 
-                                         class="px-3 pb-3 pt-2 border-t border-blue-100 dark:border-gray-800 bg-blue-50/30 dark:bg-gray-900/40 rounded-b-xl space-y-2">
-                                        
-                                        <div class="flex items-center justify-between text-[11px] text-gray-500">
-                                            <span class="font-bold text-gray-700 dark:text-gray-300 text-[10px] uppercase tracking-wider">
-                                                Select Editorial Role(s) for this Journal:
-                                            </span>
-                                            <div class="flex items-center gap-2">
-                                                <button type="button" @click.stop="selectAllRolesAdd(j.id)" 
-                                                        class="text-blue-600 hover:text-blue-800 text-[10px] font-semibold hover:underline">Select All</button>
-                                                <span class="text-gray-300">|</span>
-                                                <button type="button" @click.stop="clearRolesAdd(j.id)" 
-                                                        class="text-gray-500 hover:text-red-600 text-[10px] font-semibold hover:underline">Clear</button>
-                                            </div>
-                                        </div>
+                        <!-- 2. EDITORIAL ROLE CONFIGURATION FOR SELECTED JOURNALS -->
+                        <div class="space-y-3 pt-1">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Editorial Role(s) Per Assigned Journal *
+                                </label>
+                                <template x-if="hasMultipleJournals(addJournalAssignments)">
+                                    <button type="button" @click="copyRolesToAllAdd()" 
+                                            title="Apply 1st journal's roles to all assigned journals"
+                                            class="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 hover:underline">
+                                        Copy Roles to All
+                                    </button>
+                                </template>
+                            </div>
 
-                                        <!-- Roles Checkbox Grid -->
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                            <template x-for="r in allRoles" :key="r">
-                                                <label class="flex items-center justify-between px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer transition select-none text-xs">
-                                                    <div class="flex items-center gap-2 min-w-0">
-                                                        <input type="checkbox" 
-                                                               :value="r"
-                                                               :checked="isRoleChecked(addJournalAssignments, j.id, r)"
-                                                               @change="toggleRoleAdd(j.id, r)"
-                                                               class="w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                                        <span class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate" x-text="r"></span>
-                                                    </div>
-                                                    <template x-if="r.toLowerCase().includes('chief')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-amber-100 text-amber-800">Chief</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('section')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-blue-100 text-blue-800">Section</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('associate')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-800">Assoc</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('managing')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-purple-100 text-purple-800">Mgr</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('review')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-emerald-100 text-emerald-800">Rev</span>
-                                                    </template>
-                                                </label>
+                            <!-- Empty state warning -->
+                            <div x-show="!hasAssignedJournals(addJournalAssignments)" class="p-3.5 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 dark:bg-amber-950/20 text-center">
+                                <p class="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                    ⚠️ Please open the dropdown above and check at least one journal to assign roles.
+                                </p>
+                            </div>
+
+                            <!-- Journal-wise Role Cards -->
+                            <template x-for="(roles, jId) in addJournalAssignments" :key="jId">
+                                <div class="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-gray-900 p-3.5 space-y-2.5 shadow-xs">
+                                    <!-- Journal Card Header -->
+                                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-blue-100 dark:border-gray-800">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 flex-shrink-0"></span>
+                                            <span class="text-xs font-bold text-gray-900 dark:text-white truncate" x-text="getJournalTitle(jId)"></span>
+                                            <template x-if="String(jId) === 'global'">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Central</span>
                                             </template>
                                         </div>
-
-                                        <!-- Custom Role adder for this journal -->
-                                        <div class="pt-1 flex items-center gap-1.5">
-                                            <input type="text" 
-                                                   x-model="addCustomRoleInputs[j.id]" 
-                                                   @keydown.enter.prevent="if((addCustomRoleInputs[j.id] || '').trim()){ addCustomRoleToAdd(j.id, addCustomRoleInputs[j.id]); addCustomRoleInputs[j.id] = ''; }" 
-                                                   placeholder="+ Add custom role for this journal..." 
-                                                   class="flex-1 text-[11px] py-1 px-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
-                                            <button type="button" 
-                                                    @click="if((addCustomRoleInputs[j.id] || '').trim()){ addCustomRoleToAdd(j.id, addCustomRoleInputs[j.id]); addCustomRoleInputs[j.id] = ''; }" 
-                                                    class="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded-lg transition">
-                                                Add
+                                        <div class="flex items-center gap-1.5 flex-shrink-0 text-[11px]">
+                                            <button type="button" @click="selectAllRolesAdd(jId)" 
+                                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-[10px] font-semibold hover:underline">
+                                                Select All
+                                            </button>
+                                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                                            <button type="button" @click="clearRolesAdd(jId)" 
+                                                    class="text-gray-500 hover:text-rose-600 text-[10px] font-semibold hover:underline">
+                                                Clear
+                                            </button>
+                                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                                            <button type="button" @click="removeJournalAdd(jId)" 
+                                                    class="text-rose-500 hover:text-rose-700 text-[11px] font-semibold px-1 py-0.5 hover:bg-rose-50 dark:hover:bg-gray-800 rounded transition"
+                                                    title="Remove this journal">
+                                                &times; Remove
                                             </button>
                                         </div>
                                     </div>
+
+                                    <!-- Roles Checkboxes Grid -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                        <template x-for="r in allRoles" :key="r">
+                                            <label class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/80 hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer transition select-none text-xs">
+                                                <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                    <input type="checkbox" 
+                                                           :value="r"
+                                                           :checked="isRoleChecked(addJournalAssignments, jId, r)"
+                                                           @change="toggleRoleAdd(jId, r)"
+                                                           class="w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                                    <span class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate" x-text="r"></span>
+                                                </div>
+                                                <template x-if="r.toLowerCase().includes('chief')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-amber-100 text-amber-800">Chief</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('section')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-blue-100 text-blue-800">Section</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('associate')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-800">Assoc</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('managing')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-purple-100 text-purple-800">Mgr</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('review')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-emerald-100 text-emerald-800">Rev</span>
+                                                </template>
+                                            </label>
+                                        </template>
+                                    </div>
+
+                                    <!-- Add Custom Role -->
+                                    <div class="pt-1 flex items-center gap-1.5">
+                                        <input type="text" 
+                                               x-model="addCustomRoleInputs[jId]" 
+                                               @keydown.enter.prevent="if((addCustomRoleInputs[jId] || '').trim()){ addCustomRoleToAdd(jId, addCustomRoleInputs[jId]); addCustomRoleInputs[jId] = ''; }" 
+                                               placeholder="+ Add custom role..." 
+                                               class="flex-1 text-[11px] py-1 px-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
+                                        <button type="button" 
+                                                @click="if((addCustomRoleInputs[jId] || '').trim()){ addCustomRoleToAdd(jId, addCustomRoleInputs[jId]); addCustomRoleInputs[jId] = ''; }" 
+                                                class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded-lg transition">
+                                            Add
+                                        </button>
+                                    </div>
+
+                                    <template x-if="!roles || roles.length === 0">
+                                        <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                                            ⚠️ Please select at least one role for this journal.
+                                        </p>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -691,10 +810,6 @@ function editorialBoardManager() {
                                 </template>
                             </div>
                         </template>
-
-                        <p x-show="Object.keys(addJournalAssignments).length === 0" class="text-rose-500 text-xs font-semibold mt-2">
-                            ⚠️ Please check at least one journal to assign this editor.
-                        </p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
@@ -760,8 +875,10 @@ function editorialBoardManager() {
                                class="w-full text-sm border-gray-300 dark:border-gray-700 dark:bg-gray-900 rounded-xl focus:ring-blue-500 focus:border-blue-500">
                     </div>
 
-                    <!-- JOURNAL ASSIGNMENTS & EDITORIAL ROLES SECTION (JOURNAL-WISE WITH CHECKBOXES) -->
-                    <div class="border border-blue-200 dark:border-blue-900/60 rounded-2xl p-4 bg-gradient-to-b from-blue-50/50 via-slate-50/30 to-white dark:from-gray-900/80 dark:to-gray-900">
+                    <!-- ASSIGNED JOURNALS (DROPDOWN WITH CHECKBOXES) & ROLE CONFIGURATION -->
+                    <div class="border border-blue-200 dark:border-blue-900/60 rounded-2xl p-4 bg-gradient-to-b from-blue-50/40 via-slate-50/20 to-white dark:from-gray-900/80 dark:to-gray-900 space-y-4">
+                        
+                        <!-- Header with Selection Counter -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-gray-200/80 dark:border-gray-700">
                             <div>
                                 <div class="flex items-center gap-2">
@@ -771,150 +888,224 @@ function editorialBoardManager() {
                                         </svg>
                                     </span>
                                     <span class="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wider">
-                                        Assigned Journals & Editorial Roles *
+                                        Assigned Journal(s) & Editorial Roles *
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 dark:text-gray-400 mt-1">
-                                    Check journals to assign, then check multiple roles specifically for each journal.
+                                    Select journals from the dropdown list, then configure specific roles for each journal below.
                                 </p>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-[11px] font-bold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 shadow-xs"
-                                      x-text="Object.keys(editJournalAssignments).length + ' Journal(s) Selected'">
+                                      x-text="assignedJournalsCount(editJournalAssignments) + ' Journal(s) Selected'">
                                 </span>
                             </div>
                         </div>
 
-                        <!-- Quick Filter & Actions Bar -->
-                        <div class="mt-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                            <div class="relative flex-1">
-                                <input type="text" x-model="editJournalSearch" placeholder="Filter journals..." 
-                                       class="w-full text-xs py-1.5 pl-8 pr-3 border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:ring-blue-500 focus:border-blue-500">
-                                <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                                </svg>
-                            </div>
-                            <div class="flex items-center gap-1.5 text-[11px]">
-                                <button type="button" @click="selectAllJournalsEdit()" 
-                                        class="px-2 py-1 font-semibold text-blue-600 hover:text-blue-800 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    + Select All
-                                </button>
-                                <span class="text-gray-300 dark:text-gray-600">|</span>
-                                <button type="button" @click="copyRolesToAllEdit()" 
-                                        title="Apply 1st journal's roles to all assigned journals"
-                                        class="px-2 py-1 font-semibold text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    Copy Roles to All
-                                </button>
-                                <span class="text-gray-300 dark:text-gray-600">|</span>
-                                <button type="button" @click="clearAllJournalsEdit()" 
-                                        class="px-2 py-1 font-semibold text-gray-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-gray-700 rounded-lg transition">
-                                    Clear
-                                </button>
-                            </div>
-                        </div>
+                        <!-- 1. MULTI-SELECT DROPDOWN LIST WITH CHECKBOXES -->
+                        <div class="relative" @click.away="editJournalDropdownOpen = false">
+                            <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase mb-1.5">
+                                Select Assigned Journal(s) *
+                            </label>
 
-                        <!-- Scrollable Journal List with Role Checkboxes -->
-                        <div class="mt-3 max-h-64 overflow-y-auto space-y-2 pr-1">
-                            <template x-for="j in allJournals" :key="j.id">
-                                <div x-show="!editJournalSearch || j.title.toLowerCase().includes(editJournalSearch.toLowerCase())"
-                                     class="rounded-xl border transition"
-                                     :class="isJournalAssigned(editJournalAssignments, j.id) 
-                                        ? 'border-blue-400/90 bg-white dark:bg-gray-900 shadow-xs ring-1 ring-blue-300/60 dark:ring-blue-700/60' 
-                                        : 'border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-gray-800/50 hover:bg-white dark:hover:bg-gray-800'">
-                                    
-                                    <!-- Journal Row / Toggle Checkbox -->
-                                    <div class="p-2.5 flex items-center justify-between gap-2 cursor-pointer select-none"
-                                         @click="toggleJournalEdit(j.id)">
-                                        <div class="flex items-center gap-2.5 min-w-0">
-                                            <input type="checkbox" 
-                                                   :checked="isJournalAssigned(editJournalAssignments, j.id)"
-                                                   @click.stop="toggleJournalEdit(j.id)"
-                                                   class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                            <span class="text-xs font-semibold truncate"
-                                                  :class="isJournalAssigned(editJournalAssignments, j.id) ? 'text-blue-900 dark:text-blue-300 font-bold' : 'text-gray-700 dark:text-gray-300'"
-                                                  x-text="j.title"></span>
+                            <!-- Dropdown Trigger Button -->
+                            <button type="button" 
+                                    @click="editJournalDropdownOpen = !editJournalDropdownOpen"
+                                    class="w-full flex items-center justify-between text-left px-3.5 py-2.5 text-sm bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-xl shadow-xs hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition">
+                                <div class="flex items-center gap-2 min-w-0 pr-2">
+                                    <svg class="w-4 h-4 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                                    </svg>
+                                    <span class="truncate font-medium"
+                                          :class="!hasAssignedJournals(editJournalAssignments) ? 'text-gray-400 dark:text-gray-500' : 'text-gray-800 dark:text-gray-200'"
+                                          x-text="getSelectedJournalsSummary(editJournalAssignments)">
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-2 flex-shrink-0">
+                                    <template x-if="hasAssignedJournals(editJournalAssignments)">
+                                        <span class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300"
+                                              x-text="assignedJournalsCount(editJournalAssignments) + ' selected'">
+                                        </span>
+                                    </template>
+                                    <svg class="w-4 h-4 text-gray-400 transition-transform duration-200"
+                                         :class="editJournalDropdownOpen ? 'transform rotate-180' : ''"
+                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </div>
+                            </button>
+
+                            <!-- Floating Dropdown Panel with Checkbox List -->
+                            <div x-show="editJournalDropdownOpen" 
+                                 x-transition:enter="transition ease-out duration-150"
+                                 x-transition:enter-start="opacity-0 translate-y-1 scale-95"
+                                 x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave="transition ease-in duration-100"
+                                 x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+                                 x-transition:leave-end="opacity-0 translate-y-1 scale-95"
+                                 class="absolute left-0 right-0 top-full mt-1.5 z-40 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-2xl p-2.5 space-y-2"
+                                 style="display: none;">
+                                
+                                <!-- Search and Quick Actions inside dropdown -->
+                                <div class="flex items-center gap-2 pb-2 border-b border-gray-100 dark:border-gray-700">
+                                    <div class="relative flex-1">
+                                        <input type="text" x-model="editJournalSearch" placeholder="Search journals..." 
+                                               @click.stop
+                                               class="w-full text-xs py-1.5 pl-7 pr-2 border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50 dark:bg-gray-900 focus:ring-blue-500 focus:border-blue-500 text-gray-800 dark:text-gray-200">
+                                        <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <button type="button" @click.stop="selectAllJournalsEdit()" 
+                                            class="text-[11px] font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 hover:bg-blue-50 dark:hover:bg-gray-700 rounded-md transition">
+                                        All
+                                    </button>
+                                    <span class="text-gray-300 dark:text-gray-600">|</span>
+                                    <button type="button" @click.stop="clearAllJournalsEdit()" 
+                                            class="text-[11px] font-semibold text-gray-500 hover:text-rose-600 px-2 py-1 hover:bg-rose-50 dark:hover:bg-gray-700 rounded-md transition">
+                                        Clear
+                                    </button>
+                                </div>
+
+                                <!-- Scrollable Checkbox List -->
+                                <div class="max-h-56 overflow-y-auto space-y-1 pr-1">
+                                    <template x-for="j in allJournals" :key="j.id">
+                                        <label x-show="!editJournalSearch || j.title.toLowerCase().includes(editJournalSearch.toLowerCase())"
+                                               @click.stop
+                                               class="flex items-center justify-between px-2.5 py-2 rounded-lg hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer select-none transition group text-xs"
+                                               :class="isJournalAssigned(editJournalAssignments, j.id) ? 'bg-blue-50/50 dark:bg-gray-700/60 font-semibold' : ''">
+                                            <div class="flex items-center gap-2.5 min-w-0 pr-2">
+                                                <input type="checkbox"
+                                                       :checked="isJournalAssigned(editJournalAssignments, j.id)"
+                                                       @change="toggleJournalEdit(j.id)"
+                                                       class="w-4 h-4 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                                <span class="truncate" 
+                                                      :class="isJournalAssigned(editJournalAssignments, j.id) ? 'text-blue-900 dark:text-blue-200' : 'text-gray-700 dark:text-gray-300'"
+                                                      x-text="j.title"></span>
+                                            </div>
                                             <template x-if="j.is_central">
-                                                <span class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300 flex-shrink-0">
                                                     Central
                                                 </span>
                                             </template>
-                                        </div>
+                                        </label>
+                                    </template>
+                                </div>
 
-                                        <div class="flex items-center gap-2 flex-shrink-0">
-                                            <template x-if="isJournalAssigned(editJournalAssignments, j.id)">
-                                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-full"
-                                                      :class="(editJournalAssignments[j.id] && editJournalAssignments[j.id].length > 0) ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-amber-100 text-amber-800 border border-amber-300'"
-                                                      x-text="(editJournalAssignments[j.id] && editJournalAssignments[j.id].length > 0) ? editJournalAssignments[j.id].length + ' role(s)' : 'No role selected!'">
-                                                </span>
-                                            </template>
-                                            <template x-if="!isJournalAssigned(editJournalAssignments, j.id)">
-                                                <span class="text-[10px] text-gray-400">Click to assign</span>
-                                            </template>
-                                        </div>
-                                    </div>
+                                <!-- Done bar -->
+                                <div class="pt-2 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between text-[11px]">
+                                    <span class="text-gray-500 dark:text-gray-400" x-text="assignedJournalsCount(editJournalAssignments) + ' selected'"></span>
+                                    <button type="button" @click="editJournalDropdownOpen = false" 
+                                            class="px-3 py-1 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 shadow-xs transition">
+                                        Done
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Role Options (Shown when journal is checked) -->
-                                    <div x-show="isJournalAssigned(editJournalAssignments, j.id)" 
-                                         class="px-3 pb-3 pt-2 border-t border-blue-100 dark:border-gray-800 bg-blue-50/30 dark:bg-gray-900/40 rounded-b-xl space-y-2">
-                                        
-                                        <div class="flex items-center justify-between text-[11px] text-gray-500">
-                                            <span class="font-bold text-gray-700 dark:text-gray-300 text-[10px] uppercase tracking-wider">
-                                                Select Editorial Role(s) for this Journal:
-                                            </span>
-                                            <div class="flex items-center gap-2">
-                                                <button type="button" @click.stop="selectAllRolesEdit(j.id)" 
-                                                        class="text-blue-600 hover:text-blue-800 text-[10px] font-semibold hover:underline">Select All</button>
-                                                <span class="text-gray-300">|</span>
-                                                <button type="button" @click.stop="clearRolesEdit(j.id)" 
-                                                        class="text-gray-500 hover:text-red-600 text-[10px] font-semibold hover:underline">Clear</button>
-                                            </div>
-                                        </div>
+                        <!-- 2. EDITORIAL ROLE CONFIGURATION FOR SELECTED JOURNALS -->
+                        <div class="space-y-3 pt-1">
+                            <div class="flex items-center justify-between">
+                                <label class="block text-xs font-bold text-gray-700 dark:text-gray-300 uppercase">
+                                    Editorial Role(s) Per Assigned Journal *
+                                </label>
+                                <template x-if="hasMultipleJournals(editJournalAssignments)">
+                                    <button type="button" @click="copyRolesToAllEdit()" 
+                                            title="Apply 1st journal's roles to all assigned journals"
+                                            class="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800 dark:text-emerald-400 hover:underline">
+                                        Copy Roles to All
+                                    </button>
+                                </template>
+                            </div>
 
-                                        <!-- Roles Checkbox Grid -->
-                                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                                            <template x-for="r in allRoles" :key="r">
-                                                <label class="flex items-center justify-between px-2 py-1 rounded-lg border border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-800 hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer transition select-none text-xs">
-                                                    <div class="flex items-center gap-2 min-w-0">
-                                                        <input type="checkbox" 
-                                                               :value="r"
-                                                               :checked="isRoleChecked(editJournalAssignments, j.id, r)"
-                                                               @change="toggleRoleEdit(j.id, r)"
-                                                               class="w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
-                                                        <span class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate" x-text="r"></span>
-                                                    </div>
-                                                    <template x-if="r.toLowerCase().includes('chief')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-amber-100 text-amber-800">Chief</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('section')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-blue-100 text-blue-800">Section</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('associate')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-800">Assoc</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('managing')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-purple-100 text-purple-800">Mgr</span>
-                                                    </template>
-                                                    <template x-if="r.toLowerCase().includes('review')">
-                                                        <span class="text-[9px] font-bold px-1 rounded bg-emerald-100 text-emerald-800">Rev</span>
-                                                    </template>
-                                                </label>
+                            <!-- Empty state warning -->
+                            <div x-show="!hasAssignedJournals(editJournalAssignments)" class="p-3.5 rounded-xl border border-dashed border-amber-300 bg-amber-50/60 dark:bg-amber-950/20 text-center">
+                                <p class="text-xs text-amber-700 dark:text-amber-400 font-medium">
+                                    ⚠️ Please open the dropdown above and check at least one journal to assign roles.
+                                </p>
+                            </div>
+
+                            <!-- Journal-wise Role Cards -->
+                            <template x-for="(roles, jId) in editJournalAssignments" :key="jId">
+                                <div class="rounded-xl border border-blue-200 dark:border-blue-900/60 bg-white dark:bg-gray-900 p-3.5 space-y-2.5 shadow-xs">
+                                    <!-- Journal Card Header -->
+                                    <div class="flex items-center justify-between gap-2 pb-2 border-b border-blue-100 dark:border-gray-800">
+                                        <div class="flex items-center gap-2 min-w-0">
+                                            <span class="w-2.5 h-2.5 rounded-full bg-blue-600 flex-shrink-0"></span>
+                                            <span class="text-xs font-bold text-gray-900 dark:text-white truncate" x-text="getJournalTitle(jId)"></span>
+                                            <template x-if="String(jId) === 'global'">
+                                                <span class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300">Central</span>
                                             </template>
                                         </div>
-
-                                        <!-- Custom Role adder for this journal -->
-                                        <div class="pt-1 flex items-center gap-1.5">
-                                            <input type="text" 
-                                                   x-model="editCustomRoleInputs[j.id]" 
-                                                   @keydown.enter.prevent="if((editCustomRoleInputs[j.id] || '').trim()){ addCustomRoleToEdit(j.id, editCustomRoleInputs[j.id]); editCustomRoleInputs[j.id] = ''; }" 
-                                                   placeholder="+ Add custom role for this journal..." 
-                                                   class="flex-1 text-[11px] py-1 px-2 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
-                                            <button type="button" 
-                                                    @click="if((editCustomRoleInputs[j.id] || '').trim()){ addCustomRoleToEdit(j.id, editCustomRoleInputs[j.id]); editCustomRoleInputs[j.id] = ''; }" 
-                                                    class="px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded-lg transition">
-                                                Add
+                                        <div class="flex items-center gap-1.5 flex-shrink-0 text-[11px]">
+                                            <button type="button" @click="selectAllRolesEdit(jId)" 
+                                                    class="text-blue-600 hover:text-blue-800 dark:text-blue-400 text-[10px] font-semibold hover:underline">
+                                                Select All
+                                            </button>
+                                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                                            <button type="button" @click="clearRolesEdit(jId)" 
+                                                    class="text-gray-500 hover:text-rose-600 text-[10px] font-semibold hover:underline">
+                                                Clear
+                                            </button>
+                                            <span class="text-gray-300 dark:text-gray-600">|</span>
+                                            <button type="button" @click="removeJournalEdit(jId)" 
+                                                    class="text-rose-500 hover:text-rose-700 text-[11px] font-semibold px-1 py-0.5 hover:bg-rose-50 dark:hover:bg-gray-800 rounded transition"
+                                                    title="Remove this journal">
+                                                &times; Remove
                                             </button>
                                         </div>
                                     </div>
+
+                                    <!-- Roles Checkboxes Grid -->
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                                        <template x-for="r in allRoles" :key="r">
+                                            <label class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border border-gray-100 dark:border-gray-800 bg-gray-50/60 dark:bg-gray-800/80 hover:bg-blue-50/70 dark:hover:bg-gray-700 cursor-pointer transition select-none text-xs">
+                                                <div class="flex items-center gap-2 min-w-0 pr-1">
+                                                    <input type="checkbox" 
+                                                           :value="r"
+                                                           :checked="isRoleChecked(editJournalAssignments, jId, r)"
+                                                           @change="toggleRoleEdit(jId, r)"
+                                                           class="w-3.5 h-3.5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
+                                                    <span class="text-[11px] font-medium text-gray-800 dark:text-gray-200 truncate" x-text="r"></span>
+                                                </div>
+                                                <template x-if="r.toLowerCase().includes('chief')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-amber-100 text-amber-800">Chief</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('section')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-blue-100 text-blue-800">Section</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('associate')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-indigo-100 text-indigo-800">Assoc</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('managing')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-purple-100 text-purple-800">Mgr</span>
+                                                </template>
+                                                <template x-if="r.toLowerCase().includes('review')">
+                                                    <span class="text-[9px] font-bold px-1 rounded bg-emerald-100 text-emerald-800">Rev</span>
+                                                </template>
+                                            </label>
+                                        </template>
+                                    </div>
+
+                                    <!-- Add Custom Role -->
+                                    <div class="pt-1 flex items-center gap-1.5">
+                                        <input type="text" 
+                                               x-model="editCustomRoleInputs[jId]" 
+                                               @keydown.enter.prevent="if((editCustomRoleInputs[jId] || '').trim()){ addCustomRoleToEdit(jId, editCustomRoleInputs[jId]); editCustomRoleInputs[jId] = ''; }" 
+                                               placeholder="+ Add custom role..." 
+                                               class="flex-1 text-[11px] py-1 px-2.5 border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 rounded-lg">
+                                        <button type="button" 
+                                                @click="if((editCustomRoleInputs[jId] || '').trim()){ addCustomRoleToEdit(jId, editCustomRoleInputs[jId]); editCustomRoleInputs[jId] = ''; }" 
+                                                class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 text-[11px] font-bold rounded-lg transition">
+                                            Add
+                                        </button>
+                                    </div>
+
+                                    <template x-if="!roles || roles.length === 0">
+                                        <p class="text-[11px] text-amber-600 dark:text-amber-400 font-semibold">
+                                            ⚠️ Please select at least one role for this journal.
+                                        </p>
+                                    </template>
                                 </div>
                             </template>
                         </div>
@@ -928,10 +1119,6 @@ function editorialBoardManager() {
                                 </template>
                             </div>
                         </template>
-
-                        <p x-show="Object.keys(editJournalAssignments).length === 0" class="text-rose-500 text-xs font-semibold mt-2">
-                            ⚠️ Please check at least one journal to assign this editor.
-                        </p>
                     </div>
 
                     <div class="grid grid-cols-2 gap-3">
