@@ -4,237 +4,243 @@
 @section('breadcrumb', 'Editorial Board')
 
 @section('content')
-<div class="space-y-6" x-data="{ 
-    addModalOpen: false, 
-    settingsModalOpen: false, 
-    editModalOpen: false,
-    allRoles: {{ json_encode($roles) }},
-    allJournals: [
-        { id: 'global', title: 'Publisher-wide / Central Board', is_central: true },
-        @foreach($journals as $j)
-            { id: '{{ $j->id }}', title: {!! json_encode($j->title) !!}, is_central: false },
-        @endforeach
-    ],
+<script>
+function editorialBoardManager() {
+    return {
+        addModalOpen: false, 
+        settingsModalOpen: false, 
+        editModalOpen: false,
+        allRoles: {!! json_encode($roles) !!},
+        allJournals: [
+            { id: 'global', title: 'Publisher-wide / Central Board', is_central: true },
+            @foreach($journals as $j)
+                { id: '{{ $j->id }}', title: {!! json_encode($j->title) !!}, is_central: false },
+            @endforeach
+        ],
 
-    // Add Member State
-    addJournalAssignments: {
-        'global': ['Editor-in-Chief']
-    },
-    addJournalSearch: '',
-    addCustomRoleInputs: {},
+        // Add Member State
+        addJournalAssignments: {
+            'global': ['Editor-in-Chief']
+        },
+        addJournalSearch: '',
+        addCustomRoleInputs: {},
 
-    // Edit Member State
-    editJournalAssignments: {},
-    editJournalSearch: '',
-    editCustomRoleInputs: {},
-    editMember: {
-        id: '',
-        name: '',
-        journal_id: '',
-        affiliation: '',
-        email: '',
-        role: '',
-        bio: '',
-        sort_order: 0,
-        photo_url: '',
-        editor_uid: ''
-    },
+        // Edit Member State
+        editJournalAssignments: {},
+        editJournalSearch: '',
+        editCustomRoleInputs: {},
+        editMember: {
+            id: '',
+            name: '',
+            journal_id: '',
+            affiliation: '',
+            email: '',
+            role: '',
+            bio: '',
+            sort_order: 0,
+            photo_url: '',
+            editor_uid: ''
+        },
 
-    openEdit(member, photoUrl) {
-        this.editMember = {
-            id: member.id,
-            name: member.name || '',
-            journal_id: member.journal_id || '',
-            affiliation: member.affiliation || '',
-            email: member.email || '',
-            role: member.role || 'Editorial Board Member',
-            bio: member.bio || '',
-            sort_order: member.sort_order || 0,
-            photo_url: photoUrl || '',
-            editor_uid: member.editor_uid || ''
-        };
+        openEdit(member, photoUrl) {
+            this.editMember = {
+                id: member.id,
+                name: member.name || '',
+                journal_id: member.journal_id || '',
+                affiliation: member.affiliation || '',
+                email: member.email || '',
+                role: member.role || 'Editorial Board Member',
+                bio: member.bio || '',
+                sort_order: member.sort_order || 0,
+                photo_url: photoUrl || '',
+                editor_uid: member.editor_uid || ''
+            };
 
-        let map = {};
-        if (member.journal_roles_map && typeof member.journal_roles_map === 'object' && Object.keys(member.journal_roles_map).length > 0) {
-            map = JSON.parse(JSON.stringify(member.journal_roles_map));
-        } else {
-            let key = member.journal_id ? String(member.journal_id) : 'global';
-            let rList = (Array.isArray(member.roles_array) && member.roles_array.length > 0)
-                ? [...member.roles_array]
-                : (member.role ? member.role.split(',').map(s => s.trim()).filter(Boolean) : ['Editorial Board Member']);
-            map[key] = rList;
-        }
-
-        // Include any custom role into allRoles list
-        Object.values(map).forEach(rList => {
-            if (Array.isArray(rList)) {
-                rList.forEach(r => {
-                    if (r && !this.allRoles.includes(r)) {
-                        this.allRoles.push(r);
-                    }
-                });
+            let map = {};
+            if (member.journal_roles_map && typeof member.journal_roles_map === 'object' && Object.keys(member.journal_roles_map).length > 0) {
+                map = JSON.parse(JSON.stringify(member.journal_roles_map));
+            } else {
+                let key = member.journal_id ? String(member.journal_id) : 'global';
+                let rList = (Array.isArray(member.roles_array) && member.roles_array.length > 0)
+                    ? [...member.roles_array]
+                    : (member.role ? member.role.split(',').map(s => s.trim()).filter(Boolean) : ['Editorial Board Member']);
+                map[key] = rList;
             }
-        });
 
-        this.editJournalAssignments = map;
-        this.editJournalSearch = '';
-        this.editCustomRoleInputs = {};
-        this.editModalOpen = true;
-    },
+            // Include any custom role into allRoles list
+            Object.values(map).forEach(rList => {
+                if (Array.isArray(rList)) {
+                    rList.forEach(r => {
+                        if (r && !this.allRoles.includes(r)) {
+                            this.allRoles.push(r);
+                        }
+                    });
+                }
+            });
 
-    isJournalAssigned(assignments, jId) {
-        return assignments.hasOwnProperty(String(jId));
-    },
+            this.editJournalAssignments = map;
+            this.editJournalSearch = '';
+            this.editCustomRoleInputs = {};
+            this.editModalOpen = true;
+        },
 
-    toggleJournalAdd(jId) {
-        let key = String(jId);
-        if (this.addJournalAssignments.hasOwnProperty(key)) {
-            delete this.addJournalAssignments[key];
-        } else {
-            this.addJournalAssignments[key] = ['Editorial Board Member'];
+        isJournalAssigned(assignments, jId) {
+            return assignments.hasOwnProperty(String(jId));
+        },
+
+        toggleJournalAdd(jId) {
+            let key = String(jId);
+            if (this.addJournalAssignments.hasOwnProperty(key)) {
+                delete this.addJournalAssignments[key];
+            } else {
+                this.addJournalAssignments[key] = ['Editorial Board Member'];
+            }
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        toggleJournalEdit(jId) {
+            let key = String(jId);
+            if (this.editJournalAssignments.hasOwnProperty(key)) {
+                delete this.editJournalAssignments[key];
+            } else {
+                this.editJournalAssignments[key] = ['Editorial Board Member'];
+            }
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        isRoleChecked(assignments, jId, role) {
+            let key = String(jId);
+            return Array.isArray(assignments[key]) && assignments[key].includes(role);
+        },
+
+        toggleRoleAdd(jId, role) {
+            let key = String(jId);
+            if (!this.addJournalAssignments[key]) {
+                this.addJournalAssignments[key] = [];
+            }
+            if (this.addJournalAssignments[key].includes(role)) {
+                this.addJournalAssignments[key] = this.addJournalAssignments[key].filter(r => r !== role);
+            } else {
+                this.addJournalAssignments[key].push(role);
+            }
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        toggleRoleEdit(jId, role) {
+            let key = String(jId);
+            if (!this.editJournalAssignments[key]) {
+                this.editJournalAssignments[key] = [];
+            }
+            if (this.editJournalAssignments[key].includes(role)) {
+                this.editJournalAssignments[key] = this.editJournalAssignments[key].filter(r => r !== role);
+            } else {
+                this.editJournalAssignments[key].push(role);
+            }
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        selectAllRolesAdd(jId) {
+            this.addJournalAssignments[String(jId)] = [...this.allRoles];
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        clearRolesAdd(jId) {
+            this.addJournalAssignments[String(jId)] = [];
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        selectAllRolesEdit(jId) {
+            this.editJournalAssignments[String(jId)] = [...this.allRoles];
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        clearRolesEdit(jId) {
+            this.editJournalAssignments[String(jId)] = [];
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        addCustomRoleToAdd(jId, roleName) {
+            roleName = (roleName || '').trim();
+            if (!roleName) return;
+            if (!this.allRoles.includes(roleName)) {
+                this.allRoles.push(roleName);
+            }
+            let key = String(jId);
+            if (!this.addJournalAssignments[key]) {
+                this.addJournalAssignments[key] = [];
+            }
+            if (!this.addJournalAssignments[key].includes(roleName)) {
+                this.addJournalAssignments[key].push(roleName);
+            }
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        addCustomRoleToEdit(jId, roleName) {
+            roleName = (roleName || '').trim();
+            if (!roleName) return;
+            if (!this.allRoles.includes(roleName)) {
+                this.allRoles.push(roleName);
+            }
+            let key = String(jId);
+            if (!this.editJournalAssignments[key]) {
+                this.editJournalAssignments[key] = [];
+            }
+            if (!this.editJournalAssignments[key].includes(roleName)) {
+                this.editJournalAssignments[key].push(roleName);
+            }
+            this.editJournalAssignments = { ...this.editJournalAssignments };
+        },
+
+        selectAllJournalsAdd() {
+            let firstRoles = Object.values(this.addJournalAssignments)[0] || ['Editorial Board Member'];
+            let updated = {};
+            this.allJournals.forEach(j => {
+                updated[j.id] = [...(this.addJournalAssignments[j.id] || firstRoles)];
+            });
+            this.addJournalAssignments = updated;
+        },
+
+        clearAllJournalsAdd() {
+            this.addJournalAssignments = {};
+        },
+
+        copyRolesToAllAdd() {
+            let firstKey = Object.keys(this.addJournalAssignments)[0];
+            if (!firstKey) return;
+            let baseRoles = [...(this.addJournalAssignments[firstKey] || ['Editorial Board Member'])];
+            Object.keys(this.addJournalAssignments).forEach(k => {
+                this.addJournalAssignments[k] = [...baseRoles];
+            });
+            this.addJournalAssignments = { ...this.addJournalAssignments };
+        },
+
+        selectAllJournalsEdit() {
+            let firstRoles = Object.values(this.editJournalAssignments)[0] || ['Editorial Board Member'];
+            let updated = {};
+            this.allJournals.forEach(j => {
+                updated[j.id] = [...(this.editJournalAssignments[j.id] || firstRoles)];
+            });
+            this.editJournalAssignments = updated;
+        },
+
+        clearAllJournalsEdit() {
+            this.editJournalAssignments = {};
+        },
+
+        copyRolesToAllEdit() {
+            let firstKey = Object.keys(this.editJournalAssignments)[0];
+            if (!firstKey) return;
+            let baseRoles = [...(this.editJournalAssignments[firstKey] || ['Editorial Board Member'])];
+            Object.keys(this.editJournalAssignments).forEach(k => {
+                this.editJournalAssignments[k] = [...baseRoles];
+            });
+            this.editJournalAssignments = { ...this.editJournalAssignments };
         }
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
+    };
+}
+</script>
 
-    toggleJournalEdit(jId) {
-        let key = String(jId);
-        if (this.editJournalAssignments.hasOwnProperty(key)) {
-            delete this.editJournalAssignments[key];
-        } else {
-            this.editJournalAssignments[key] = ['Editorial Board Member'];
-        }
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    },
-
-    isRoleChecked(assignments, jId, role) {
-        let key = String(jId);
-        return Array.isArray(assignments[key]) && assignments[key].includes(role);
-    },
-
-    toggleRoleAdd(jId, role) {
-        let key = String(jId);
-        if (!this.addJournalAssignments[key]) {
-            this.addJournalAssignments[key] = [];
-        }
-        if (this.addJournalAssignments[key].includes(role)) {
-            this.addJournalAssignments[key] = this.addJournalAssignments[key].filter(r => r !== role);
-        } else {
-            this.addJournalAssignments[key].push(role);
-        }
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
-
-    toggleRoleEdit(jId, role) {
-        let key = String(jId);
-        if (!this.editJournalAssignments[key]) {
-            this.editJournalAssignments[key] = [];
-        }
-        if (this.editJournalAssignments[key].includes(role)) {
-            this.editJournalAssignments[key] = this.editJournalAssignments[key].filter(r => r !== role);
-        } else {
-            this.editJournalAssignments[key].push(role);
-        }
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    },
-
-    selectAllRolesAdd(jId) {
-        this.addJournalAssignments[String(jId)] = [...this.allRoles];
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
-
-    clearRolesAdd(jId) {
-        this.addJournalAssignments[String(jId)] = [];
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
-
-    selectAllRolesEdit(jId) {
-        this.editJournalAssignments[String(jId)] = [...this.allRoles];
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    },
-
-    clearRolesEdit(jId) {
-        this.editJournalAssignments[String(jId)] = [];
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    },
-
-    addCustomRoleToAdd(jId, roleName) {
-        roleName = (roleName || '').trim();
-        if (!roleName) return;
-        if (!this.allRoles.includes(roleName)) {
-            this.allRoles.push(roleName);
-        }
-        let key = String(jId);
-        if (!this.addJournalAssignments[key]) {
-            this.addJournalAssignments[key] = [];
-        }
-        if (!this.addJournalAssignments[key].includes(roleName)) {
-            this.addJournalAssignments[key].push(roleName);
-        }
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
-
-    addCustomRoleToEdit(jId, roleName) {
-        roleName = (roleName || '').trim();
-        if (!roleName) return;
-        if (!this.allRoles.includes(roleName)) {
-            this.allRoles.push(roleName);
-        }
-        let key = String(jId);
-        if (!this.editJournalAssignments[key]) {
-            this.editJournalAssignments[key] = [];
-        }
-        if (!this.editJournalAssignments[key].includes(roleName)) {
-            this.editJournalAssignments[key].push(roleName);
-        }
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    },
-
-    selectAllJournalsAdd() {
-        let firstRoles = Object.values(this.addJournalAssignments)[0] || ['Editorial Board Member'];
-        let updated = {};
-        this.allJournals.forEach(j => {
-            updated[j.id] = [...(this.addJournalAssignments[j.id] || firstRoles)];
-        });
-        this.addJournalAssignments = updated;
-    },
-
-    clearAllJournalsAdd() {
-        this.addJournalAssignments = {};
-    },
-
-    copyRolesToAllAdd() {
-        let firstKey = Object.keys(this.addJournalAssignments)[0];
-        if (!firstKey) return;
-        let baseRoles = [...(this.addJournalAssignments[firstKey] || ['Editorial Board Member'])];
-        Object.keys(this.addJournalAssignments).forEach(k => {
-            this.addJournalAssignments[k] = [...baseRoles];
-        });
-        this.addJournalAssignments = { ...this.addJournalAssignments };
-    },
-
-    selectAllJournalsEdit() {
-        let firstRoles = Object.values(this.editJournalAssignments)[0] || ['Editorial Board Member'];
-        let updated = {};
-        this.allJournals.forEach(j => {
-            updated[j.id] = [...(this.editJournalAssignments[j.id] || firstRoles)];
-        });
-        this.editJournalAssignments = updated;
-    },
-
-    clearAllJournalsEdit() {
-        this.editJournalAssignments = {};
-    },
-
-    copyRolesToAllEdit() {
-        let firstKey = Object.keys(this.editJournalAssignments)[0];
-        if (!firstKey) return;
-        let baseRoles = [...(this.editJournalAssignments[firstKey] || ['Editorial Board Member'])];
-        Object.keys(this.editJournalAssignments).forEach(k => {
-            this.editJournalAssignments[k] = [...baseRoles];
-        });
-        this.editJournalAssignments = { ...this.editJournalAssignments };
-    }
-}">
+<div class="space-y-6" x-data="editorialBoardManager()">
 
     <!-- Top Header -->
     <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
