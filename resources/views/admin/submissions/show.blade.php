@@ -37,7 +37,7 @@
         <div class="flex items-center gap-3">
             @if(in_array($submission->status, ['accepted', 'published']))
                 <a href="{{ route('certificates.publication.submission', $submission) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-600/20 transition-all">
-                    ?? View Certificates ({{ $submission->certificates->count() }})
+                    🎓 View Certificates ({{ rescue(fn() => $submission->certificates->count(), 0) }})
                 </a>
             @endif
             <a href="{{ route('admin.submissions.download', $submission) }}" class="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all">

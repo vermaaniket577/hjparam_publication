@@ -276,9 +276,26 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             $output = \Illuminate\Support\Facades\Artisan::output();
-            return back()->with('success', 'Database migrations executed successfully: ' . ($output ?: 'Done'));
-        } catch (\Exception $e) {
-            return back()->with('error', 'Migration error: ' . $e->getMessage());
+
+            \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+            $cacheOutput = \Illuminate\Support\Facades\Artisan::output();
+
+            $html = '<!DOCTYPE html><html><head><title>Database Migrations</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{background:#0f172a;color:#f8fafc;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;padding:24px;line-height:1.5;max-width:850px;margin:40px auto;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.5);}h1{color:#38bdf8;font-size:20px;margin-bottom:16px;border-bottom:1px solid #334155;padding-bottom:10px;}pre{background:#1e293b;padding:16px;border-radius:8px;overflow-x:auto;color:#4ade80;font-size:13px;white-space:pre-wrap;}a{display:inline-block;margin-top:16px;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;}a:hover{background:#1d4ed8;}</style></head><body>';
+            $html .= '<h1>Database Migrations &amp; Cache Status</h1>';
+            $html .= '<p style="color:#94a3b8;margin-bottom:6px;"><strong>Artisan Migrate Output:</strong></p><pre>' . htmlspecialchars($output ?: 'All migrations are already up to date.') . '</pre>';
+            $html .= '<p style="color:#94a3b8;margin-bottom:6px;margin-top:16px;"><strong>Cache Clear Output:</strong></p><pre>' . htmlspecialchars($cacheOutput ?: 'Cache cleared.') . '</pre>';
+            $html .= '<a href="' . route('admin.dashboard') . '">&larr; Return to Admin Dashboard</a>';
+            $html .= '</body></html>';
+
+            return response($html);
+        } catch (\Throwable $e) {
+            $html = '<!DOCTYPE html><html><head><title>Migration Failed</title><meta name="viewport" content="width=device-width, initial-scale=1.0"><style>body{background:#0f172a;color:#f8fafc;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace;padding:24px;line-height:1.5;max-width:850px;margin:40px auto;border-radius:12px;box-shadow:0 10px 25px rgba(0,0,0,0.5);}h1{color:#f87171;font-size:20px;margin-bottom:16px;border-bottom:1px solid #334155;padding-bottom:10px;}pre{background:#1e293b;padding:16px;border-radius:8px;overflow-x:auto;color:#ef4444;font-size:13px;white-space:pre-wrap;}a{display:inline-block;margin-top:16px;padding:10px 20px;background:#2563eb;color:#fff;text-decoration:none;border-radius:6px;font-weight:600;}a:hover{background:#1d4ed8;}</style></head><body>';
+            $html .= '<h1>Migration Failed</h1>';
+            $html .= '<pre>' . htmlspecialchars($e->getMessage()) . '</pre>';
+            $html .= '<a href="' . route('admin.dashboard') . '">&larr; Return to Admin Dashboard</a>';
+            $html .= '</body></html>';
+
+            return response($html, 500);
         }
     })->name('run-migrations');
 
