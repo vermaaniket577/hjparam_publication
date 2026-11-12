@@ -22,6 +22,9 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
+        [x-cloak] {
+            display: none !important;
+        }
         html, body {
             overflow-x: hidden;
             max-width: 100vw;
@@ -52,8 +55,8 @@
     @include('components.web-loader')
 
     <!-- Top Academic Ecosystem Bar -->
-    <div class="text-white relative z-[60] transition-all duration-300 transform w-full overflow-hidden"
-        style="background-color: #0b132b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 0; min-height: 40px;"
+    <div class="text-white relative z-[60] transition-all duration-300 transform w-full"
+        style="background-color: #0b132b; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: 7px 0; min-height: 40px; overflow: visible;"
         x-data="{ visible: true }" x-show="visible"
         x-init="window.addEventListener('scroll', () => { visible = window.scrollY < 100 })"
         x-transition:enter="transition ease-out duration-300" x-transition:enter-start="-translate-y-full opacity-0"
@@ -108,7 +111,7 @@
                     <div class="flex items-center" style="display: flex; align-items: center; gap: 9px;" x-data="{ notificationOpen: false }">
                         <!-- Notification Bell -->
                         <div class="relative">
-                            <button @click="notificationOpen = !notificationOpen"
+                            <button @click.stop="notificationOpen = !notificationOpen"
                                 class="text-slate-300 hover:text-white relative transition-colors p-1 rounded-full hover:bg-white/10"
                                 title="Notifications">
                                 <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -210,8 +213,8 @@
                         @endif
 
                         <!-- Profile Dropdown -->
-                        <div class="relative" x-data="{ profileOpen: false }" @click.outside="profileOpen = false">
-                            <button @click="profileOpen = !profileOpen"
+                        <div class="relative inline-block text-left" x-data="{ profileOpen: false }" @click.away="profileOpen = false">
+                            <button @click.stop="profileOpen = !profileOpen"
                                 type="button"
                                 style="background-color: #0284c7; color: #ffffff; padding: 4px 12px; border-radius: 6px; font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; gap: 4px; border: none; cursor: pointer; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);"
                                 class="hover:bg-sky-500 transition-all">
@@ -222,14 +225,14 @@
                             </button>
 
                             <div x-show="profileOpen"
+                                x-cloak
                                 x-transition:enter="transition ease-out duration-100"
                                 x-transition:enter-start="transform opacity-0 scale-95"
                                 x-transition:enter-end="transform opacity-100 scale-100"
                                 x-transition:leave="transition ease-in duration-75"
                                 x-transition:leave-start="transform opacity-100 scale-100"
                                 x-transition:leave-end="transform opacity-0 scale-95"
-                                style="display: none;"
-                                class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-1 z-50 border border-slate-100 text-left">
+                                class="absolute right-0 top-full mt-2 w-52 bg-white rounded-xl shadow-2xl py-1 z-[100] border border-slate-200 text-left">
                                 
                                 <div class="px-4 py-2 border-b border-gray-100">
                                     <p class="text-xs font-bold text-gray-800 truncate">{{ Auth::user()->name }}</p>
