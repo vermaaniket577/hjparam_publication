@@ -234,13 +234,15 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('editorial-board/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'destroyGlobal'])->name('editorial-board.destroy');
     Route::post('editorial-board/settings', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updatePageSettings'])->name('editorial-board.settings');
 
+    Route::post('articles/{article}/toggle-publish', [\App\Http\Controllers\Admin\ArticleController::class, 'togglePublish'])->name('articles.toggle-publish');
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
 
     // Admin Conference Management
     Route::resource('conferences', \App\Http\Controllers\Admin\ConferenceController::class);
     Route::post('conferences/{conference}/toggle-featured', [\App\Http\Controllers\Admin\ConferenceController::class, 'toggleFeatured'])->name('conferences.toggle-featured');
 
-    // Admin Submissions & 8-Step Lifecycle
+    // Admin Submissions & Publication Lifecycle
+    Route::post('submissions/{submission}/publish', [\App\Http\Controllers\Admin\SubmissionController::class, 'publishToJournal'])->name('submissions.publish');
     Route::get('submissions/{submission}/view', [\App\Http\Controllers\Admin\SubmissionController::class, 'view'])->name('submissions.view');
     Route::get('submissions/{submission}/download', [\App\Http\Controllers\Admin\SubmissionController::class, 'download'])->name('submissions.download');
     Route::post('submissions/{submission}/assign', [\App\Http\Controllers\Admin\SubmissionController::class, 'assign'])->name('submissions.assign');

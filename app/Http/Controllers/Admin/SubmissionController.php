@@ -7,12 +7,18 @@ use App\Models\Submission;
 use App\Models\User;
 use App\Models\Review;
 use App\Models\Certificate;
+use App\Models\Article;
+use App\Models\Journal;
+use App\Models\Volume;
+use App\Models\Issue;
+use App\Models\Author;
 use App\Services\CertificateIssuanceService;
 use App\Mail\SubmissionStatusNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class SubmissionController extends Controller
 {
@@ -49,7 +55,7 @@ class SubmissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Submission::with(['user', 'journal', 'conference', 'editor']);
+        $query = Submission::with(['user', 'journal', 'conference', 'editor', 'article.journal']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);
@@ -78,7 +84,17 @@ class SubmissionController extends Controller
      */
     public function show(Submission $submission)
     {
-        $submission->load(['user', 'journal', 'conference', 'editor', 'reviews.reviewer']);
+        $submission->load([
+            'user',
+            'journal',
+            'conference',
+            'editor',
+            'reviews.reviewer',
+            'article.journal',
+            'article.issue.volume',
+            'article.authors',
+            'certificates',
+        ]);
         
         // Potential editors & reviewers
         $editors = User::whereIn('role', ['editor', 'admin'])->orderBy('name')->get();
@@ -87,7 +103,167 @@ class SubmissionController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('admin.submissions.show', compact('submission', 'editors', 'reviewers'));
+        $journals = Journal::with(['volumes' => function ($q) {
+            $q->orderBy('year', 'desc')->with('issues');
+        }])->orderBy('title')->get();
+
+        $authorsList = CertificateIssuanceService::extractAuthors($submission);
+
+        return view('admin.submissions.show', compact('submission', 'editors', 'reviewers', 'journals', 'authorsList'));
+    }
+
+    /**
+     * Directly publish a submission into an official Journal Article.
+     */
+    public function publishToJournal(Request $request, Submission $submission)
+    {
+        $request->validate([
+            'journal_id' => 'required|exists:journals,id',
+            'issue_id' => 'nullable|exists:issues,id',
+            'title' => 'required|string|max:500',
+            'abstract' => 'required|string',
+            'keywords' => 'nullable|string',
+            'doi' => 'nullable|string|max:255',
+            'published_at' => 'nullable|date',
+            'pdf_file' => 'nullable|file|mimes:pdf|max:30720',
+            'authors' => 'nullable|array',
+            'authors.*.name' => 'nullable|string|max:255',
+            'authors.*.email' => 'nullable|email|max:255',
+            'authors.*.affiliation' => 'nullable|string|max:500',
+            'authors.*.is_corresponding' => 'nullable',
+        ]);
+
+        $journal = Journal::findOrFail($request->journal_id);
+
+        // Ensure an Issue exists for this Journal
+        $issueId = $request->issue_id;
+        if (empty($issueId)) {
+            $targetYear = $journal->effective_starting_year ?? date('Y');
+            $volume = Volume::firstOrCreate(
+                ['journal_id' => $journal->id, 'year' => $targetYear],
+                ['volume_number' => '1', 'month' => 'Regular Issue', 'is_published' => true]
+            );
+
+            $issue = Issue::firstOrCreate(
+                ['volume_id' => $volume->id, 'issue_number' => '1'],
+                ['publication_date' => now(), 'is_published' => true]
+            );
+            $issueId = $issue->id;
+        }
+
+        // Generate unique slug
+        $baseSlug = Str::slug($request->title);
+        $slug = $baseSlug ?: 'article-' . time();
+        $counter = 1;
+        $existingArticleId = $submission->article?->id;
+        while (Article::where('slug', $slug)->where('id', '!=', $existingArticleId ?? 0)->exists()) {
+            $slug = $baseSlug . '-' . $counter;
+            $counter++;
+        }
+
+        // DOI Generation if empty
+        $doi = $request->doi;
+        if (empty($doi)) {
+            $year = $request->published_at ? date('Y', strtotime($request->published_at)) : date('Y');
+            $doi = '10.5281/hjparam.' . $journal->slug . '.' . $year . '.' . str_pad($submission->id, 4, '0', STR_PAD_LEFT);
+        }
+
+        // Handle Manuscript PDF
+        $pdfPath = $submission->article?->pdf_path;
+        if ($request->hasFile('pdf_file')) {
+            $pdfPath = $request->file('pdf_file')->store('articles/pdf', 'public');
+        } elseif (empty($pdfPath)) {
+            if (!empty($submission->file_path) && str_ends_with(strtolower($submission->file_path), '.pdf')) {
+                try {
+                    $originalFull = storage_path('app/' . $submission->file_path);
+                    if (file_exists($originalFull)) {
+                        $newFilename = 'articles/pdf/manuscript_' . $submission->id . '_' . basename($submission->file_path);
+                        Storage::disk('public')->put($newFilename, file_get_contents($originalFull));
+                        $pdfPath = $newFilename;
+                    }
+                } catch (\Throwable $e) {
+                    $pdfPath = $submission->file_path;
+                }
+            } elseif (!empty($submission->binary_content) && ($submission->extension === 'pdf' || $submission->mime_type === 'application/pdf')) {
+                try {
+                    $newFilename = 'articles/pdf/article_' . $submission->id . '_' . time() . '.pdf';
+                    Storage::disk('public')->put($newFilename, $submission->binary_content);
+                    $pdfPath = $newFilename;
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // Create or update Article
+        $article = Article::updateOrCreate(
+            ['submission_id' => $submission->id],
+            [
+                'journal_id' => $journal->id,
+                'issue_id' => $issueId,
+                'user_id' => $submission->user_id,
+                'title' => $request->title,
+                'slug' => $slug,
+                'abstract' => $request->abstract,
+                'keywords' => $request->keywords ?? $submission->keywords,
+                'doi' => $doi,
+                'pdf_path' => $pdfPath,
+                'status' => 'published',
+                'submitted_at' => $submission->created_at ?? now(),
+                'accepted_at' => now(),
+                'published_at' => $request->published_at ? \Carbon\Carbon::parse($request->published_at) : now(),
+            ]
+        );
+
+        // Process authors: use provided or fallback to extracted
+        $authorsData = $request->input('authors');
+        if (empty($authorsData) || !is_array($authorsData)) {
+            $extracted = CertificateIssuanceService::extractAuthors($submission);
+            $authorsData = array_map(function ($item) {
+                return [
+                    'name' => $item['name'],
+                    'email' => $item['email'] ?? null,
+                    'affiliation' => $item['institution'] ?? ($item['department'] ?? 'Academic Researcher'),
+                    'is_corresponding' => ($item['role'] ?? '') === 'author' ? 1 : 0,
+                ];
+            }, $extracted);
+        }
+
+        // Sync authors
+        $article->authors()->delete();
+        foreach ($authorsData as $authorItem) {
+            if (!empty($authorItem['name'])) {
+                $article->authors()->create([
+                    'name' => $authorItem['name'],
+                    'email' => $authorItem['email'] ?? null,
+                    'affiliation' => $authorItem['affiliation'] ?? null,
+                    'is_corresponding' => !empty($authorItem['is_corresponding']),
+                ]);
+            }
+        }
+
+        // Update submission status to published
+        $submission->update([
+            'status' => 'published',
+            'journal_id' => $journal->id,
+        ]);
+
+        // Issue official publication certificates
+        try {
+            CertificateIssuanceService::issueForArticle($article);
+        } catch (\Throwable $e) {
+            Log::warning('Automatic certificate issuance error on publishing article: ' . $e->getMessage());
+        }
+
+        // Send email to author
+        $this->notifyAuthor($submission, 'status_change', [
+            'new_status' => 'published',
+            'journal_title' => $journal->title,
+            'article_title' => $article->title,
+            'article_url' => route('articles.show', [$journal->slug, $article->slug]),
+        ]);
+
+        $articleUrl = route('articles.show', [$journal->slug, $article->slug]);
+        return redirect()->route('admin.submissions.show', $submission)
+            ->with('success', "🎉 Paper officially published in '{$journal->title}'! View live article at: {$articleUrl}");
     }
 
     /**

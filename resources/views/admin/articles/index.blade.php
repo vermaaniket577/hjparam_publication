@@ -96,20 +96,40 @@
                                 </td>
                                 <td class="px-8 py-6 whitespace-nowrap text-right text-sm">
                                     <div
-                                        class="flex items-center justify-end gap-3 opacity-50 group-hover:opacity-100 transition-opacity">
+                                        class="flex items-center justify-end gap-2 opacity-75 group-hover:opacity-100 transition-opacity">
+                                        {{-- 1-Click Publish/Unpublish Toggle --}}
+                                        <form action="{{ route('admin.articles.toggle-publish', $article->id) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" 
+                                                class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all {{ $article->status === 'published' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200' : 'bg-purple-600 text-white hover:bg-purple-700 shadow-sm' }}"
+                                                title="{{ $article->status === 'published' ? 'Click to Set as Under Review' : 'Click to Publish Immediately' }}">
+                                                {{ $article->status === 'published' ? 'Live ✓' : '⚡ Publish Now' }}
+                                            </button>
+                                        </form>
+
                                         <a href="{{ route('articles.show', [$article->journal->slug, $article->slug]) }}"
-                                            target="_blank" class="p-2 text-slate-400 hover:text-blue-600 transition-colors"
-                                            title="Public View">
-                                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
+                                            title="Public Live View">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path
                                                     d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                                                     stroke-width="2.5"></path>
                                             </svg>
                                         </a>
+                                        <a href="{{ route('articles.download', $article->id) }}" target="_blank"
+                                            class="p-1.5 text-slate-400 hover:text-indigo-600 transition-colors text-xs"
+                                            title="Download Official Academic PDF">
+                                            📄
+                                        </a>
+                                        <a href="{{ route('certificates.publication.article', $article) }}" target="_blank"
+                                            class="p-1.5 text-slate-400 hover:text-amber-500 transition-colors text-xs"
+                                            title="View Publication Certificates">
+                                            🎓
+                                        </a>
                                         <a href="{{ route('admin.articles.edit', $article->id) }}"
-                                            class="p-2 text-slate-400 hover:text-emerald-600 transition-colors"
+                                            class="p-1.5 text-slate-400 hover:text-emerald-600 transition-colors"
                                             title="Modify Registry">
-                                            <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path
                                                     d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
                                                     stroke-width="2.5"></path>
@@ -120,9 +140,9 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit"
-                                                class="p-2 text-slate-300 hover:text-red-600 transition-colors"
+                                                class="p-1.5 text-slate-300 hover:text-red-600 transition-colors"
                                                 title="De-index Research">
-                                                <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path
                                                         d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                                         stroke-width="2.5"></path>

@@ -5,11 +5,17 @@
 
 @section('content')
     <div class="max-w-5xl mx-auto" x-data="{ 
-                    title: '', 
-                    slug: '',
-                    authors: [
-                        { name: '', email: '', affiliation: '', is_corresponding: 0 }
-                    ],
+                    title: @js(old('title', $selectedSubmission->title ?? '')), 
+                    slug: @js(old('slug', isset($selectedSubmission) ? \Illuminate\Support\Str::slug($selectedSubmission->title) : '')),
+                    abstract: @js(old('abstract', $selectedSubmission->abstract ?? '')),
+                    keywords: @js(old('keywords', $selectedSubmission->keywords ?? '')),
+                    doi: @js(old('doi', '')),
+                    journal_id: '{{ old('journal_id', $selectedSubmission->journal_id ?? '') }}',
+                    submission_id: '{{ old('submission_id', $selectedSubmission->id ?? '') }}',
+                    submissionsData: @json($submissions->keyBy('id') ?? []),
+                    authors: @json(old('authors', isset($selectedSubmission) ? \App\Services\CertificateIssuanceService::extractAuthors($selectedSubmission) : [
+                        ['name' => '', 'email' => '', 'affiliation' => '', 'is_corresponding' => 1]
+                    ])),
                     addAuthor() {
                         this.authors.push({ name: '', email: '', affiliation: '', is_corresponding: 0 });
                     },
@@ -20,6 +26,43 @@
                         this.slug = this.title.toLowerCase()
                             .replace(/[^a-z0-9]+/g, '-')
                             .replace(/(^-|-$)+/g, '');
+                    },
+                    generateDoi() {
+                        const year = new Date().getFullYear();
+                        const rand = Math.floor(1000 + Math.random() * 9000);
+                        this.doi = '10.5281/hjparam.j' + (this.journal_id || 'pub') + '.' + year + '.' + rand;
+                    },
+                    loadSubmission(id) {
+                        if (!id || !this.submissionsData[id]) return;
+                        const s = this.submissionsData[id];
+                        this.title = s.title || '';
+                        this.generateSlug();
+                        this.abstract = s.abstract || '';
+                        this.keywords = s.keywords || '';
+                        this.journal_id = s.journal_id || '';
+                        this.submission_id = s.id || '';
+                        if (s.authors_data && s.authors_data.length) {
+                            this.authors = s.authors_data.map((a, i) => ({
+                                name: a.name || ((a.first_name || '') + ' ' + (a.last_name || '')).trim(),
+                                email: a.email || '',
+                                affiliation: a.institution || (a.affiliation || ''),
+                                is_corresponding: a.is_corresponding || (i === 0 ? 1 : 0)
+                            }));
+                        } else if (s.scholars_data && s.scholars_data.length) {
+                            this.authors = s.scholars_data.map((a, i) => ({
+                                name: ((a.first_name || '') + ' ' + (a.last_name || '')).trim(),
+                                email: a.email || '',
+                                affiliation: a.institution || '',
+                                is_corresponding: i === 0 ? 1 : 0
+                            }));
+                        } else if (s.user) {
+                            this.authors = [{
+                                name: s.user.name || '',
+                                email: s.user.email || '',
+                                affiliation: s.user.affiliation || '',
+                                is_corresponding: 1
+                            }];
+                        }
                     }
                 }">
         <div class="mb-8 flex items-center justify-between">
@@ -40,6 +83,30 @@
 
         <form action="{{ route('admin.articles.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
             @csrf
+            <input type="hidden" name="submission_id" x-model="submission_id">
+
+            {{-- Quick Autofill from Submission --}}
+            @if(isset($submissions) && $submissions->isNotEmpty())
+                <div class="bg-gradient-to-r from-blue-900 to-indigo-900 text-white rounded-3xl p-6 shadow-xl border border-blue-700/50 flex flex-col md:flex-row items-center justify-between gap-4">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center font-black text-lg">⚡</div>
+                        <div>
+                            <h3 class="text-sm font-bold text-white">Auto-fill from Submitted Manuscript</h3>
+                            <p class="text-xs text-blue-200">Import title, abstract, journal, and author records with one click.</p>
+                        </div>
+                    </div>
+                    <div class="w-full md:w-80">
+                        <select @change="loadSubmission($event.target.value)" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-white focus:ring-2 focus:ring-blue-400">
+                            <option value="">-- Choose Submission to Auto-fill --</option>
+                            @foreach($submissions as $sub)
+                                <option value="{{ $sub->id }}" {{ (isset($selectedSubmission) && $selectedSubmission->id == $sub->id) ? 'selected' : '' }}>
+                                    #SUB-{{ str_pad($sub->id, 4, '0', STR_PAD_LEFT) }}: {{ Str::limit($sub->title, 40) }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+            @endif
 
             {{-- Metadata Section --}}
             <div class="bg-white rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden">
@@ -78,12 +145,17 @@
                             </div>
 
                             <div>
-                                <label for="doi"
-                                    class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Digital
-                                    Object Identifier (DOI)</label>
-                                <input type="text" name="doi" id="doi" value="{{ old('doi') }}"
-                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
-                                    placeholder="10.xxxx/journal.id.article.id">
+                                <div class="flex items-center justify-between mb-3 ml-1">
+                                    <label for="doi"
+                                        class="block text-xs font-black text-slate-400 uppercase tracking-widest">Digital
+                                        Object Identifier (DOI)</label>
+                                    <button type="button" @click="generateDoi()" class="text-[10px] font-bold text-blue-600 hover:underline">
+                                        ⚡ Auto-generate DOI
+                                    </button>
+                                </div>
+                                <input type="text" name="doi" id="doi" x-model="doi" value="{{ old('doi') }}"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-mono text-xs"
+                                    placeholder="10.5281/hjparam.xxx">
                                 @error('doi') <p class="text-red-500 text-xs mt-2 ml-1">{{ $message }}</p> @enderror
                             </div>
                         </div>
@@ -96,7 +168,7 @@
                             <label for="journal_id"
                                 class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Target
                                 Journal</label>
-                            <select name="journal_id" id="journal_id"
+                            <select name="journal_id" id="journal_id" x-model="journal_id"
                                 class="w-full px-5 py-4 rounded-2xl bg-white border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all font-bold text-slate-700"
                                 required>
                                 <option value="">Select Journal...</option>
@@ -210,9 +282,16 @@
                         <label for="abstract"
                             class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Manuscript
                             Abstract</label>
-                        <textarea name="abstract" id="abstract" rows="4"
+                        <textarea name="abstract" id="abstract" x-model="abstract" rows="4"
                             class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all leading-relaxed"
                             placeholder="Summary of research findings...">{{ old('abstract') }}</textarea>
+                    </div>
+
+                    <div>
+                        <label for="keywords" class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Keywords (Comma separated)</label>
+                        <input type="text" name="keywords" id="keywords" x-model="keywords"
+                            class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all text-xs"
+                            placeholder="e.g. Machine Learning, Neuroscience, Neural Networks">
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">

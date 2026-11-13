@@ -107,6 +107,19 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-right space-x-2">
+                                @if($submission->article)
+                                    <a href="{{ route('articles.show', [$submission->article->journal->slug, $submission->article->slug]) }}" target="_blank"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all shadow-xs"
+                                        title="View Published Article">
+                                        Published #{{ $submission->article->id }} ↗
+                                    </a>
+                                @else
+                                    <a href="{{ route('admin.submissions.show', $submission) }}#publish-paper-section"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 rounded-lg text-xs font-bold transition-all shadow-xs"
+                                        title="Directly Publish this Paper into a Journal">
+                                        ⚡ Publish Paper
+                                    </a>
+                                @endif
                                 <a href="{{ route('admin.submissions.show', $submission) }}" class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow-xs">
                                     Manage
                                 </a>

@@ -25,11 +25,21 @@ class ArticleController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        $journals = \App\Models\Journal::orderBy('title')->get();
-        $issues = \App\Models\Issue::with('volume')->get(); // Issues usually need their volume context
-        return view('admin.articles.create', compact('journals', 'issues'));
+        $journals = \App\Models\Journal::with(['volumes.issues'])->orderBy('title')->get();
+        $issues = \App\Models\Issue::with('volume')->get();
+        $submissions = \App\Models\Submission::with(['journal', 'user'])
+            ->orderBy('id', 'desc')
+            ->take(50)
+            ->get();
+
+        $selectedSubmission = null;
+        if ($request->filled('from_submission')) {
+            $selectedSubmission = \App\Models\Submission::with(['journal', 'user'])->find($request->from_submission);
+        }
+
+        return view('admin.articles.create', compact('journals', 'issues', 'submissions', 'selectedSubmission'));
     }
 
     /**
@@ -40,6 +50,7 @@ class ArticleController extends Controller
         $validated = $request->validate([
             'journal_id' => 'required|exists:journals,id',
             'issue_id' => 'nullable|exists:issues,id',
+            'submission_id' => 'nullable|exists:submissions,id',
             'title' => 'required|string|max:500',
             'slug' => 'required|string|unique:articles,slug',
             'abstract' => 'required|string',
@@ -55,7 +66,26 @@ class ArticleController extends Controller
             'authors.*.is_corresponding' => 'nullable|boolean',
         ]);
 
+        // Auto-assign issue if not provided
+        $issueId = $request->issue_id;
+        if (empty($issueId)) {
+            $journal = \App\Models\Journal::find($request->journal_id);
+            if ($journal) {
+                $targetYear = $journal->effective_starting_year ?? date('Y');
+                $volume = \App\Models\Volume::firstOrCreate(
+                    ['journal_id' => $journal->id, 'year' => $targetYear],
+                    ['volume_number' => '1', 'month' => 'Regular Issue', 'is_published' => true]
+                );
+                $issue = \App\Models\Issue::firstOrCreate(
+                    ['volume_id' => $volume->id, 'issue_number' => '1'],
+                    ['publication_date' => now(), 'is_published' => true]
+                );
+                $issueId = $issue->id;
+            }
+        }
+
         $article = new Article($request->except('authors', 'pdf_path'));
+        $article->issue_id = $issueId;
 
         if ($request->hasFile('pdf_path')) {
             $path = $request->file('pdf_path')->store('articles/pdf', 'public');
@@ -74,6 +104,14 @@ class ArticleController extends Controller
             $article->authors()->create($authorData);
         }
 
+        // If created from submission, mark submission as published
+        if ($request->filled('submission_id')) {
+            $sub = \App\Models\Submission::find($request->submission_id);
+            if ($sub && $article->status === 'published') {
+                $sub->update(['status' => 'published']);
+            }
+        }
+
         // Issue certificates automatically if published
         if ($article->status === 'published') {
             try {
@@ -84,7 +122,7 @@ class ArticleController extends Controller
         }
 
         return redirect()->route('admin.articles.index')
-            ->with('success', 'Manuscript and author records successfully registered.');
+            ->with('success', 'Manuscript published and author records successfully registered.');
     }
 
     /**
@@ -175,5 +213,28 @@ class ArticleController extends Controller
 
         return redirect()->route('admin.articles.index')
             ->with('success', 'Article and associated assets removed.');
+    }
+
+    /**
+     * Quick toggle published / draft status for an article.
+     */
+    public function togglePublish(Article $article)
+    {
+        $newStatus = $article->status === 'published' ? 'under_review' : 'published';
+        $article->status = $newStatus;
+        if ($newStatus === 'published' && !$article->published_at) {
+            $article->published_at = now();
+        }
+        $article->save();
+
+        if ($newStatus === 'published') {
+            try {
+                CertificateIssuanceService::issueForArticle($article);
+            } catch (\Throwable $e) {
+                Log::warning('Certificate error on toggle publish: ' . $e->getMessage());
+            }
+        }
+
+        return back()->with('success', "Article '{$article->title}' is now " . ucfirst(str_replace('_', ' ', $newStatus)) . '.');
     }
 }

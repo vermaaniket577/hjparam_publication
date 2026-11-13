@@ -62,15 +62,15 @@
                             <span class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Journal
                                 Registry</span>
                             <span class="text-sm font-bold text-slate-700">Vol.
-                                {{ $article->issue->volume->volume_number }}, No. {{ $article->issue->issue_number }}
-                                ({{ $article->issue->publication_date->format('Y') }})</span>
+                                {{ $article->issue?->volume?->volume_number ?? '1' }}, No. {{ $article->issue?->issue_number ?? '1' }}
+                                ({{ $article->issue?->publication_date ? $article->issue->publication_date->format('Y') : ($article->published_at ? $article->published_at->format('Y') : date('Y')) }})</span>
                         </div>
                         <div>
                             <span
                                 class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Chronology</span>
                             <span class="text-sm font-bold text-slate-700">Received:
-                                {{ $article->submitted_at->format('M d, Y') }} | Published:
-                                {{ $article->published_at->format('M d, Y') }}</span>
+                                {{ $article->submitted_at ? $article->submitted_at->format('M d, Y') : ($article->created_at ? $article->created_at->format('M d, Y') : now()->format('M d, Y')) }} | Published:
+                                {{ $article->published_at ? $article->published_at->format('M d, Y') : now()->format('M d, Y') }}</span>
                         </div>
                     </div>
                 </div>
