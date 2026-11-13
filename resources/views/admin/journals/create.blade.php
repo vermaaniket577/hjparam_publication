@@ -82,7 +82,7 @@
                         <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', 2026) }}"
                             min="1900" max="2100"
                             class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
-                            placeholder="e.g. 2024" required>
+                            placeholder="e.g. 2026" required>
                         @error('starting_year') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 

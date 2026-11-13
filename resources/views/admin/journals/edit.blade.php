@@ -78,10 +78,10 @@
 
                     <div>
                         <label for="starting_year" class="block text-xs font-bold text-gray-700 uppercase mb-1">Starting Year *</label>
-                        <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', $journal->starting_year ?: 2026) }}"
+                        <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', $journal->effective_starting_year) }}"
                             min="1900" max="2100"
                             class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
-                            placeholder="e.g. 2024" required>
+                            placeholder="e.g. 2026" required>
                         @error('starting_year') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
 

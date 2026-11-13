@@ -65,7 +65,11 @@ class Journal extends Model
      */
     public function getEffectiveStartingYearAttribute(): int
     {
-        return $this->starting_year ?: 2026;
+        if (empty($this->starting_year) || (int)$this->starting_year < 2026) {
+            return 2026;
+        }
+
+        return (int)$this->starting_year;
     }
 
     /**
