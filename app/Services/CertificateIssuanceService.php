@@ -53,7 +53,7 @@ class CertificateIssuanceService
             $cert->manuscript_id = $manuscriptId;
             $cert->paper_title = $submission->title;
             $cert->journal_name = $journalName;
-            $cert->volume = 'Volume ' . (date('Y') - 2024);
+            $cert->volume = 'Volume ' . max(1, ((int)date('Y') - 2026 + 1));
             $cert->issue = 'Issue ' . date('n');
             $cert->month_year = $monthYear;
             $cert->pages = 'pp. 01–' . str_pad(rand(8, 22), 2, '0', STR_PAD_LEFT);
@@ -81,7 +81,7 @@ class CertificateIssuanceService
         $manuscriptId = 'HJP/' . ($article->journal ? strtoupper(substr($article->journal->slug ?? 'PUB', 0, 4)) : 'PUB') . '/' . ($article->published_at ? $article->published_at->format('Y') : date('Y')) . '/' . str_pad($article->id, 4, '0', STR_PAD_LEFT);
         $issueDate = $article->published_at ? $article->published_at->toDateString() : now()->toDateString();
         $monthYear = $article->published_at ? $article->published_at->format('F Y') : now()->format('F Y');
-        $volNum = $article->issue?->volume?->volume_number ?? ('Volume ' . (date('Y') - 2024));
+        $volNum = $article->issue?->volume?->volume_number ?? ('Volume ' . max(1, ((int)date('Y') - 2026 + 1)));
         $issueNum = $article->issue?->issue_number ?? ('Issue ' . date('n'));
         $doi = $article->doi ?? ('10.XXXXX/hjparam.' . date('Y') . '.' . $article->id);
 

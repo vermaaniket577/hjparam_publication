@@ -27,7 +27,7 @@ return new class extends Migration
                 $table->string('language', 150)->default('English, Hindi')->after('subject');
             }
             if (!Schema::hasColumn('journals', 'starting_year')) {
-                $table->unsignedSmallInteger('starting_year')->default(2024)->after('language');
+                $table->unsignedSmallInteger('starting_year')->default(2026)->after('language');
             }
             if (!Schema::hasColumn('journals', 'publisher')) {
                 $table->string('publisher', 255)->default('HJPARAM Publication')->after('starting_year');

@@ -79,7 +79,7 @@
 
                     <div>
                         <label for="starting_year" class="block text-xs font-bold text-gray-700 uppercase mb-1">Starting Year *</label>
-                        <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', 2024) }}"
+                        <input type="number" name="starting_year" id="starting_year" value="{{ old('starting_year', 2026) }}"
                             min="1900" max="2100"
                             class="focus:ring-blue-500 focus:border-blue-500 block w-full text-xs border-gray-300 rounded-lg"
                             placeholder="e.g. 2024" required>
