@@ -163,7 +163,8 @@
     </div>
 
     <!-- Secondary Sticky Sub-Navigation Bar -->
-    <div class="sticky top-[76px] z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs">
+    <div class="sticky top-[76px] z-40 bg-white border-b border-slate-200 shadow-xs"
+        style="position: sticky; top: 76px; z-index: 40; background-color: #ffffff;">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center gap-1 sm:gap-2 overflow-x-auto py-2.5 no-scrollbar text-xs sm:text-sm font-bold text-slate-600">
                 <a href="#preliminary-details" class="px-3.5 py-1.5 rounded-lg text-blue-700 bg-blue-50/70 hover:bg-blue-100 transition-colors whitespace-nowrap">Preliminary Details</a>

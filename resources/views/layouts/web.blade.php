@@ -296,55 +296,27 @@
 
     <!-- Main Navigation (Standard Clean Academic Style) -->
     <div id="header-container"
-        style="position: relative; z-index: 100;"
-        class="relative z-50"
+        style="position: sticky; top: 0; z-index: 100; width: 100%; background-color: #ffffff;"
+        class="sticky top-0 z-50 w-full"
         x-data="{
             open: false,
             activeDropdown: null,
             searchOpen: false,
             advancedSearchOpen: false,
-            isFixed: false,
-            isVisible: true,
-            lastScrollY: 0,
-            scrollThreshold: 10,
+            scrolled: false,
             init() {
-                this.lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
-                window.addEventListener('scroll', () => {
-                    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
-                    const diff = currentScroll - this.lastScrollY;
-
-                    if (currentScroll <= 60) {
-                        this.isFixed = false;
-                        this.isVisible = true;
-                    } else if (diff > this.scrollThreshold) {
-                        // Scrolling DOWN -> hide header so user can read paper unobstructed
-                        if (!this.open && !this.searchOpen) {
-                            this.isVisible = false;
-                            this.activeDropdown = null;
-                        }
-                    } else if (diff < -this.scrollThreshold) {
-                        // Scrolling UPWARD -> fix header at top!
-                        this.isFixed = true;
-                        this.isVisible = true;
-                    }
-
-                    this.lastScrollY = currentScroll <= 0 ? 0 : currentScroll;
-                }, { passive: true });
+                const onScroll = () => {
+                    this.scrolled = (window.pageYOffset || document.documentElement.scrollTop) > 20;
+                };
+                window.addEventListener('scroll', onScroll, { passive: true });
+                onScroll();
             }
         }">
 
-        {{-- Spacer to prevent layout shift when header becomes fixed --}}
-        <div x-show="isFixed" style="height: 76px;" class="w-full" x-cloak></div>
-
         <header id="main-header"
-            class="bg-white border-b border-slate-200 z-50 w-full transition-all duration-300 ease-out"
-            :class="{
-                'fixed top-0 left-0 right-0 shadow-lg shadow-slate-900/5 bg-white/95 backdrop-blur-md': isFixed,
-                'relative': !isFixed,
-                '-translate-y-full': isFixed && !isVisible && !open && !searchOpen,
-                'translate-y-0': isVisible || !isFixed || open || searchOpen
-            }"
-            style="width: 100%; background-color: #ffffff; position: relative; z-index: 100;">
+            class="bg-white border-b border-slate-200 w-full transition-shadow duration-200"
+            :class="{ 'shadow-md': scrolled }"
+            style="width: 100%; background-color: #ffffff; position: relative;">
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
@@ -751,12 +723,8 @@
         </div>
 
         <!-- Mobile Navigation Drawer -->
-        <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200"
-            x-transition:enter-start="opacity-0 -translate-y-2"
-            x-transition:enter-end="opacity-100 translate-y-0"
-            x-transition:leave="transition ease-in duration-150"
-            x-transition:leave-start="opacity-100 translate-y-0"
-            x-transition:leave-end="opacity-0 -translate-y-2"
+        <div x-show="open" x-transition.opacity.duration.200ms
+            style="background-color: #ffffff;"
             class="lg:hidden bg-white border-t border-slate-200 shadow-xl max-h-[calc(100vh-80px)] overflow-y-auto p-4 space-y-4">
             
             <!-- Quick Action Buttons -->
