@@ -195,6 +195,8 @@ class ArticleController extends Controller
             public_path('storage/' . $relPath),
             public_path($relPath),
             storage_path('app/' . $relPath),
+            storage_path('app/private/' . $relPath),
+            storage_path('app/public/' . $relPath),
         ];
 
         foreach ($candidates as $cand) {
@@ -207,31 +209,39 @@ class ArticleController extends Controller
     }
 
     /**
-     * Find original manuscript file (e.g. docx, doc) for explicit download requests.
+     * Find original manuscript file (e.g. docx, doc) across all possible storage roots.
      */
     protected function findRawManuscriptPath(Article $article): ?array
     {
-        $relPath = $article->pdf_path ?: ($article->submission?->file_path ?? null);
-        if (empty($relPath)) {
+        $relPaths = array_filter([
+            $article->submission?->file_path,
+            $article->pdf_path,
+        ]);
+
+        if (empty($relPaths)) {
             return null;
         }
 
-        $candidates = [
-            Storage::disk('public')->path($relPath),
-            Storage::disk('local')->path($relPath),
-            public_path('storage/' . $relPath),
-            public_path($relPath),
-            storage_path('app/' . $relPath),
-        ];
+        foreach ($relPaths as $relPath) {
+            $candidates = [
+                Storage::disk('public')->path($relPath),
+                Storage::disk('local')->path($relPath),
+                public_path('storage/' . $relPath),
+                public_path($relPath),
+                storage_path('app/' . $relPath),
+                storage_path('app/private/' . $relPath),
+                storage_path('app/public/' . $relPath),
+            ];
 
-        foreach ($candidates as $cand) {
-            if (file_exists($cand) && !is_dir($cand)) {
-                $ext = pathinfo($cand, PATHINFO_EXTENSION) ?: 'docx';
-                $cleanTitle = Str::slug($article->title);
-                return [
-                    'path' => $cand,
-                    'filename' => "{$cleanTitle}.{$ext}",
-                ];
+            foreach ($candidates as $cand) {
+                if (file_exists($cand) && !is_dir($cand)) {
+                    $ext = strtolower(pathinfo($cand, PATHINFO_EXTENSION) ?: 'docx');
+                    $cleanTitle = Str::slug($article->title);
+                    return [
+                        'path' => $cand,
+                        'filename' => "{$cleanTitle}.{$ext}",
+                    ];
+                }
             }
         }
 
