@@ -201,28 +201,18 @@
                 <!-- Right Column: Institutional Hub (4 cols) -->
                 <div class="lg:col-span-4 space-y-12">
                     {{-- Primary Actions --}}
-                    <div class="space-y-3">
-                        <a href="{{ route('articles.download', $article->id) }}" target="_blank"
-                            class="w-full h-18 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 group">
-                            <svg class="w-6 h-6 group-hover:translate-y-0.5 transition-transform" fill="none"
+                    <div class="space-y-4">
+                        <a href="{{ route('articles.download', $article->id) }}"
+                            class="w-full h-20 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl shadow-blue-600/20 hover:-translate-y-1 group">
+                            <svg class="w-7 h-7 group-hover:translate-y-1 transition-transform" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5">
                                 </path>
                             </svg>
-                            <span class="text-base font-black uppercase tracking-wider">Download Full-Text (PDF)</span>
+                            <span class="text-lg font-black uppercase tracking-widest">Download Full-Text</span>
                         </a>
-
-                        <a href="{{ route('articles.download', ['id' => $article->id, 'raw' => 1]) }}"
-                            class="w-full py-3 px-4 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl flex items-center justify-center gap-2.5 transition-colors border border-slate-300 text-xs font-bold uppercase tracking-wider shadow-2xs">
-                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                            </svg>
-                            <span>Download Full Manuscript (.DOCX)</span>
-                        </a>
-
-                        <div class="text-[10px] text-center font-bold uppercase tracking-widest text-slate-400">
-                            Scholarly Open Access Edition
-                        </div>
+                        <div class="text-[10px] text-center font-black uppercase tracking-[0.3em] text-slate-400">Scholarly
+                            Open Access PDF</div>
                     </div>
 
                     {{-- Metrics Dashboard --}}
