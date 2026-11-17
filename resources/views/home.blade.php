@@ -565,9 +565,9 @@
                                                     class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50/50 px-4 rounded-md hover:bg-slate-100 transition-all border border-slate-200/50">Abstract</a>
                                                 <a href="{{ route('articles.show', ['journalSlug' => $article->journal->slug, 'articleSlug' => $article->slug]) }}"
                                                     class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-slate-500 hover:text-blue-900 uppercase tracking-widest bg-slate-50/50 px-4 rounded-md hover:bg-slate-100 transition-all border border-slate-200/50">Full-Text</a>
-                                                <a href="{{ route('articles.download', $article->id) }}"
+                                                <a href="{{ route('articles.download', $article->id) }}" target="_blank"
                                                     class="h-8 inline-flex items-center justify-center text-[11px] font-bold text-white uppercase tracking-widest bg-blue-600 px-4 rounded-md hover:bg-blue-700 shadow-sm shadow-blue-200 transition-all">Download
-                                                    {{ $article->primary_download_format }}</a>
+                                                    PDF</a>
 
                                                 <div
                                                     class="ml-auto flex items-center gap-4 text-slate-400 text-[11px] font-medium hidden md:flex">

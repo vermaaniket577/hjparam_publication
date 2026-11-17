@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Services\AcademicPdfService;
+use App\Services\DocxConverterService;
+use App\Services\DocxToPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -29,11 +31,11 @@ class ArticleController extends Controller
     }
 
     /**
-     * Download or view the journal paper in the exact format uploaded by the admin/author.
-     * - If a real PDF was uploaded, serves that exact PDF byte-for-byte.
-     * - If a Word document (.docx / .doc) was uploaded (without a PDF), serves that exact
-     *   Word document byte-for-byte in its original format without conversion or reformatting.
-     * - Falls back to AcademicPdfService only when no uploaded file exists for the article.
+     * Download or view the journal paper as a PDF preserving the exact formatting uploaded by admin/author.
+     * - Priority 1: Exact uploaded PDF file on disk or submission binary_content.
+     * - Priority 2: Faithful DOCX -> PDF conversion preserving exact headers, logos, footers, styles,
+     *   tables, figures, badges, Abstract box, and 2-column layout (LibreOffice if available, else DomPDF).
+     * - Priority 3: Fallback AcademicPdfService only if no uploaded file exists.
      */
     public function download(Request $request, $id)
     {
@@ -92,14 +94,54 @@ class ArticleController extends Controller
             }
         }
 
-        // 4. Priority 3: Exact uploaded Word document (.docx / .doc) — served byte-for-byte
-        //    in the exact same format uploaded from Admin Portal without reformatting or conversion
-        $exactManuscriptResponse = $this->buildExactManuscriptResponse($article);
-        if ($exactManuscriptResponse !== null) {
-            return $exactManuscriptResponse;
+        // 4. Priority 3: Convert uploaded Word document (.docx / .doc) on disk to a faithful PDF
+        //    preserving the exact uploaded formatting (headers, logo, footers, styles, tables, figures, 2-column layout)
+        $wordPath = $article->resolveWordManuscriptDiskPath();
+        if ($wordPath && file_exists($wordPath)) {
+            // 4a. Headless LibreOffice if installed and allowed on server
+            try {
+                $loPdf = DocxConverterService::convert($wordPath);
+                if ($loPdf && file_exists($loPdf)) {
+                    return response()->file($loPdf, array_merge($noCacheHeaders, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('LibreOffice conversion skipped: ' . $e->getMessage());
+            }
+
+            // 4b. Pure-PHP high-fidelity DOCX -> HTML -> DomPDF converter (works on shared hosting)
+            try {
+                $domPdfPath = DocxToPdfService::convert($wordPath, false);
+                if ($domPdfPath && file_exists($domPdfPath)) {
+                    return response()->file($domPdfPath, array_merge($noCacheHeaders, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('DocxToPdfService disk conversion error: ' . $e->getMessage());
+            }
         }
 
-        // 5. Ultimate fallback ONLY when no uploaded file exists for this article at all:
+        // 5. Priority 4: Convert uploaded Word document stored in submission binary_content to faithful PDF
+        $binStr = $article->getSubmissionBinaryContent();
+        if ($binStr !== null && !$article->isPdfBinary($binStr)) {
+            try {
+                $domPdfPath = DocxToPdfService::convert($binStr, true);
+                if ($domPdfPath && file_exists($domPdfPath)) {
+                    return response()->file($domPdfPath, array_merge($noCacheHeaders, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('DocxToPdfService binary conversion error: ' . $e->getMessage());
+            }
+        }
+
+        // 6. Ultimate fallback ONLY when no convertible uploaded file exists for this article:
         //    Generate official academic PDF from metadata using AcademicPdfService
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));

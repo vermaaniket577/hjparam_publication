@@ -160,9 +160,9 @@
                                             class="inline-flex items-center justify-center px-3 py-1 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 leading-none">
                                             Full-Text
                                         </a>
-                                        <a href="{{ route('articles.download', $article->id) }}"
+                                        <a href="{{ route('articles.download', $article->id) }}" target="_blank"
                                             class="inline-flex items-center justify-center px-3 py-1 border border-blue-300 text-xs font-medium rounded text-blue-900 bg-blue-50 hover:bg-blue-600 hover:text-white transition-all leading-none">
-                                            Download {{ $article->primary_download_format }}
+                                            Download PDF
                                         </a>
                                     </div>
                                 </div>
