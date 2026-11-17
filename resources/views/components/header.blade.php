@@ -45,13 +45,9 @@
                     Participate
                 </button>
                 <div x-show="activeDropdown === 'participate'" 
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-2"
-                    x-transition:enter-end="opacity-100 translate-y-0"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-y-0"
-                    x-transition:leave-end="opacity-0 translate-y-2"
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
+                    x-transition.opacity.duration.150ms
+                    style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff;"
+                    class="w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                     <a href="{{ route('submission.create') }}" class="flex items-center gap-4 px-5 py-3 hover:bg-[#F3F4F6] transition group">
                         <div class="w-9 h-9 bg-blue-50 text-[#1E3A8A] rounded-lg flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -88,7 +84,9 @@
                     Topics
                 </button>
                 <div x-show="activeDropdown === 'topics'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] overflow-hidden text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
+                    x-transition.opacity.duration.150ms
+                    style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff;"
+                    class="w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 overflow-hidden text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                     <div class="max-h-[70vh] overflow-y-auto scrollbar-hide">
                         @foreach($global_topics as $topic)
                             <a href="{{ route('topics.show', $topic->slug) }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50 transition">
@@ -105,7 +103,9 @@
                     Author Services
                 </button>
                 <div x-show="activeDropdown === 'authors'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
+                    x-transition.opacity.duration.150ms
+                    style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff;"
+                    class="w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                     <a href="{{ route('author.submit') }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50">Submit Manuscript</a>
                     <a href="{{ route('author.guidelines') }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50">Guidelines</a>
                     <a href="{{ route('payments.create') }}" class="block px-6 py-2.5 text-sm font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50/50">Pay Fees / APC</a>
@@ -128,17 +128,12 @@
                     </svg>
                 </button>
                 <div x-show="activeDropdown === 'conferences'" 
-                    x-transition:enter="transition ease-out duration-200"
-                    x-transition:enter-start="opacity-0 translate-y-2 scale-95"
-                    x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                    x-transition:leave="transition ease-in duration-150"
-                    x-transition:leave-start="opacity-100 translate-y-0 scale-100"
-                    x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                    class="absolute top-full left-0 w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-slate-100 p-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" 
+                    x-transition.opacity.duration.150ms
+                    style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff;"
+                    class="w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-slate-100 p-3 z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" 
                     role="menu" 
                     aria-orientation="vertical" 
-                    aria-labelledby="conferences-menu-button"
-                    x-cloak>
+                    aria-labelledby="conferences-menu-button">
                     
                     <!-- 1. Upcoming Conferences -->
                     <div class="p-2">
@@ -220,7 +215,9 @@
                     About
                 </button>
                 <div x-show="activeDropdown === 'about'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
+                    x-transition.opacity.duration.150ms
+                    style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff;"
+                    class="w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                     @foreach($menu_about as $page)
                         <a href="{{ route('about.page', $page->slug) }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50 transition">{{ $page->title }}</a>
                     @endforeach

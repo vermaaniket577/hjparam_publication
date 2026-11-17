@@ -296,7 +296,8 @@
 
     <!-- Main Navigation (Standard Clean Academic Style) -->
     <div id="header-container"
-        class="relative z-[90]"
+        style="position: relative; z-index: 100;"
+        class="relative z-50"
         x-data="{
             open: false,
             activeDropdown: null,
@@ -336,14 +337,14 @@
         <div x-show="isFixed" style="height: 76px;" class="w-full" x-cloak></div>
 
         <header id="main-header"
-            class="bg-white border-b border-slate-200 z-[90] w-full transition-all duration-300 ease-out"
+            class="bg-white border-b border-slate-200 z-50 w-full transition-all duration-300 ease-out"
             :class="{
                 'fixed top-0 left-0 right-0 shadow-lg shadow-slate-900/5 bg-white/95 backdrop-blur-md': isFixed,
                 'relative': !isFixed,
                 '-translate-y-full': isFixed && !isVisible && !open && !searchOpen,
                 'translate-y-0': isVisible || !isFixed || open || searchOpen
             }"
-            style="width: 100%; background-color: #ffffff;">
+            style="width: 100%; background-color: #ffffff; position: relative; z-index: 100;">
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
@@ -362,14 +363,14 @@
                 <!-- Desktop Menu -->
                 <nav
                     class="hidden lg:flex items-center h-full"
-                    style="display: flex; align-items: center; gap: 12px; white-space: nowrap; margin-left: 12px;">
+                    style="display: flex; align-items: center; gap: 12px; white-space: nowrap; margin-left: 12px; height: 100%;">
 
                     <!-- Journals Dropdown -->
                     <div class="relative h-full flex items-center group" 
                         @mouseenter="activeDropdown = 'journals'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'journals') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'journals' ? null : 'journals')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -382,14 +383,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'journals'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 16rem;"
+                            class="w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('journals.index') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">All
                                 Journals (A-Z)</a>
@@ -413,7 +409,7 @@
                         @mouseenter="activeDropdown = 'policies'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'policies') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'policies' ? null : 'policies')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -426,14 +422,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'policies'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 16rem;"
+                            class="w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('policies.show', 'disclaimer') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Disclaimer</a>
                             <a href="{{ route('policies.show', 'open-access-policy') }}"
@@ -459,7 +450,7 @@
                         @mouseenter="activeDropdown = 'topics'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'topics') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'topics' ? null : 'topics')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -472,14 +463,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'topics'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 14rem;"
+                            class="w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($global_topics as $topic)
                                     <a href="{{ route('topics.show', $topic->slug) }}"
@@ -497,7 +483,7 @@
                         @mouseenter="activeDropdown = 'conferences'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'conferences') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'conferences' ? null : 'conferences')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -510,14 +496,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'conferences'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-60 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 15rem;"
+                            class="w-60 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('conferences.index') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">All Conferences</a>
                             <a href="{{ route('conferences.index') }}?type=upcoming"
@@ -533,7 +514,7 @@
                         @mouseenter="activeDropdown = 'authors'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'authors') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'authors' ? null : 'authors')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -546,14 +527,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'authors'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 16rem;"
+                            class="w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('author.submit') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Submit
                                 Manuscript</a>
@@ -596,7 +572,7 @@
                         @mouseenter="activeDropdown = 'initiatives'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'initiatives') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'initiatives' ? null : 'initiatives')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -609,14 +585,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'initiatives'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 14rem;"
+                            class="w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($menu_initiatives as $page)
                                     @if($page->slug !== 'blog' && $page->slug !== 'blogs')
@@ -635,7 +606,7 @@
                         @mouseenter="activeDropdown = 'about'"
                         @mouseleave="activeDropdown = null" 
                         @click.outside="if (activeDropdown === 'about') activeDropdown = null"
-                        style="display: flex; align-items: center;">
+                        style="display: flex; align-items: center; height: 100%; position: relative;">
                         <button type="button"
                             @click.stop="activeDropdown = (activeDropdown === 'about' ? null : 'about')"
                             class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
@@ -648,14 +619,9 @@
                             </svg>
                         </button>
                         <div x-show="activeDropdown === 'about'" 
-                            x-cloak
-                            x-transition:enter="transition ease-out duration-150"
-                            x-transition:enter-start="opacity-0 translate-y-1"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-100"
-                            x-transition:leave-start="opacity-100 translate-y-0"
-                            x-transition:leave-end="opacity-0 translate-y-1"
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
+                            x-transition.opacity.duration.150ms
+                            style="position: absolute; top: 100%; left: 0; z-index: 9999; background-color: #ffffff; min-width: 14rem;"
+                            class="w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50 text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($menu_about as $page)
                                     <a href="{{ route('about.page', $page->slug) }}"
@@ -699,13 +665,9 @@
                     </div>
 
                     <!-- Search Overlay Form -->
-                    <div x-show="searchOpen" x-cloak x-transition:enter="transition ease-out duration-200"
-                        x-transition:enter-start="opacity-0 -translate-y-2"
-                        x-transition:enter-end="opacity-100 translate-y-0"
-                        x-transition:leave="transition ease-in duration-150"
-                        x-transition:leave-start="opacity-100 translate-y-0"
-                        x-transition:leave-end="opacity-0 -translate-y-2"
-                        class="absolute top-[76px] left-0 w-full bg-white border-b border-gray-200 shadow-md p-4 z-40"
+                    <div x-show="searchOpen" x-transition.opacity.duration.150ms
+                        style="position: absolute; top: 76px; left: 0; width: 100%; z-index: 9999; background-color: #ffffff;"
+                        class="bg-white border-b border-gray-200 shadow-md p-4 z-50"
                         @click.away="searchOpen = false">
                         <div class="container mx-auto max-w-4xl">
                             <form action="{{ route('search') }}" method="GET" class="flex gap-3">
