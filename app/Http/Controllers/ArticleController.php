@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Article;
 use App\Models\DownloadLog;
+use App\Services\AcademicPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -54,112 +55,166 @@ class ArticleController extends Controller
         $cleanArticleTitle = Str::slug($article->title);
         $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
 
-        // 1. Check if the article has an uploaded official manuscript PDF
-        if (!empty($article->pdf_path)) {
-            if (Storage::disk('public')->exists($article->pdf_path)) {
-                return response()->file(Storage::disk('public')->path($article->pdf_path), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
-            }
-
-            if (Storage::disk('local')->exists($article->pdf_path)) {
-                return response()->file(Storage::disk('local')->path($article->pdf_path), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
-            }
-
-            if (file_exists(public_path('storage/' . $article->pdf_path))) {
-                return response()->file(public_path('storage/' . $article->pdf_path), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
-            }
-
-            if (file_exists(public_path($article->pdf_path))) {
-                return response()->file(public_path($article->pdf_path), [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
+        // 1. If user explicitly requests the raw manuscript file (e.g. Word .docx)
+        if ($request->has('raw') || $request->has('manuscript')) {
+            $rawDoc = $this->findRawManuscriptPath($article);
+            if ($rawDoc) {
+                return response()->download($rawDoc['path'], $rawDoc['filename']);
             }
         }
 
-        // 2. Fallback to attached submission PDF if available
+        // 2. Check if the article has a verified, real PDF manuscript on disk
+        $realPdfPath = $this->findRealPdfPath($article->pdf_path);
+        if ($realPdfPath) {
+            return response()->file($realPdfPath, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        }
+
+        // 3. Check if the linked submission has a verified, real PDF file on disk
         if ($article->submission) {
-            $sub = $article->submission;
-            if (!empty($sub->file_path)) {
-                if (Storage::disk('public')->exists($sub->file_path)) {
-                    return response()->file(Storage::disk('public')->path($sub->file_path), [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    ]);
-                }
-
-                if (Storage::disk('local')->exists($sub->file_path)) {
-                    return response()->file(Storage::disk('local')->path($sub->file_path), [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    ]);
-                }
-
-                if (file_exists(storage_path('app/' . $sub->file_path))) {
-                    return response()->file(storage_path('app/' . $sub->file_path), [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    ]);
-                }
+            $subPdf = $this->findRealPdfPath($article->submission->file_path);
+            if ($subPdf) {
+                return response()->file($subPdf, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                ]);
             }
 
-            if (!empty($sub->binary_content) && ($sub->extension === 'pdf' || $sub->mime_type === 'application/pdf')) {
-                return response($sub->binary_content, 200, [
+            // Check if submission binary_content is a real PDF
+            if (!empty($article->submission->binary_content) && str_starts_with($article->submission->binary_content, '%PDF')) {
+                return response($article->submission->binary_content, 200, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . $filename . '"',
                 ]);
             }
         }
 
-        // 3. Dynamic PDF Generation using Dompdf if installed, or fallback to printable HTML
+        // 4. Generate guaranteed valid, standalone official academic PDF using AcademicPdfService
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
 
-        return $this->generateOfficialPdf($article, $journal, $issue, $volume, $issueMonth, $issueYear, $filename);
+        try {
+            $academicPdf = new AcademicPdfService();
+            $pdfBytes = $academicPdf->generate([
+                'title' => $article->title,
+                'journal_title' => $journal ? $journal->title : 'HJPARAM Publication',
+                'volume' => $volNum,
+                'issue' => $issNum,
+                'month' => $issueMonth,
+                'year' => $issueYear,
+                'issn' => $journal ? ($journal->issn ?: 'Applied (Online)') : 'Applied (Online)',
+                'doi' => $article->doi ?? '',
+                'authors' => $article->authors->map(function ($a) {
+                    return [
+                        'name' => $a->name,
+                        'affiliation' => $a->affiliation ?? 'Academic Scholar',
+                        'email' => $a->email ?? '',
+                        'is_corresponding' => (bool)$a->is_corresponding,
+                    ];
+                })->toArray(),
+                'author_name' => $article->submission?->user?->name ?? 'Academic Author',
+                'author_affiliation' => $article->submission?->user?->affiliation ?? 'Academic Scholar',
+                'author_email' => $article->submission?->user?->email ?? '',
+                'abstract' => $article->abstract,
+                'keywords' => $article->keywords,
+                'received_date' => $article->submitted_at ? \Carbon\Carbon::parse($article->submitted_at)->format('d M Y') : '10 Jan 2026',
+                'accepted_date' => $article->accepted_at ? \Carbon\Carbon::parse($article->accepted_at)->format('d M Y') : '24 Jan 2026',
+                'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),
+            ]);
+
+            return response($pdfBytes, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Content-Length' => strlen($pdfBytes),
+                'Cache-Control' => 'private, max-age=3600, must-revalidate',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('AcademicPdfService generation error: ' . $e->getMessage());
+        }
+
+        // 5. Ultimate fallback: printable HTML view
+        return response()->view('articles.pdf', compact('article', 'journal', 'issue', 'volume', 'issueMonth', 'issueYear'))
+            ->header('Content-Type', 'text/html');
     }
 
-    protected function generateOfficialPdf($article, $journal, $issue, $volume, $issueMonth, $issueYear, $filename = null)
+    /**
+     * Determine if a given file path is a genuine PDF by checking the %PDF magic bytes.
+     */
+    protected function isRealPdf(?string $path): bool
     {
-        $volNum = $volume ? $volume->volume_number : '1';
-        $issNum = $issue ? $issue->issue_number : '1';
-        $cleanJournalTitle = Str::slug($journal ? $journal->title : 'journal');
-        $cleanArticleTitle = Str::slug($article->title);
-        $filename = $filename ?: "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
+        if (empty($path) || !file_exists($path) || is_dir($path)) {
+            return false;
+        }
 
-        // Check if Dompdf is loaded in vendor
-        if (class_exists(\Dompdf\Dompdf::class) && class_exists(\Dompdf\Options::class)) {
-            try {
-                $html = view('articles.pdf', compact('article', 'journal', 'issue', 'volume', 'issueMonth', 'issueYear'))->render();
+        $h = @fopen($path, 'rb');
+        if (!$h) {
+            return false;
+        }
 
-                $options = new \Dompdf\Options();
-                $options->set('isHtml5ParserEnabled', true);
-                $options->set('isRemoteEnabled', true);
+        $magic = fread($h, 4);
+        fclose($h);
 
-                $dompdf = new \Dompdf\Dompdf($options);
-                $dompdf->loadHtml($html);
-                $dompdf->setPaper('A4', 'portrait');
-                $dompdf->render();
+        return $magic === '%PDF';
+    }
 
-                return response($dompdf->output(), 200, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
-            } catch (\Throwable $e) {
-                Log::warning('Dompdf generation failed: ' . $e->getMessage());
+    /**
+     * Search possible storage locations and return the absolute path if it is a valid PDF.
+     */
+    protected function findRealPdfPath(?string $relPath): ?string
+    {
+        if (empty($relPath)) {
+            return null;
+        }
+
+        $candidates = [
+            Storage::disk('public')->path($relPath),
+            Storage::disk('local')->path($relPath),
+            public_path('storage/' . $relPath),
+            public_path($relPath),
+            storage_path('app/' . $relPath),
+        ];
+
+        foreach ($candidates as $cand) {
+            if ($this->isRealPdf($cand)) {
+                return $cand;
             }
         }
 
-        // Clean printable HTML fallback when Dompdf is not installed or fails
-        return response()->view('articles.pdf', compact('article', 'journal', 'issue', 'volume', 'issueMonth', 'issueYear'))
-            ->header('Content-Type', 'text/html');
+        return null;
+    }
+
+    /**
+     * Find original manuscript file (e.g. docx, doc) for explicit download requests.
+     */
+    protected function findRawManuscriptPath(Article $article): ?array
+    {
+        $relPath = $article->pdf_path ?: ($article->submission?->file_path ?? null);
+        if (empty($relPath)) {
+            return null;
+        }
+
+        $candidates = [
+            Storage::disk('public')->path($relPath),
+            Storage::disk('local')->path($relPath),
+            public_path('storage/' . $relPath),
+            public_path($relPath),
+            storage_path('app/' . $relPath),
+        ];
+
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && !is_dir($cand)) {
+                $ext = pathinfo($cand, PATHINFO_EXTENSION) ?: 'docx';
+                $cleanTitle = Str::slug($article->title);
+                return [
+                    'path' => $cand,
+                    'filename' => "{$cleanTitle}.{$ext}",
+                ];
+            }
+        }
+
+        return null;
     }
 }
 
