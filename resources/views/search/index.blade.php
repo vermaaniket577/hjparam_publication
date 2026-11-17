@@ -162,7 +162,7 @@
                                         </a>
                                         <a href="{{ route('articles.download', $article->id) }}"
                                             class="inline-flex items-center justify-center px-3 py-1 border border-blue-300 text-xs font-medium rounded text-blue-900 bg-blue-50 hover:bg-blue-600 hover:text-white transition-all leading-none">
-                                            Download PDF
+                                            Download {{ $article->primary_download_format }}
                                         </a>
                                     </div>
                                 </div>

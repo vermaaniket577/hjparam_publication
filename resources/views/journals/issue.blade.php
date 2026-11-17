@@ -179,7 +179,7 @@
                                     Full-Text
                                 </a>
                                 <a href="{{ route('articles.download', $article->id) }}" class="inline-flex items-center justify-center text-[10px] font-bold text-blue-900 uppercase tracking-widest border border-blue-100 bg-blue-50 px-3 py-1.5 rounded-full hover:bg-blue-600 hover:text-white transition-all leading-none">
-                                    Download PDF
+                                    Download {{ $article->primary_download_format }}
                                 </a>
                                 <div class="flex items-center gap-4 text-xs text-gray-400 ml-auto">
                                     <span class="flex items-center"><svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>{{ $article->views_count }}</span>

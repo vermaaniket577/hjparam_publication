@@ -102,24 +102,237 @@ class Article extends Model
         return $this->hasMany(Certificate::class);
     }
 
+    protected bool $resolvedRealPdfChecked = false;
+    protected ?string $resolvedRealPdfCache = null;
+
+    protected bool $resolvedWordManuscriptChecked = false;
+    protected ?string $resolvedWordManuscriptCache = null;
+
     /**
-     * Check if this article has an original manuscript available (either directly or via submission).
+     * Locate a relative or absolute path across all possible storage roots.
      */
-    public function getHasManuscriptAttribute(): bool
+    public function locateFileOnDisk(?string $relPath): ?string
     {
-        if (!empty($this->manuscript_path)) {
-            return true;
+        if (empty($relPath)) {
+            return null;
         }
-        if ($this->submission && (!empty($this->submission->file_path) || !empty($this->submission->binary_content))) {
-            return true;
+
+        if (file_exists($relPath) && !is_dir($relPath)) {
+            return $relPath;
         }
+
+        $candidates = [
+            Storage::disk('public')->path($relPath),
+            Storage::disk('local')->path($relPath),
+            storage_path('app/public/' . $relPath),
+            storage_path('app/private/' . $relPath),
+            storage_path('app/' . $relPath),
+            public_path('storage/' . $relPath),
+            public_path($relPath),
+        ];
+
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && !is_dir($cand)) {
+                return $cand;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check whether a disk file is a genuine PDF via its %PDF magic header.
+     */
+    public function isPdfFile(?string $path): bool
+    {
+        if (empty($path) || !file_exists($path) || is_dir($path)) {
+            return false;
+        }
+
+        $h = @fopen($path, 'rb');
+        if (!$h) {
+            return false;
+        }
+
+        $magic = fread($h, 4);
+        fclose($h);
+
+        return $magic === '%PDF';
+    }
+
+    /**
+     * Resolve the absolute path on disk for an uploaded real PDF file.
+     * Prioritizes admin-uploaded article pdf_path, and falls back to submission file_path
+     * only if admin has not explicitly uploaded a Word manuscript override.
+     */
+    public function resolveRealPdfPath(): ?string
+    {
+        if ($this->resolvedRealPdfChecked) {
+            return $this->resolvedRealPdfCache;
+        }
+
+        $this->resolvedRealPdfChecked = true;
+        $relPaths = [];
+
         if (!empty($this->pdf_path)) {
-            $ext = strtolower(pathinfo($this->pdf_path, PATHINFO_EXTENSION));
-            if (in_array($ext, ['doc', 'docx'])) {
+            $relPaths[] = $this->pdf_path;
+        }
+
+        if (empty($this->manuscript_path) && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
+            $relPaths[] = $this->submission->file_path;
+        }
+
+        foreach (array_unique(array_filter($relPaths)) as $relPath) {
+            $found = $this->locateFileOnDisk($relPath);
+            if ($found && $this->isPdfFile($found)) {
+                $this->resolvedRealPdfCache = $found;
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if this article has a real uploaded PDF (on disk or submission binary_content).
+     */
+    public function getHasRealPdfAttribute(): bool
+    {
+        if ($this->resolveRealPdfPath() !== null) {
+            return true;
+        }
+
+        if (empty($this->manuscript_path) && !empty($this->submission_id) && !empty($this->submission?->binary_content)) {
+            $binStr = is_resource($this->submission->binary_content)
+                ? stream_get_contents($this->submission->binary_content)
+                : (string)$this->submission->binary_content;
+
+            if (str_starts_with($binStr, '%PDF')) {
                 return true;
             }
         }
+
         return false;
+    }
+
+    /**
+     * Resolve the absolute path on disk for a non-PDF Word manuscript (.doc / .docx).
+     */
+    public function resolveWordManuscriptDiskPath(): ?string
+    {
+        if ($this->resolvedWordManuscriptChecked) {
+            return $this->resolvedWordManuscriptCache;
+        }
+
+        $this->resolvedWordManuscriptChecked = true;
+        $relPaths = [];
+
+        if (!empty($this->manuscript_path)) {
+            $relPaths[] = $this->manuscript_path;
+        }
+
+        if (empty($this->pdf_path) && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
+            $relPaths[] = $this->submission->file_path;
+        }
+
+        if (!empty($this->pdf_path)) {
+            $ext = strtolower(pathinfo($this->pdf_path, PATHINFO_EXTENSION));
+            if (in_array($ext, ['doc', 'docx'])) {
+                $relPaths[] = $this->pdf_path;
+            }
+        }
+
+        foreach (array_unique(array_filter($relPaths)) as $relPath) {
+            $found = $this->locateFileOnDisk($relPath);
+            if ($found && !$this->isPdfFile($found)) {
+                $this->resolvedWordManuscriptCache = $found;
+                return $found;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Check if this article has an uploaded Word manuscript (.doc / .docx) available.
+     */
+    public function getHasWordManuscriptAttribute(): bool
+    {
+        if ($this->resolveWordManuscriptDiskPath() !== null) {
+            return true;
+        }
+
+        if (empty($this->pdf_path) && !empty($this->submission_id) && !empty($this->submission?->binary_content)) {
+            $binStr = is_resource($this->submission->binary_content)
+                ? stream_get_contents($this->submission->binary_content)
+                : (string)$this->submission->binary_content;
+
+            if (!empty($binStr) && !str_starts_with($binStr, '%PDF')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if this article has an original Word manuscript available (either directly or via submission).
+     */
+    public function getHasManuscriptAttribute(): bool
+    {
+        return $this->has_word_manuscript;
+    }
+
+    /**
+     * Get the primary download format matching the exact file uploaded by admin/author.
+     */
+    public function getPrimaryDownloadFormatAttribute(): string
+    {
+        if ($this->has_real_pdf) {
+            return 'PDF';
+        }
+
+        if ($this->has_word_manuscript) {
+            return $this->manuscript_extension;
+        }
+
+        return 'PDF';
+    }
+
+    /**
+     * Format byte count cleanly (e.g. "1.8 MB", "481.5 KB").
+     */
+    protected function formatBytes(?int $bytes): ?string
+    {
+        if (!$bytes || $bytes <= 0) {
+            return null;
+        }
+
+        $val = (float) $bytes;
+        $units = ['B', 'KB', 'MB', 'GB'];
+        for ($i = 0; $val > 1024 && $i < count($units) - 1; $i++) {
+            $val /= 1024;
+        }
+        return round($val, 1) . ' ' . $units[$i];
+    }
+
+    /**
+     * Get formatted file size for the primary uploaded file.
+     */
+    public function getPrimaryDownloadSizeFormattedAttribute(): ?string
+    {
+        if ($this->has_real_pdf) {
+            $pdfPath = $this->resolveRealPdfPath();
+            if ($pdfPath && file_exists($pdfPath)) {
+                return $this->formatBytes((int) filesize($pdfPath));
+            }
+        }
+
+        if ($this->has_word_manuscript) {
+            return $this->manuscript_size_formatted;
+        }
+
+        return null;
     }
 
     /**
@@ -127,17 +340,24 @@ class Article extends Model
      */
     public function getManuscriptExtensionAttribute(): string
     {
+        $diskPath = $this->resolveWordManuscriptDiskPath();
+        if ($diskPath) {
+            $diskExt = pathinfo($diskPath, PATHINFO_EXTENSION);
+            if ($diskExt) {
+                return strtoupper($diskExt);
+            }
+        }
         if (!empty($this->file_extension)) {
             return strtoupper(ltrim($this->file_extension, '.'));
-        }
-        if (!empty($this->submission?->extension)) {
-            return strtoupper(ltrim($this->submission->extension, '.'));
         }
         if (!empty($this->manuscript_path)) {
             $ext = pathinfo($this->manuscript_path, PATHINFO_EXTENSION);
             if ($ext) return strtoupper($ext);
         }
-        if (!empty($this->submission?->file_path)) {
+        if (!empty($this->submission_id) && !empty($this->submission?->extension)) {
+            return strtoupper(ltrim($this->submission->extension, '.'));
+        }
+        if (!empty($this->submission_id) && !empty($this->submission?->file_path)) {
             $ext = pathinfo($this->submission->file_path, PATHINFO_EXTENSION);
             if ($ext) return strtoupper($ext);
         }
@@ -152,7 +372,7 @@ class Article extends Model
         if (!empty($this->original_filename)) {
             return $this->original_filename;
         }
-        if (!empty($this->submission?->filename)) {
+        if (!empty($this->submission_id) && !empty($this->submission?->filename)) {
             return $this->submission->filename;
         }
         $ext = strtolower($this->manuscript_extension ?: 'docx');
@@ -164,33 +384,21 @@ class Article extends Model
      */
     public function resolveManuscriptDiskPath(): ?string
     {
+        $wordPath = $this->resolveWordManuscriptDiskPath();
+        if ($wordPath) {
+            return $wordPath;
+        }
+
         $relPaths = array_filter([
             $this->manuscript_path,
-            $this->submission?->file_path,
+            !empty($this->submission_id) ? $this->submission?->file_path : null,
             $this->pdf_path,
         ]);
 
         foreach ($relPaths as $relPath) {
-            if (empty($relPath)) continue;
-
-            if (file_exists($relPath) && !is_dir($relPath)) {
-                return $relPath;
-            }
-
-            $candidates = [
-                Storage::disk('local')->path($relPath),
-                storage_path('app/private/' . $relPath),
-                storage_path('app/' . $relPath),
-                Storage::disk('public')->path($relPath),
-                storage_path('app/public/' . $relPath),
-                public_path('storage/' . $relPath),
-                public_path($relPath),
-            ];
-
-            foreach ($candidates as $cand) {
-                if (file_exists($cand) && !is_dir($cand)) {
-                    return $cand;
-                }
+            $found = $this->locateFileOnDisk($relPath);
+            if ($found) {
+                return $found;
             }
         }
 
@@ -203,30 +411,22 @@ class Article extends Model
     public function getManuscriptSizeFormattedAttribute(): ?string
     {
         $bytes = $this->file_size;
-        if (!$bytes && $this->submission?->file_size) {
-            $bytes = $this->submission->file_size;
-        }
         if (!$bytes) {
-            $diskPath = $this->resolveManuscriptDiskPath();
+            $diskPath = $this->resolveWordManuscriptDiskPath();
             if ($diskPath && file_exists($diskPath)) {
                 $bytes = filesize($diskPath);
             }
         }
-        if (!$bytes && !empty($this->submission?->binary_content)) {
+        if (!$bytes && !empty($this->submission_id) && $this->submission?->file_size) {
+            $bytes = $this->submission->file_size;
+        }
+        if (!$bytes && !empty($this->submission_id) && !empty($this->submission?->binary_content)) {
             $bytes = is_resource($this->submission->binary_content)
                 ? strlen(stream_get_contents($this->submission->binary_content))
                 : strlen((string)$this->submission->binary_content);
         }
 
-        if (!$bytes) {
-            return null;
-        }
-
-        $units = ['B', 'KB', 'MB', 'GB'];
-        for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
-            $bytes /= 1024;
-        }
-        return round($bytes, 1) . ' ' . $units[$i];
+        return $this->formatBytes($bytes ? (int) $bytes : null);
     }
 
     public function getApaCitationAttribute()

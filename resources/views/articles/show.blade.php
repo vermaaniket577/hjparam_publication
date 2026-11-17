@@ -202,17 +202,35 @@
                 <div class="lg:col-span-4 space-y-12">
                     {{-- Primary Actions --}}
                     <div class="space-y-4">
-                        <a href="{{ route('articles.download', $article->id) }}" target="_blank"
-                            class="w-full h-18 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 group">
-                            <svg class="w-6 h-6 group-hover:translate-y-0.5 transition-transform" fill="none"
+                        @php
+                            $primaryFormat = $article->primary_download_format;
+                            $isPrimaryPdf = $article->has_real_pdf || !$article->has_word_manuscript;
+                            $primarySize = $article->primary_download_size_formatted;
+                        @endphp
+
+                        <a href="{{ route('articles.download', $article->id) }}"
+                            @if($isPrimaryPdf) target="_blank" @endif
+                            class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 group">
+                            <svg class="w-6 h-6 group-hover:translate-y-0.5 transition-transform shrink-0" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5">
                                 </path>
                             </svg>
-                            <span class="text-base font-black uppercase tracking-wider">Download Full-Text (PDF)</span>
+                            <span class="text-base font-black uppercase tracking-wider">Download Full-Text ({{ $primaryFormat }})</span>
                         </a>
 
-                        @if($article->has_manuscript)
+                        @if(!$article->has_real_pdf && $article->has_word_manuscript)
+                            <div class="text-[11px] text-center font-semibold text-slate-500 flex items-center justify-center gap-2">
+                                <span class="px-2 py-0.5 rounded bg-blue-50 text-blue-700 font-black text-[10px] uppercase">{{ $primaryFormat }}</span>
+                                @if($primarySize)
+                                    <span>{{ $primarySize }}</span>
+                                    <span>•</span>
+                                @endif
+                                <span>Original File Format</span>
+                            </div>
+                        @endif
+
+                        @if($article->has_real_pdf && $article->has_word_manuscript)
                             <a href="{{ route('articles.manuscript', $article->id) }}"
                                 class="w-full py-4 px-5 bg-white hover:bg-slate-50 text-slate-800 rounded-[1.25rem] flex items-center justify-between transition-all duration-200 border-2 border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-md group">
                                 <div class="flex items-center gap-3.5">

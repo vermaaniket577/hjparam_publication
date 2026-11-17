@@ -96,6 +96,8 @@ class ArticleController extends Controller
             }
         }
 
+        Article::ensureManuscriptColumns();
+
         $article = new Article($request->except('authors', 'pdf_path', 'manuscript_file'));
         $article->issue_id = $issueId;
 
@@ -176,6 +178,7 @@ class ArticleController extends Controller
             'keywords' => 'nullable|string',
             'doi' => 'nullable|string',
             'pdf_path' => 'nullable|file|mimes:pdf|max:20480',
+            'remove_pdf' => 'nullable|boolean',
             'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200',
             'remove_manuscript' => 'nullable|boolean',
             'status' => 'required|string',
@@ -187,9 +190,16 @@ class ArticleController extends Controller
             'authors.*.is_corresponding' => 'nullable|boolean',
         ]);
 
-        $article->fill($request->except('authors', 'pdf_path', 'manuscript_file', 'remove_manuscript'));
+        Article::ensureManuscriptColumns();
 
-        if ($request->hasFile('pdf_path')) {
+        $article->fill($request->except('authors', 'pdf_path', 'remove_pdf', 'manuscript_file', 'remove_manuscript'));
+
+        if ($request->boolean('remove_pdf')) {
+            if ($article->pdf_path && \Storage::disk('public')->exists($article->pdf_path)) {
+                \Storage::disk('public')->delete($article->pdf_path);
+            }
+            $article->pdf_path = null;
+        } elseif ($request->hasFile('pdf_path')) {
             // Option: delete old PDF
             if ($article->pdf_path && \Storage::disk('public')->exists($article->pdf_path)) {
                 \Storage::disk('public')->delete($article->pdf_path);

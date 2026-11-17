@@ -268,6 +268,7 @@
                                 class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Update
                                 Manuscript PDF (Optional)</label>
                             <input type="file" name="pdf_path" id="pdf_path" class="hidden"
+                                accept=".pdf,application/pdf"
                                 @change="fileName = $event.target.files[0].name"
                                 x-data="{ fileName: 'Change PDF Document' }">
                             <label for="pdf_path"
@@ -280,7 +281,13 @@
                                 <span x-text="fileName"></span>
                             </label>
                             @if($article->pdf_path)
-                                <p class="text-[10px] text-slate-400 mt-2 ml-2">Current PDF: {{ basename($article->pdf_path) }}</p>
+                                <div class="flex items-center justify-between flex-wrap gap-2 mt-2 ml-2">
+                                    <p class="text-[10px] text-slate-400">Current PDF: {{ basename($article->pdf_path) }}</p>
+                                    <label class="inline-flex items-center gap-1.5 cursor-pointer text-[11px] text-red-600 font-bold hover:text-red-700">
+                                        <input type="checkbox" name="remove_pdf" value="1" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                                        <span>Remove PDF</span>
+                                    </label>
+                                </div>
                             @endif
                         </div>
                         <div class="grid grid-cols-2 gap-4">

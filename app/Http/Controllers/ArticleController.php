@@ -29,7 +29,11 @@ class ArticleController extends Controller
     }
 
     /**
-     * Download or view the official publication PDF.
+     * Download or view the journal paper in the exact format uploaded by the admin/author.
+     * - If a real PDF was uploaded, serves that exact PDF byte-for-byte.
+     * - If a Word document (.docx / .doc) was uploaded (without a PDF), serves that exact
+     *   Word document byte-for-byte in its original format without conversion or reformatting.
+     * - Falls back to AcademicPdfService only when no uploaded file exists for the article.
      */
     public function download(Request $request, $id)
     {
@@ -40,19 +44,13 @@ class ArticleController extends Controller
 
         $article = Article::with(['journal', 'issue.volume', 'authors', 'submission'])->findOrFail($id);
 
-        // Track download analytics
-        try {
-            DB::table('article_downloads')->insert([
-                'article_id' => $article->id,
-                'ip_address' => $request->ip(),
-                'user_agent' => substr((string)$request->userAgent(), 0, 500),
-                'downloaded_at' => now(),
-            ]);
-        } catch (\Throwable $e) {
-            // Non-critical
+        // Security check: Only allow public download if article is published, or user is authenticated
+        if ($article->status !== 'published' && !Auth::check()) {
+            abort(403, 'This paper is not yet publicly released.');
         }
 
-        $article->increment('downloads_count');
+        // Track download analytics
+        $this->recordDownload($article, $request);
 
         $journal = $article->journal;
         $issue = $article->issue;
@@ -64,61 +62,41 @@ class ArticleController extends Controller
         $cleanArticleTitle = Str::slug($article->title);
         $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
 
-        // 2. Check if the article has a verified, real PDF manuscript on disk
-        $realPdfPath = $this->findRealPdfPath($article->pdf_path);
+        // 2. Priority 1: Exact uploaded PDF file on disk (Admin pdf_path or submission PDF when no Word override)
+        $realPdfPath = $article->resolveRealPdfPath();
         if ($realPdfPath) {
             return response()->file($realPdfPath, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                'Cache-Control' => 'private, max-age=3600, must-revalidate',
             ]);
         }
 
-        // 3. Check if the linked submission has a verified, real PDF file on disk
-        if ($article->submission) {
-            $subPdf = $this->findRealPdfPath($article->submission->file_path);
-            if ($subPdf) {
-                return response()->file($subPdf, [
+        // 3. Priority 2: Exact uploaded PDF in submission binary_content (only if admin did not upload a Word override)
+        if (empty($article->manuscript_path) && $article->submission && !empty($article->submission->binary_content)) {
+            $binStr = is_resource($article->submission->binary_content)
+                ? stream_get_contents($article->submission->binary_content)
+                : (string)$article->submission->binary_content;
+
+            if (str_starts_with($binStr, '%PDF')) {
+                return response($binStr, 200, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    'Content-Length' => strlen($binStr),
+                    'Cache-Control' => 'private, max-age=3600, must-revalidate',
                 ]);
             }
-
-            // Check if submission binary_content is a real PDF
-            if (!empty($article->submission->binary_content)) {
-                $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
-                if (str_starts_with($binStr, '%PDF')) {
-                    return response($binStr, 200, [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    ]);
-                }
-            }
         }
 
-        // 4. Attempt exact headless conversion of the Word manuscript (preserves 100% of formatting, images, diagrams, tables, and watermarks)
-        $rawDoc = $this->findRawManuscriptPath($article);
-        if ($rawDoc && file_exists($rawDoc['path'])) {
-            try {
-                $convertedPdf = \App\Services\DocxConverterService::convert($rawDoc['path']);
-                if ($convertedPdf && file_exists($convertedPdf)) {
-                    return response()->file($convertedPdf, [
-                        'Content-Type' => 'application/pdf',
-                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                    ]);
-                }
-            } catch (\Throwable $e) {}
+        // 4. Priority 3: Exact uploaded Word document (.docx / .doc) — served byte-for-byte
+        //    in the exact same format uploaded from Admin Portal without reformatting or conversion
+        $exactManuscriptResponse = $this->buildExactManuscriptResponse($article);
+        if ($exactManuscriptResponse !== null) {
+            return $exactManuscriptResponse;
         }
 
-        // 5. Extract rich paper elements (sections, headings, tables, diagrams) from the manuscript
-        $bodyElements = [];
-        if ($rawDoc && file_exists($rawDoc['path'])) {
-            $bodyElements = AcademicPdfService::extractDocxElements($rawDoc['path']);
-        } elseif (!empty($article->submission?->binary_content)) {
-            $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
-            $bodyElements = AcademicPdfService::extractDocxElements($binStr);
-        }
-
-        // 6. Generate multi-page official academic PDF with Watermark, Tables & Figures using AcademicPdfService
+        // 5. Ultimate fallback ONLY when no uploaded file exists for this article at all:
+        //    Generate official academic PDF from metadata using AcademicPdfService
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
 
@@ -146,7 +124,7 @@ class ArticleController extends Controller
                 'author_email' => $article->submission?->user?->email ?? '',
                 'abstract' => $article->abstract,
                 'keywords' => $article->keywords,
-                'body_elements' => $bodyElements,
+                'body_elements' => [],
                 'received_date' => $article->submitted_at ? \Carbon\Carbon::parse($article->submitted_at)->format('d M Y') : '10 Jan 2026',
                 'accepted_date' => $article->accepted_at ? \Carbon\Carbon::parse($article->accepted_at)->format('d M Y') : '24 Jan 2026',
                 'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),
@@ -180,9 +158,21 @@ class ArticleController extends Controller
             abort(403, 'This manuscript is not yet publicly released.');
         }
 
-        $article->increment('downloads_count');
+        $this->recordDownload($article, $request);
 
-        // Track download analytics
+        $response = $this->buildExactManuscriptResponse($article);
+        if ($response !== null) {
+            return $response;
+        }
+
+        return back()->with('error', 'The original Word document for this paper is not currently available for download.');
+    }
+
+    /**
+     * Track download analytics and increment article counter safely.
+     */
+    protected function recordDownload(Article $article, Request $request): void
+    {
         try {
             DB::table('article_downloads')->insert([
                 'article_id' => $article->id,
@@ -190,27 +180,34 @@ class ArticleController extends Controller
                 'user_agent' => substr((string)$request->userAgent(), 0, 500),
                 'downloaded_at' => now(),
             ]);
-        } catch (\Throwable $e) {}
+        } catch (\Throwable $e) {
+            // Non-critical
+        }
 
-        // 1. Check for original manuscript on disk
-        $diskPath = $article->resolveManuscriptDiskPath();
+        $article->increment('downloads_count');
+    }
+
+    /**
+     * Build a byte-exact download response for the article's original uploaded Word document (.doc / .docx).
+     */
+    protected function buildExactManuscriptResponse(Article $article)
+    {
+        // 1. Check for original Word manuscript on disk
+        $diskPath = $article->resolveWordManuscriptDiskPath();
         if ($diskPath && file_exists($diskPath) && !is_dir($diskPath)) {
-            $ext = strtolower($article->file_extension ?: pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'docx');
+            $diskExt = strtolower(pathinfo($diskPath, PATHINFO_EXTENSION));
+            $ext = $diskExt ?: strtolower($article->file_extension ?: 'docx');
             $downloadFilename = $article->original_filename ?: $article->manuscript_filename;
+            $downloadFilename = str_replace(["\r", "\n", '"'], '', $downloadFilename);
 
-            // Ensure filename has extension
             if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
                 $downloadFilename .= '.' . $ext;
             }
 
-            $mime = $article->mime_type;
-            if (empty($mime)) {
-                $mime = ($ext === 'doc') ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
-            }
+            $mime = $this->resolveMimeType($ext, $article->mime_type);
 
             return response()->download($diskPath, $downloadFilename, [
                 'Content-Type' => $mime,
-                'Content-Disposition' => 'attachment; filename="' . addslashes($downloadFilename) . '"',
                 'Cache-Control' => 'private, max-age=3600, must-revalidate',
             ]);
         }
@@ -221,15 +218,16 @@ class ArticleController extends Controller
                 ? stream_get_contents($article->submission->binary_content)
                 : (string)$article->submission->binary_content;
 
-            if (!empty($binStr)) {
-                $ext = strtolower($article->submission->extension ?: 'docx');
+            if (!empty($binStr) && !str_starts_with($binStr, '%PDF')) {
+                $ext = strtolower($article->submission->extension ?: $article->file_extension ?: 'docx');
                 $downloadFilename = $article->original_filename ?: ($article->submission->filename ?: (Str::slug($article->title) . '.' . $ext));
+                $downloadFilename = str_replace(["\r", "\n", '"'], '', $downloadFilename);
 
                 if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
                     $downloadFilename .= '.' . $ext;
                 }
 
-                $mime = $article->submission->mime_type ?: (($ext === 'doc') ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+                $mime = $this->resolveMimeType($ext, $article->submission->mime_type);
 
                 return response($binStr, 200, [
                     'Content-Type' => $mime,
@@ -240,7 +238,20 @@ class ArticleController extends Controller
             }
         }
 
-        return back()->with('error', 'The original Word document for this paper is not currently available for download.');
+        return null;
+    }
+
+    /**
+     * Resolve accurate MIME type for uploaded manuscript extensions.
+     */
+    protected function resolveMimeType(string $ext, ?string $fallback = null): string
+    {
+        return match (strtolower($ext)) {
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            default => $fallback ?: 'application/octet-stream',
+        };
     }
 
     /**

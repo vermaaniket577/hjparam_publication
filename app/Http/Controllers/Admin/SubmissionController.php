@@ -131,6 +131,7 @@ class SubmissionController extends Controller
             'doi' => 'nullable|string|max:255',
             'published_at' => 'nullable|date',
             'pdf_file' => 'nullable|file|mimes:pdf|max:30720',
+            'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200',
             'authors' => 'nullable|array',
             'authors.*.name' => 'nullable|string|max:255',
             'authors.*.email' => 'nullable|email|max:255',
@@ -173,11 +174,13 @@ class SubmissionController extends Controller
             $doi = '10.5281/hjparam.' . $journal->slug . '.' . $year . '.' . str_pad($submission->id, 4, '0', STR_PAD_LEFT);
         }
 
+        Article::ensureManuscriptColumns();
+
         // Handle Manuscript PDF
         $pdfPath = $submission->article?->pdf_path;
         if ($request->hasFile('pdf_file')) {
             $pdfPath = $request->file('pdf_file')->store('articles/pdf', 'public');
-        } elseif (empty($pdfPath)) {
+        } elseif (empty($pdfPath) && !$request->hasFile('manuscript_file')) {
             // Check if submission file on disk is an actual PDF
             $candidates = [
                 !empty($submission->file_path) ? Storage::disk('local')->path($submission->file_path) : null,
@@ -229,8 +232,8 @@ class SubmissionController extends Controller
             $fileExtension = $ext;
             $fileSize = $mFile->getSize();
             $mimeType = $mFile->getClientMimeType() ?: ($ext === 'doc' ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
-        } elseif (empty($manuscriptPath)) {
-            // Inherit directly from submitted manuscript so it is instantly available
+        } elseif (empty($manuscriptPath) && empty($pdfPath)) {
+            // Inherit directly from submitted manuscript only when no PDF was uploaded/found
             if (!empty($submission->file_path)) {
                 $manuscriptPath = $submission->file_path;
                 $originalFilename = $submission->filename ?: ($request->title . '.' . ($submission->extension ?: 'docx'));
