@@ -290,6 +290,69 @@ class SubmissionController extends Controller
      */
     public function update(Request $request, Submission $submission)
     {
+        // Handle authors update if submitted
+        if ($request->has('update_authors')) {
+            $request->validate([
+                'authors' => 'required|array|min:1',
+                'authors.*.name' => 'required|string|max:255',
+                'authors.*.email' => 'nullable|email|max:255',
+                'authors.*.institution' => 'nullable|string|max:500',
+                'authors.*.department' => 'nullable|string|max:255',
+                'authors.*.designation' => 'nullable|string|max:255',
+                'authors.*.mobile' => 'nullable|string|max:50',
+                'authors.*.orcid' => 'nullable|string|max:100',
+            ]);
+
+            $cleanAuthors = [];
+            foreach ($request->authors as $idx => $a) {
+                $nameParts = explode(' ', trim($a['name'] ?? ''), 2);
+                $firstName = $nameParts[0] ?? '';
+                $lastName = $nameParts[1] ?? '';
+
+                $cleanAuthors[] = [
+                    'name' => trim($a['name']),
+                    'first_name' => $firstName,
+                    'last_name' => $lastName,
+                    'email' => $a['email'] ?? null,
+                    'institution' => $a['institution'] ?? ($a['affiliation'] ?? null),
+                    'affiliation' => $a['institution'] ?? ($a['affiliation'] ?? null),
+                    'institute' => $a['institution'] ?? ($a['affiliation'] ?? null),
+                    'department' => $a['department'] ?? null,
+                    'designation' => $a['designation'] ?? null,
+                    'mobile' => $a['mobile'] ?? null,
+                    'orcid' => $a['orcid'] ?? null,
+                    'role' => $idx === 0 ? 'author' : 'co_author',
+                    'is_corresponding' => $idx === 0 ? 1 : (!empty($a['is_corresponding']) ? 1 : 0),
+                ];
+            }
+
+            $submission->authors_data = $cleanAuthors;
+            $submission->scholars_data = $cleanAuthors;
+            $submission->save();
+
+            // Also synchronize with published Article authors if an Article exists
+            if ($submission->article) {
+                $submission->article->authors()->delete();
+                foreach ($cleanAuthors as $authorItem) {
+                    $submission->article->authors()->create([
+                        'name' => $authorItem['name'],
+                        'email' => $authorItem['email'],
+                        'affiliation' => $authorItem['institution'] ?? 'Academic Scholar',
+                        'is_corresponding' => $authorItem['is_corresponding'] ?? 0,
+                    ]);
+                }
+
+                // Re-issue / refresh certificates with updated authors
+                try {
+                    CertificateIssuanceService::issueForArticle($submission->article);
+                } catch (\Throwable $e) {
+                    Log::warning('Certificate sync error on authors update: ' . $e->getMessage());
+                }
+            }
+
+            return back()->with('success', 'Authors and scholar details updated successfully.');
+        }
+
         $request->validate([
             'status' => 'required|in:submitted,under_review,revision_requested,accepted,rejected,published',
             'revision_comments' => 'nullable|string',

@@ -95,37 +95,129 @@
                 </div>
             </div>
 
-            <!-- Scholar & Authors List -->
-            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4">
-                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Scholar & Author Details</h3>
+            <!-- Scholar & Authors List & Management -->
+            <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4"
+                x-data="{ 
+                    manageAuthors: false,
+                    authors: @json($authorsList ?? []),
+                    addAuthor() {
+                        this.authors.push({
+                            name: '',
+                            email: '',
+                            institution: '',
+                            department: '',
+                            designation: '',
+                            mobile: '',
+                            orcid: ''
+                        });
+                    },
+                    removeAuthor(idx) {
+                        if (this.authors.length > 1) {
+                            this.authors.splice(idx, 1);
+                        }
+                    }
+                }">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Scholar &amp; Author Details</h3>
+                        <p class="text-[11px] text-slate-500">Author attribution &amp; certificate recipients</p>
+                    </div>
+                    <button type="button" @click="manageAuthors = !manageAuthors"
+                        class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
+                        <span x-text="manageAuthors ? 'Cancel Edit' : '✏️ Manage Authors'"></span>
+                    </button>
+                </div>
 
-                @if(!empty($submission->scholars_data) && is_array($submission->scholars_data))
-                    <div class="space-y-3">
-                        @foreach($submission->scholars_data as $idx => $author)
-                            <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 rounded-xl border border-slate-200/60 dark:border-slate-600 text-xs space-y-1">
-                                <div class="flex items-center justify-between">
-                                    <span class="font-bold text-slate-900 dark:text-white">{{ $author['first_name'] ?? '' }} {{ $author['last_name'] ?? '' }}</span>
-                                    <span class="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">Author #{{ $idx + 1 }}</span>
-                                </div>
-                                @if(!empty($author['designation']) || !empty($author['institute']))
-                                    <p class="text-slate-500 dark:text-slate-400">{{ $author['designation'] ?? '' }} {{ !empty($author['department']) ? '• ' . $author['department'] : '' }} • {{ $author['institute'] ?? '' }}</p>
+                {{-- View Mode --}}
+                <div x-show="!manageAuthors" class="space-y-3">
+                    @forelse($authorsList as $idx => $author)
+                        <div class="p-3.5 bg-slate-50 dark:bg-slate-700/40 rounded-xl border border-slate-200/60 dark:border-slate-600 text-xs space-y-1">
+                            <div class="flex items-center justify-between">
+                                <span class="font-bold text-slate-900 dark:text-white">{{ $author['name'] }}</span>
+                                <span class="text-[10px] font-bold {{ $idx === 0 ? 'text-emerald-700 bg-emerald-50 dark:bg-emerald-950/60 dark:text-emerald-300' : 'text-blue-600 bg-blue-50 dark:bg-blue-900/40 dark:text-blue-300' }} px-2 py-0.5 rounded">
+                                    {{ $idx === 0 ? 'Lead Author' : 'Co-Author #' . $idx }}
+                                </span>
+                            </div>
+                            @if(!empty($author['institution']) || !empty($author['designation']) || !empty($author['department']))
+                                <p class="text-slate-500 dark:text-slate-400">
+                                    {{ $author['designation'] ?? '' }}
+                                    {{ !empty($author['department']) ? '• ' . $author['department'] : '' }}
+                                    {{ !empty($author['institution']) ? '• ' . $author['institution'] : '' }}
+                                </p>
+                            @endif
+                            <div class="flex items-center gap-3 pt-1 text-[11px] text-slate-500">
+                                @if(!empty($author['email']))
+                                    <span>📧 {{ $author['email'] }}</span>
                                 @endif
-                                <div class="flex items-center gap-3 pt-1 text-[11px] text-slate-500">
-                                    <span>📧 {{ $author['email'] ?? '-' }}</span>
-                                    <span>📱 {{ $author['mobile'] ?? '-' }}</span>
-                                </div>
-                                @if(!empty($author['orcid']))
-                                    <p class="text-[10px] text-emerald-600 font-mono">ORCID: {{ $author['orcid'] }}</p>
+                                @if(!empty($author['city_country']))
+                                    <span>📍 {{ $author['city_country'] }}</span>
                                 @endif
                             </div>
-                        @endforeach
-                    </div>
-                @else
-                    <div class="p-3 bg-slate-50 rounded-xl text-xs">
-                        <p class="font-bold text-slate-800">{{ $submission->user->name }}</p>
-                        <p class="text-slate-500">{{ $submission->user->email }}</p>
-                    </div>
-                @endif
+                        </div>
+                    @empty
+                        <div class="p-3 bg-slate-50 rounded-xl text-xs">
+                            <p class="font-bold text-slate-800">{{ $submission->user->name }}</p>
+                            <p class="text-slate-500">{{ $submission->user->email }}</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- Edit / Manage Mode --}}
+                <div x-show="manageAuthors" x-cloak class="pt-2 border-t border-slate-200 dark:border-slate-700 space-y-4">
+                    <form action="{{ route('admin.submissions.update', $submission) }}" method="POST" class="space-y-4">
+                        @csrf
+                        @method('PUT')
+                        <input type="hidden" name="update_authors" value="1">
+
+                        <div class="flex items-center justify-between">
+                            <span class="text-[11px] font-bold text-slate-600 dark:text-slate-300">Update authors list (syncs with Certificates &amp; Articles)</span>
+                            <button type="button" @click="addAuthor()" class="text-xs font-bold text-emerald-600 hover:text-emerald-700">
+                                + Add Co-Author
+                            </button>
+                        </div>
+
+                        <div class="space-y-3">
+                            <template x-for="(author, index) in authors" :key="index">
+                                <div class="p-3.5 bg-slate-50 dark:bg-slate-700/50 rounded-2xl border border-slate-200 dark:border-slate-600 space-y-2.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[10px] font-black uppercase tracking-wider text-slate-500" x-text="index === 0 ? 'Lead Author' : 'Co-Author #' + index"></span>
+                                        <button type="button" @click="removeAuthor(index)" x-show="authors.length > 1" class="text-rose-500 hover:text-rose-700 font-bold text-xs">
+                                            Remove
+                                        </button>
+                                    </div>
+
+                                    <div>
+                                        <input type="text" :name="`authors[${index}][name]`" x-model="author.name" placeholder="Author Full Name *" required
+                                            class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-white">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <input type="email" :name="`authors[${index}][email]`" x-model="author.email" placeholder="Institutional Email"
+                                            class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                                        <input type="text" :name="`authors[${index}][institution]`" x-model="author.institution" placeholder="University / Affiliation"
+                                            class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                                    </div>
+
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                        <input type="text" :name="`authors[${index}][department]`" x-model="author.department" placeholder="Department"
+                                            class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                                        <input type="text" :name="`authors[${index}][designation]`" x-model="author.designation" placeholder="Designation (e.g. Professor)"
+                                            class="w-full px-3 py-1.5 rounded-xl border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <div class="flex items-center justify-end gap-2 pt-2">
+                            <button type="button" @click="manageAuthors = false" class="px-4 py-2 rounded-xl text-xs font-bold text-slate-500 hover:text-slate-700">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-md shadow-blue-600/20 transition-all">
+                                Save Authors
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
 
             <!-- Assigned Staff Summary -->
