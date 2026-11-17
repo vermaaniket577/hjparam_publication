@@ -1,13 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+@php
+    $volNum = $volume?->volume_number ?? '1';
+    $issNum = $issue?->issue_number ?? '1';
+    $journalTitle = $journal->title ?? 'HJPARAM International Journal';
+    $journalIssn = $journal->issn ?: 'Applied (Online)';
+    $publisher = $journal->effective_publisher ?? 'HJPARAM Publication';
+    $issueMonth = $issueMonth ?? 'Regular';
+    $issueYear = $issueYear ?? date('Y');
+@endphp
     <meta charset="UTF-8">
     <title>{{ $article->title }}</title>
     <style>
         @page {
             margin: 20mm 18mm 20mm 18mm;
             @top-center {
-                content: "{{ $journal->title }} | Vol. {{ $volume->volume_number }}, Issue No. {{ $issue->issue_number }} ({{ $issueMonth }} {{ $issueYear }})";
+                content: "{{ $journalTitle }} | Vol. {{ $volNum }}, Issue No. {{ $issNum }} ({{ $issueMonth }} {{ $issueYear }})";
                 font-size: 8pt;
                 font-family: 'Helvetica', 'Arial', sans-serif;
                 color: #64748b;
@@ -18,6 +27,9 @@
                 font-family: 'Helvetica', 'Arial', sans-serif;
                 color: #64748b;
             }
+        }
+        @media print {
+            .no-print { display: none !important; }
         }
         body {
             font-family: 'DejaVu Sans', 'Helvetica', 'Arial', sans-serif;
@@ -140,17 +152,27 @@
 </head>
 <body>
 
+    <div class="no-print" style="background:#0f172a; color:#fff; padding:12px 20px; margin:-20px -20px 20px -20px; display:flex; justify-content:space-between; align-items:center; font-family:system-ui, sans-serif; font-size:13px; position:sticky; top:0; z-index:9999; box-shadow:0 2px 10px rgba(0,0,0,0.2);">
+        <div>
+            <strong>Official Academic Manuscript</strong> &bull; {{ $journalTitle }} (Vol. {{ $volNum }}, Issue {{ $issNum }})
+        </div>
+        <div style="display:flex; gap:10px;">
+            <button onclick="window.print()" style="background:#2563eb; color:#fff; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:bold; font-size:12px;">🖨️ Print / Save as PDF</button>
+            <a href="{{ route('articles.show', [$journal->slug ?? 'journal', $article->slug]) }}" style="background:#475569; color:#fff; text-decoration:none; padding:6px 14px; border-radius:6px; font-size:12px;">&larr; Back to Article</a>
+        </div>
+    </div>
+
     <!-- Header bar with Journal Title, Vol, Issue, Month, Year, and ISSN -->
     <div class="header-bar">
         <table style="width: 100%; border-collapse: collapse;">
             <tr>
                 <td style="vertical-align: top;">
-                    <div class="journal-title">{{ $journal->title }}</div>
+                    <div class="journal-title">{{ $journalTitle }}</div>
                     <div class="meta-strip">
-                        <span class="meta-badge">Volume {{ $volume->volume_number }}</span> &bull; 
-                        <span class="meta-badge">Issue No. {{ $issue->issue_number }}</span> &bull; 
+                        <span class="meta-badge">Volume {{ $volNum }}</span> &bull; 
+                        <span class="meta-badge">Issue No. {{ $issNum }}</span> &bull; 
                         <span class="meta-badge">{{ $issueMonth }} {{ $issueYear }}</span> &bull; 
-                        <span>ISSN: {{ $journal->issn ?: 'Applied (Online)' }}</span>
+                        <span>ISSN: {{ $journalIssn }}</span>
                     </div>
                 </td>
                 <td style="vertical-align: top; text-align: right; width: 140px;">
@@ -252,9 +274,9 @@
 
     <!-- Footer Notice -->
     <div class="footer-notice">
-        &copy; {{ $issueYear }} Authors. Published by {{ $journal->effective_publisher }}.<br>
+        &copy; {{ $issueYear }} Authors. Published by {{ $publisher }}.<br>
         This is an open-access article distributed under the terms of the Creative Commons Attribution 4.0 International License (CC-BY 4.0).<br>
-        <strong>Journal:</strong> {{ $journal->title }} &bull; <strong>Vol. {{ $volume->volume_number }}, Issue {{ $issue->issue_number }}</strong> ({{ $issueMonth }} {{ $issueYear }}) &bull; <strong>ISSN:</strong> {{ $journal->issn ?: 'Applied (Online)' }} &bull; https://hjparam.com
+        <strong>Journal:</strong> {{ $journalTitle }} &bull; <strong>Vol. {{ $volNum }}, Issue {{ $issNum }}</strong> ({{ $issueMonth }} {{ $issueYear }}) &bull; <strong>ISSN:</strong> {{ $journalIssn }} &bull; https://hjparam.com
     </div>
 
 </body>
