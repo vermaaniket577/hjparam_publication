@@ -420,12 +420,51 @@ class AcademicPdfService
 
     /**
      * Pure-PHP extraction of a specific entry from a PKZIP / DOCX binary stream.
+     * Supports both standard local headers and ZIP data descriptors via Central Directory parsing.
      */
     protected static function extractZipEntry(string $zipData, string $targetFile): ?string
     {
-        $pos = 0;
         $len = strlen($zipData);
+        if ($len < 22) {
+            return null;
+        }
 
+        // Strategy 1: Parse Central Directory from End of Central Directory Record (PK\x05\x06)
+        $eocdPos = strrpos($zipData, "PK\x05\x06");
+        if ($eocdPos !== false && $eocdPos + 22 <= $len) {
+            $eocd = @unpack('vdisk/vdiskStart/vtotalSec/vtotal/VcdSize/VcdOffset', substr($zipData, $eocdPos + 4, 18));
+            if ($eocd && isset($eocd['cdOffset'], $eocd['cdSize'])) {
+                $pos = $eocd['cdOffset'];
+                $end = min($pos + $eocd['cdSize'], $len);
+                while ($pos < $end && ($pos = strpos($zipData, "PK\x01\x02", $pos)) !== false) {
+                    if ($pos + 46 > $len) break;
+                    $cd = @unpack('vver/vverReq/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen/vcommLen/vdisk/vattr/VextAttr/Voffset', substr($zipData, $pos + 4, 42));
+                    if (!$cd) break;
+
+                    $filename = substr($zipData, $pos + 46, $cd['nameLen']);
+                    if ($filename === $targetFile) {
+                        $localPos = $cd['offset'];
+                        if ($localPos + 30 <= $len) {
+                            $lh = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $localPos + 4, 26));
+                            if ($lh) {
+                                $dataStart = $localPos + 30 + $lh['nameLen'] + $lh['extraLen'];
+                                $compData = substr($zipData, $dataStart, $cd['cSize']);
+                                if ($cd['method'] == 8) {
+                                    $decomp = @gzinflate($compData);
+                                    if ($decomp !== false) return $decomp;
+                                } elseif ($cd['method'] == 0) {
+                                    return $compData;
+                                }
+                            }
+                        }
+                    }
+                    $pos += 46 + $cd['nameLen'] + $cd['extraLen'] + $cd['commLen'];
+                }
+            }
+        }
+
+        // Strategy 2: Direct scan for target file local header (PK\x03\x04)
+        $pos = 0;
         while ($pos < $len && ($pos = strpos($zipData, "PK\x03\x04", $pos)) !== false) {
             if ($pos + 30 > $len) break;
             $meta = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $pos + 4, 26));
@@ -434,22 +473,27 @@ class AcademicPdfService
             $namePos = $pos + 30;
             if ($namePos + $meta['nameLen'] > $len) break;
             $filename = substr($zipData, $namePos, $meta['nameLen']);
-
             $dataPos = $namePos + $meta['nameLen'] + $meta['extraLen'];
-            if ($dataPos + $meta['cSize'] > $len) break;
 
             if ($filename === $targetFile) {
-                $compData = substr($zipData, $dataPos, $meta['cSize']);
-                if ($meta['method'] == 8) {
-                    $decomp = @gzinflate($compData);
-                    return $decomp !== false ? $decomp : null;
-                }
-                if ($meta['method'] == 0) {
-                    return $compData;
+                if ($meta['cSize'] > 0) {
+                    $compData = substr($zipData, $dataPos, $meta['cSize']);
+                    if ($meta['method'] == 8) {
+                        $decomp = @gzinflate($compData);
+                        if ($decomp !== false) return $decomp;
+                    } elseif ($meta['method'] == 0) {
+                        return $compData;
+                    }
+                } else {
+                    // Data descriptor flag set: try decompressing contiguous slice
+                    $slice = substr($zipData, $dataPos, 10000000); // up to 10MB
+                    $decomp = @gzinflate($slice);
+                    if ($decomp !== false) return $decomp;
                 }
             }
 
-            $pos = $dataPos + $meta['cSize'];
+            $skip = $meta['cSize'] > 0 ? $meta['cSize'] : 1;
+            $pos = $dataPos + $skip;
         }
 
         return null;
