@@ -24,13 +24,16 @@ use Illuminate\Support\Facades\Log;
  */
 class PureDocxPdfService
 {
-    protected const RENDERER_VERSION = 'pure_v2';
+    protected const RENDERER_VERSION = 'pure_v3';
 
     protected const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
     protected const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
     protected const A_NS = 'http://schemas.openxmlformats.org/drawingml/2006/main';
     protected const WP_NS = 'http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing';
     protected const V_NS = 'urn:schemas-microsoft-com:vml';
+
+    // Article/Journal metadata for automatic template placeholder replacement
+    protected array $meta = [];
 
     // ZIP entries map (in-memory or via ZipArchive)
     protected ?\ZipArchive $zipArchive = null;
@@ -76,15 +79,19 @@ class PureDocxPdfService
 
     /**
      * Convert a .docx file on disk (or raw .docx binary bytes) to a cached PDF file path.
+     * Automatically replaces template placeholders (e.g. [Journal Name], ISSN, Vol/Issue, DOI)
+     * with real article/journal metadata passed in $meta.
      */
-    public static function convert(string $sourcePathOrBytes, bool $isBinary = false): ?string
+    public static function convert(string $sourcePathOrBytes, bool $isBinary = false, array $meta = []): ?string
     {
         try {
+            $metaHash = !empty($meta) ? ('_' . substr(md5(json_encode($meta)), 0, 10)) : '';
+
             if ($isBinary) {
                 if (empty($sourcePathOrBytes) || !str_starts_with($sourcePathOrBytes, 'PK')) {
                     return null;
                 }
-                $hash = md5($sourcePathOrBytes);
+                $hash = md5($sourcePathOrBytes) . $metaHash;
                 $rawBytes = $sourcePathOrBytes;
                 $filePath = null;
             } else {
@@ -97,7 +104,7 @@ class PureDocxPdfService
                 if ($sig !== 'PK') {
                     return null;
                 }
-                $hash = md5($sourcePathOrBytes . '_' . filemtime($sourcePathOrBytes) . '_' . filesize($sourcePathOrBytes));
+                $hash = md5($sourcePathOrBytes . '_' . filemtime($sourcePathOrBytes) . '_' . filesize($sourcePathOrBytes)) . $metaHash;
                 $rawBytes = '';
                 $filePath = $sourcePathOrBytes;
             }
@@ -113,7 +120,7 @@ class PureDocxPdfService
             }
 
             $renderer = new self();
-            $pdfBytes = $renderer->render($filePath, $rawBytes);
+            $pdfBytes = $renderer->render($filePath, $rawBytes, $meta);
 
             if ($pdfBytes && str_starts_with($pdfBytes, '%PDF-')) {
                 @file_put_contents($cachedPdf, $pdfBytes);
@@ -136,8 +143,10 @@ class PureDocxPdfService
     /**
      * Render a .docx file or binary bytes directly into PDF 1.4 bytes.
      */
-    public function render(?string $filePath, string $rawBytes = ''): ?string
+    public function render(?string $filePath, string $rawBytes = '', array $meta = []): ?string
     {
+        $this->meta = $meta;
+
         if (!$this->openZip($filePath, $rawBytes)) {
             return null;
         }
@@ -158,6 +167,8 @@ class PureDocxPdfService
             $this->closeZip();
             return null;
         }
+
+        $this->replacePlaceholdersInDom($dom);
 
         $xpath = new \DOMXPath($dom);
         $xpath->registerNamespace('w', self::W_NS);
@@ -326,6 +337,92 @@ class PureDocxPdfService
     }
 
     // =========================================================================
+    // AUTOMATIC TEMPLATE PLACEHOLDER REPLACEMENT ([Journal Name], ISSN, VOL/ISSUE, DOI)
+    // =========================================================================
+
+    protected function replacePlaceholdersInDom(\DOMDocument $dom): void
+    {
+        if (empty($this->meta)) {
+            return;
+        }
+
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('w', self::W_NS);
+
+        // Pass 1: Direct replacement inside individual <w:t> nodes (preserves all per-run formatting)
+        foreach ($xpath->query('//w:t') as $tNode) {
+            $orig = $tNode->textContent;
+            if ($orig === '') continue;
+            $updated = $this->applyMetadataPlaceholders($orig);
+            if ($updated !== $orig) {
+                $tNode->textContent = $updated;
+            }
+        }
+
+        // Pass 2: Handle placeholders that Word split across multiple adjacent <w:t> runs in a paragraph
+        foreach ($xpath->query('//w:p') as $pNode) {
+            $tNodes = $xpath->query('.//w:t', $pNode);
+            if (!$tNodes || $tNodes->length < 2) continue;
+
+            $combined = '';
+            foreach ($tNodes as $tn) {
+                $combined .= $tn->textContent;
+            }
+            $updated = $this->applyMetadataPlaceholders($combined);
+            if ($updated !== $combined) {
+                // Only collapse runs in paragraphs where a split placeholder existed
+                $first = true;
+                foreach ($tNodes as $tn) {
+                    if ($first) {
+                        $tn->textContent = $updated;
+                        $first = false;
+                    } else {
+                        $tn->textContent = '';
+                    }
+                }
+            }
+        }
+    }
+
+    protected function applyMetadataPlaceholders(string $text): string
+    {
+        if (empty($this->meta) || $text === '') {
+            return $text;
+        }
+
+        // 1. Replace [Journal Name] placeholder (any casing / whitespace)
+        if (!empty($this->meta['journal_title'])) {
+            $text = preg_replace('/\[\s*Journal\s+Name\s*\]/i', $this->meta['journal_title'], $text);
+        }
+
+        // 2. Replace template ISSN placeholder (XXXX-XXXX) ONLY if still placeholder
+        if (!empty($this->meta['issn']) && stripos($text, 'XXXX') !== false) {
+            $issn = $this->meta['issn'];
+            if (stripos($issn, 'online') !== false || stripos($issn, 'applied') !== false) {
+                $text = preg_replace('/ISSN:\s*XXXX-XXXX\s*\(Online\)/i', 'ISSN: ' . $issn, $text);
+            } else {
+                $text = preg_replace('/XXXX-XXXX/i', $issn, $text);
+            }
+        }
+
+        // 3. Replace template Vol. X, Issue X placeholder ONLY if still placeholder
+        if (!empty($this->meta['volume']) && !empty($this->meta['issue'])) {
+            $vol = $this->meta['volume'];
+            $iss = $this->meta['issue'];
+            $year = $this->meta['year'] ?? date('Y');
+            $text = preg_replace('/Vol\.\s*X,\s*Issue\s*X,\s*\d{4},\s*pp\.\s*XX[\x{2013}\x{2014}-]XX/iu', "Vol. {$vol}, Issue {$iss} ({$year})", $text);
+            $text = preg_replace('/Vol\.\s*X,\s*Issue\s*X/i', "Vol. {$vol}, Issue {$iss}", $text);
+        }
+
+        // 4. Replace template DOI placeholder (10.XXXXX/hjparam.XXXX) ONLY if still placeholder
+        if (!empty($this->meta['doi']) && stripos($text, 'XXXXX') !== false) {
+            $text = preg_replace('/10\.X+\/hjparam\.X+/i', $this->meta['doi'], $text);
+        }
+
+        return $text;
+    }
+
+    // =========================================================================
     // RUNNING HEADER, FOOTER & WATERMARK
     // =========================================================================
 
@@ -338,6 +435,9 @@ class PureDocxPdfService
         $dom = new \DOMDocument();
         $dom->preserveWhiteSpace = false;
         if (!@$dom->loadXML($xml)) return;
+
+        // Automatically replace [Journal Name] and template metadata placeholders in header
+        $this->replacePlaceholdersInDom($dom);
 
         // Extract optional VML watermark
         $xpath = new \DOMXPath($dom);
@@ -414,6 +514,8 @@ class PureDocxPdfService
         $dom = new \DOMDocument();
         $dom->preserveWhiteSpace = false;
         if (!@$dom->loadXML($xml)) return;
+
+        $this->replacePlaceholdersInDom($dom);
 
         $root = $dom->documentElement;
         if (!$root) return;

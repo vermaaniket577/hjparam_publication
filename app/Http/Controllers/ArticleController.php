@@ -95,6 +95,16 @@ class ArticleController extends Controller
             }
         }
 
+        $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
+        $articleMeta = [
+            'journal_title' => $journal ? $journal->title : 'HJPARAM Publication',
+            'issn' => $journal && !empty($journal->issn) ? $journal->issn : 'Applied (Online)',
+            'volume' => $volNum,
+            'issue' => $issNum,
+            'year' => $issueYear,
+            'doi' => $article->doi ?? '',
+        ];
+
         // 4. Priority 3: Convert uploaded Word document (.docx / .doc) on disk to a faithful PDF
         //    preserving the exact uploaded formatting (headers, logo, footers, styles, tables, figures, 2-column layout)
         $wordPath = $article->resolveWordManuscriptDiskPath();
@@ -114,7 +124,7 @@ class ArticleController extends Controller
 
             // 4b. Zero-dependency Pure-PHP direct DOCX -> PDF renderer (works on all shared hosts, exact 2-col layout)
             try {
-                $purePdfPath = PureDocxPdfService::convert($wordPath, false);
+                $purePdfPath = PureDocxPdfService::convert($wordPath, false, $articleMeta);
                 if ($purePdfPath && file_exists($purePdfPath)) {
                     return response()->file($purePdfPath, array_merge($noCacheHeaders, [
                         'Content-Type' => 'application/pdf',
@@ -143,7 +153,7 @@ class ArticleController extends Controller
         $binStr = $article->getSubmissionBinaryContent();
         if ($binStr !== null && !$article->isPdfBinary($binStr)) {
             try {
-                $purePdfPath = PureDocxPdfService::convert($binStr, true);
+                $purePdfPath = PureDocxPdfService::convert($binStr, true, $articleMeta);
                 if ($purePdfPath && file_exists($purePdfPath)) {
                     return response()->file($purePdfPath, array_merge($noCacheHeaders, [
                         'Content-Type' => 'application/pdf',
