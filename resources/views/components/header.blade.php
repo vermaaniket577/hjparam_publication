@@ -40,8 +40,8 @@
             </a>
 
             <!-- Participate Dropdown -->
-            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'participate'" @mouseleave="activeDropdown = null">
-                <button class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors">
+            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'participate'" @mouseleave="activeDropdown = null" @click.outside="if (activeDropdown === 'participate') activeDropdown = null">
+                <button type="button" @click.stop="activeDropdown = (activeDropdown === 'participate' ? null : 'participate')" class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors cursor-pointer">
                     Participate
                 </button>
                 <div x-show="activeDropdown === 'participate'" 
@@ -51,7 +51,7 @@
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-y-0"
                     x-transition:leave-end="opacity-0 translate-y-2"
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left" x-cloak>
+                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
                     <a href="{{ route('submission.create') }}" class="flex items-center gap-4 px-5 py-3 hover:bg-[#F3F4F6] transition group">
                         <div class="w-9 h-9 bg-blue-50 text-[#1E3A8A] rounded-lg flex items-center justify-center font-bold group-hover:bg-blue-600 group-hover:text-white transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -83,12 +83,12 @@
             </div>
 
             <!-- Topics Dropdown -->
-            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'topics'" @mouseleave="activeDropdown = null">
-                <button class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors">
+            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'topics'" @mouseleave="activeDropdown = null" @click.outside="if (activeDropdown === 'topics') activeDropdown = null">
+                <button type="button" @click.stop="activeDropdown = (activeDropdown === 'topics' ? null : 'topics')" class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors cursor-pointer">
                     Topics
                 </button>
                 <div x-show="activeDropdown === 'topics'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 overflow-hidden text-left" x-cloak>
+                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] overflow-hidden text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
                     <div class="max-h-[70vh] overflow-y-auto scrollbar-hide">
                         @foreach($global_topics as $topic)
                             <a href="{{ route('topics.show', $topic->slug) }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50 transition">
@@ -100,12 +100,12 @@
             </div>
 
             <!-- Author Services -->
-            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'authors'" @mouseleave="activeDropdown = null">
-                <button class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors">
+            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'authors'" @mouseleave="activeDropdown = null" @click.outside="if (activeDropdown === 'authors') activeDropdown = null">
+                <button type="button" @click.stop="activeDropdown = (activeDropdown === 'authors' ? null : 'authors')" class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors cursor-pointer">
                     Author Services
                 </button>
                 <div x-show="activeDropdown === 'authors'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left" x-cloak>
+                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
                     <a href="{{ route('author.submit') }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50">Submit Manuscript</a>
                     <a href="{{ route('author.guidelines') }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50">Guidelines</a>
                     <a href="{{ route('payments.create') }}" class="block px-6 py-2.5 text-sm font-bold text-amber-600 hover:text-amber-700 hover:bg-amber-50/50">Pay Fees / APC</a>
@@ -116,8 +116,8 @@
             </div>
 
             <!-- Conferences Dropdown (Replaces Information) -->
-            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'conferences'" @mouseleave="activeDropdown = null">
-                <button class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors focus:outline-none"
+            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'conferences'" @mouseleave="activeDropdown = null" @click.outside="if (activeDropdown === 'conferences') activeDropdown = null">
+                <button type="button" @click.stop="activeDropdown = (activeDropdown === 'conferences' ? null : 'conferences')" class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors focus:outline-none cursor-pointer"
                     aria-expanded="false" 
                     :aria-expanded="activeDropdown === 'conferences' ? 'true' : 'false'" 
                     aria-haspopup="true"
@@ -134,7 +134,7 @@
                     x-transition:leave="transition ease-in duration-150"
                     x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                     x-transition:leave-end="opacity-0 translate-y-2 scale-95"
-                    class="absolute top-full left-0 w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-slate-100 p-3 z-50 text-left" 
+                    class="absolute top-full left-0 w-80 bg-white rounded-2xl shadow-[0_20px_50px_rgba(30,58,138,0.15)] border border-slate-100 p-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" 
                     role="menu" 
                     aria-orientation="vertical" 
                     aria-labelledby="conferences-menu-button"
@@ -215,12 +215,12 @@
             </div>
 
             <!-- About -->
-            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'about'" @mouseleave="activeDropdown = null">
-                <button class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors group">
+            <div class="relative group h-full py-4 text-[14px] xl:text-[15px]" @mouseenter="activeDropdown = 'about'" @mouseleave="activeDropdown = null" @click.outside="if (activeDropdown === 'about') activeDropdown = null">
+                <button type="button" @click.stop="activeDropdown = (activeDropdown === 'about' ? null : 'about')" class="flex items-center gap-1.5 px-2.5 py-2 font-bold text-gray-700 hover:text-[#1E3A8A] transition-colors group cursor-pointer">
                     About
                 </button>
                 <div x-show="activeDropdown === 'about'" 
-                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-50 text-left" x-cloak>
+                    class="absolute top-full left-0 w-64 bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 py-3 z-[100] text-left before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']" x-cloak>
                     @foreach($menu_about as $page)
                         <a href="{{ route('about.page', $page->slug) }}" class="block px-6 py-2.5 text-sm font-medium text-gray-600 hover:text-[#1E3A8A] hover:bg-gray-50 transition">{{ $page->title }}</a>
                     @endforeach

@@ -296,6 +296,7 @@
 
     <!-- Main Navigation (Standard Clean Academic Style) -->
     <div id="header-container"
+        class="relative z-[90]"
         x-data="{
             open: false,
             activeDropdown: null,
@@ -318,6 +319,7 @@
                         // Scrolling DOWN -> hide header so user can read paper unobstructed
                         if (!this.open && !this.searchOpen) {
                             this.isVisible = false;
+                            this.activeDropdown = null;
                         }
                     } else if (diff < -this.scrollThreshold) {
                         // Scrolling UPWARD -> fix header at top!
@@ -363,20 +365,31 @@
                     style="display: flex; align-items: center; gap: 12px; white-space: nowrap; margin-left: 12px;">
 
                     <!-- Journals Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'journals'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'journals'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'journals') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'journals' ? null : 'journals')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'journals' }">
                             <span>Journals</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'journals' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'journals'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'journals'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('journals.index') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">All
                                 Journals (A-Z)</a>
@@ -396,20 +409,31 @@
                     </div>
 
                     <!-- Journal Policies Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'policies'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'policies'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'policies') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'policies' ? null : 'policies')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'policies' }">
                             <span>Journal Policies</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'policies' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'policies'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'policies'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('policies.show', 'disclaimer') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Disclaimer</a>
                             <a href="{{ route('policies.show', 'open-access-policy') }}"
@@ -431,20 +455,31 @@
                     </div>
 
                     <!-- Topics Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'topics'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'topics'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'topics') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'topics' ? null : 'topics')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'topics' }">
                             <span>Topics</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'topics' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'topics'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'topics'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($global_topics as $topic)
                                     <a href="{{ route('topics.show', $topic->slug) }}"
@@ -458,20 +493,31 @@
                     </div>
 
                     <!-- Conferences Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'conferences'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'conferences'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'conferences') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'conferences' ? null : 'conferences')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'conferences' }">
                             <span>Conferences</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'conferences' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'conferences'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-60 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'conferences'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-60 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('conferences.index') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">All Conferences</a>
                             <a href="{{ route('conferences.index') }}?type=upcoming"
@@ -483,20 +529,31 @@
                     </div>
 
                     <!-- Author Services Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'authors'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'authors'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'authors') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'authors' ? null : 'authors')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'authors' }">
                             <span>Author Services</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'authors' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'authors'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'authors'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-64 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <a href="{{ route('author.submit') }}"
                                 class="block px-4 py-2 hover:bg-slate-50 hover:text-blue-800 normal-case font-medium text-xs">Submit
                                 Manuscript</a>
@@ -535,20 +592,31 @@
                     </div>
 
                     <!-- Initiatives Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'initiatives'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'initiatives'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'initiatives') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'initiatives' ? null : 'initiatives')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'initiatives' }">
                             <span>Initiatives</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'initiatives' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'initiatives'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'initiatives'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($menu_initiatives as $page)
                                     @if($page->slug !== 'blog' && $page->slug !== 'blogs')
@@ -563,20 +631,31 @@
                     </div>
 
                     <!-- About Dropdown -->
-                    <div class="relative h-full flex items-center" @mouseenter="activeDropdown = 'about'"
-                        @mouseleave="activeDropdown = null" style="display: flex; align-items: center;">
-                        <button
-                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700"
+                    <div class="relative h-full flex items-center group" 
+                        @mouseenter="activeDropdown = 'about'"
+                        @mouseleave="activeDropdown = null" 
+                        @click.outside="if (activeDropdown === 'about') activeDropdown = null"
+                        style="display: flex; align-items: center;">
+                        <button type="button"
+                            @click.stop="activeDropdown = (activeDropdown === 'about' ? null : 'about')"
+                            class="hover:text-blue-700 transition flex items-center h-full border-b-2 border-transparent hover:border-blue-700 cursor-pointer"
                             style="font-size: 13px; font-weight: 700; color: #1e293b; white-space: nowrap; padding: 0 3px; display: flex; align-items: center; gap: 3px;"
                             :class="{ 'text-blue-700 border-blue-700': activeDropdown === 'about' }">
                             <span>About</span>
-                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="{ 'rotate-180 text-blue-700': activeDropdown === 'about' }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
                                     d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="activeDropdown === 'about'" x-transition.opacity.duration.200ms
-                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-50">
+                        <div x-show="activeDropdown === 'about'" 
+                            x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 translate-y-0"
+                            x-transition:leave-end="opacity-0 translate-y-1"
+                            class="absolute top-full left-0 w-56 bg-white border border-slate-200 shadow-xl py-2 rounded-b-xl z-[100] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3 before:content-['']">
                             <div class="max-h-60 overflow-y-auto custom-scrollbar" style="max-height: 240px; overflow-y: auto;">
                                 @foreach($menu_about as $page)
                                     <a href="{{ route('about.page', $page->slug) }}"
@@ -737,10 +816,25 @@
                 </svg>
             </form>
 
-            <a href="{{ route('journals.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Journals</a>
+            <!-- Journals on Mobile -->
+            <div x-data="{ journalsOpen: false }">
+                <button type="button" @click="journalsOpen = !journalsOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
+                    <span>Journals</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': journalsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="journalsOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600">
+                    <a href="{{ route('journals.index') }}" class="block py-1 hover:text-blue-700 font-medium">All Journals (A-Z)</a>
+                    <a href="{{ route('journals.subjects') }}" class="block py-1 hover:text-blue-700 font-medium">Journals by Subject</a>
+                    <div class="border-t border-slate-100 my-1"></div>
+                    <span class="block py-1 text-[11px] text-slate-400 font-bold uppercase tracking-wider">Featured Journals</span>
+                    @foreach($featured_journals as $journal)
+                        <a href="{{ route('journals.show', $journal->slug) }}" class="block py-1 hover:text-blue-700 truncate">{{ $journal->title }}</a>
+                    @endforeach
+                </div>
+            </div>
 
             <div x-data="{ policiesOpen: false }">
-                <button @click="policiesOpen = !policiesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                <button type="button" @click="policiesOpen = !policiesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
                     <span>Journal Policies</span>
                     <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': policiesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
@@ -756,11 +850,39 @@
                 </div>
             </div>
 
-            <a href="{{ route('topics.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Topics</a>
-            <a href="{{ route('conferences.index') }}" class="block font-bold text-gray-800 py-1 hover:text-blue-700">Conferences</a>
+            <!-- Topics on Mobile -->
+            <div x-data="{ topicsOpen: false }">
+                <button type="button" @click="topicsOpen = !topicsOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
+                    <span>Topics</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': topicsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="topicsOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600 max-h-56 overflow-y-auto">
+                    <a href="{{ route('topics.index') }}" class="block py-1 hover:text-blue-700 font-bold text-blue-700">All Topics Overview</a>
+                    @foreach($global_topics as $topic)
+                        <a href="{{ route('topics.show', $topic->slug) }}" class="block py-1 hover:text-blue-700">{{ $topic->name }}</a>
+                    @endforeach
+                    @if($global_topics->isEmpty())
+                        <span class="block py-1 text-xs text-slate-400">No topics added yet.</span>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Conferences on Mobile -->
+            <div x-data="{ conferencesOpen: false }">
+                <button type="button" @click="conferencesOpen = !conferencesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
+                    <span>Conferences</span>
+                    <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': conferencesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </button>
+                <div x-show="conferencesOpen" class="pl-4 space-y-2 mt-2 text-sm text-slate-600">
+                    <a href="{{ route('conferences.index') }}" class="block py-1 hover:text-blue-700 font-medium">All Conferences</a>
+                    <a href="{{ route('conferences.index') }}?type=upcoming" class="block py-1 hover:text-blue-700 font-medium">Upcoming Conferences</a>
+                    <div class="border-t border-slate-100 my-1"></div>
+                    <a href="{{ route('info.page', 'proposals') }}" class="block py-1 hover:text-blue-700 font-bold text-blue-700">+ Propose Conference</a>
+                </div>
+            </div>
 
             <div x-data="{ authorsOpen: false }">
-                <button @click="authorsOpen = !authorsOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                <button type="button" @click="authorsOpen = !authorsOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
                     <span>Author Services</span>
                     <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': authorsOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
@@ -790,7 +912,7 @@
             </div>
 
             <div x-data="{ initiativesOpen: false }">
-                <button @click="initiativesOpen = !initiativesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                <button type="button" @click="initiativesOpen = !initiativesOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
                     <span>Initiatives</span>
                     <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': initiativesOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
@@ -806,7 +928,7 @@
 
             <!-- About Section on Mobile -->
             <div x-data="{ aboutOpen: false }">
-                <button @click="aboutOpen = !aboutOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1">
+                <button type="button" @click="aboutOpen = !aboutOpen" class="w-full flex items-center justify-between font-bold text-gray-800 py-1 hover:text-blue-700">
                     <span>About</span>
                     <svg class="w-4 h-4 text-gray-500 transition-transform" :class="{ 'rotate-180': aboutOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </button>
