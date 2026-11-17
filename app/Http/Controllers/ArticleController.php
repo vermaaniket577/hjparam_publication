@@ -98,13 +98,15 @@ class ArticleController extends Controller
         // 4. Attempt exact headless conversion of the Word manuscript (preserves 100% of formatting, images, diagrams, tables, and watermarks)
         $rawDoc = $this->findRawManuscriptPath($article);
         if ($rawDoc && file_exists($rawDoc['path'])) {
-            $convertedPdf = \App\Services\DocxConverterService::convert($rawDoc['path']);
-            if ($convertedPdf && file_exists($convertedPdf)) {
-                return response()->file($convertedPdf, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
-            }
+            try {
+                $convertedPdf = \App\Services\DocxConverterService::convert($rawDoc['path']);
+                if ($convertedPdf && file_exists($convertedPdf)) {
+                    return response()->file($convertedPdf, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]);
+                }
+            } catch (\Throwable $e) {}
         }
 
         // 5. Extract rich paper elements (sections, headings, tables, diagrams) from the manuscript
