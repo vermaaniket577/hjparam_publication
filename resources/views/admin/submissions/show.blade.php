@@ -148,7 +148,8 @@
         <div class="lg:col-span-7 space-y-6">
 
             <!-- DIRECT JOURNAL PUBLICATION MODULE (COMPLETE ADMINISTRATIVE FLOW) -->
-            <div id="publish-paper-section" class="rounded-3xl p-6 md:p-8 shadow-xl transition-all border {{ $submission->article ? 'bg-gradient-to-br from-emerald-950 via-slate-900 to-teal-950 border-emerald-500/40 text-white' : 'bg-gradient-to-br from-indigo-950 via-slate-900 to-purple-950 border-purple-500/40 text-white' }}"
+            <div id="publish-paper-section" class="rounded-3xl p-6 md:p-8 shadow-xl transition-all border {{ $submission->article ? 'border-emerald-600/50' : 'border-purple-600/50' }}"
+                style="background: {{ $submission->article ? 'linear-gradient(135deg, #022c22 0%, #0f172a 50%, #042f2e 100%)' : 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #3b0764 100%)' }}; color: #ffffff;"
                 x-data="{ 
                     customOpen: {{ $submission->article ? 'false' : 'false' }},
                     selectedJournalId: '{{ $submission->journal_id ?? ($journals->first()->id ?? '') }}',
@@ -171,55 +172,59 @@
                             <div class="flex items-center gap-2.5">
                                 <span class="w-8 h-8 rounded-xl bg-emerald-500 text-slate-950 flex items-center justify-center font-black text-sm">✓</span>
                                 <div>
-                                    <span class="text-[10px] uppercase font-black tracking-widest text-emerald-400 block">Publication Verified & Live</span>
-                                    <h3 class="text-base font-bold text-white">Officially Published in {{ $submission->article->journal->title }}</h3>
+                                    <span class="text-[10px] uppercase font-black tracking-widest text-emerald-400 block" style="color: #34d399 !important;">Publication Verified &amp; Live</span>
+                                    <h3 class="text-base font-bold text-white" style="color: #ffffff !important;">Officially Published in {{ $submission->article->journal->title }}</h3>
                                 </div>
                             </div>
-                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/30 text-xs font-mono font-bold">
+                            <span class="px-3 py-1 bg-emerald-500/20 text-emerald-300 rounded-full border border-emerald-400/30 text-xs font-mono font-bold" style="background-color: rgba(16, 185, 129, 0.2); color: #6ee7b7; border-color: rgba(52, 211, 153, 0.3);">
                                 Article #{{ $submission->article->id }}
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs bg-white/5 p-4 rounded-2xl border border-white/10">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs p-4 rounded-2xl border" style="background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.12);">
                             <div>
-                                <span class="text-slate-400 text-[10px] font-bold uppercase block">Journal & ISSN</span>
-                                <span class="font-bold text-white block">{{ $submission->article->journal->title }}</span>
-                                <span class="text-emerald-400 text-[11px] font-mono">ISSN: {{ $submission->article->journal->issn ?: 'Applied' }}</span>
+                                <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">Journal &amp; ISSN</span>
+                                <span class="font-bold block" style="color: #ffffff !important;">{{ $submission->article->journal->title }}</span>
+                                <span class="text-[11px] font-mono" style="color: #34d399 !important;">ISSN: {{ $submission->article->journal->issn ?: 'Applied' }}</span>
                             </div>
                             <div>
-                                <span class="text-slate-400 text-[10px] font-bold uppercase block">Volume & Issue</span>
-                                <span class="font-bold text-white block">
+                                <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">Volume &amp; Issue</span>
+                                <span class="font-bold block" style="color: #ffffff !important;">
                                     Vol. {{ $submission->article->issue?->volume?->volume_number ?? '1' }} ({{ $submission->article->issue?->volume?->year ?? date('Y') }})
                                 </span>
-                                <span class="text-slate-300 text-[11px]">Issue No. {{ $submission->article->issue?->issue_number ?? '1' }}</span>
+                                <span class="text-[11px]" style="color: #cbd5e1 !important;">Issue No. {{ $submission->article->issue?->issue_number ?? '1' }}</span>
                             </div>
                             <div>
-                                <span class="text-slate-400 text-[10px] font-bold uppercase block">DOI & Release Date</span>
-                                <a href="https://doi.org/{{ $submission->article->doi }}" target="_blank" class="font-mono text-blue-300 hover:underline block truncate">
+                                <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">DOI &amp; Release Date</span>
+                                <a href="https://doi.org/{{ $submission->article->doi }}" target="_blank" class="font-mono hover:underline block truncate" style="color: #93c5fd !important;">
                                     {{ $submission->article->doi ?: 'Not Assigned' }}
                                 </a>
-                                <span class="text-slate-300 text-[11px]">{{ $submission->article->published_at ? $submission->article->published_at->format('M d, Y') : now()->format('M d, Y') }}</span>
+                                <span class="text-[11px]" style="color: #cbd5e1 !important;">{{ $submission->article->published_at ? $submission->article->published_at->format('M d, Y') : now()->format('M d, Y') }}</span>
                             </div>
                         </div>
 
                         {{-- Quick Action Hub --}}
                         <div class="flex flex-wrap items-center gap-3 pt-2">
                             <a href="{{ route('articles.show', [$submission->article->journal->slug, $submission->article->slug]) }}" target="_blank"
-                                class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all">
+                                class="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black rounded-xl text-xs flex items-center gap-2 shadow-lg shadow-emerald-500/20 transition-all"
+                                style="background-color: #10b981 !important; color: #022c22 !important;">
                                 <span>🌐 View Live Article on Website</span>
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
                             </a>
                             <a href="{{ route('articles.download', $submission->article->id) }}" target="_blank"
-                                class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
+                                class="px-4 py-2.5 hover:bg-white/20 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+                                style="background-color: rgba(255, 255, 255, 0.12); color: #ffffff !important;">
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                                 Official Academic PDF
                             </a>
                             <a href="{{ route('certificates.publication.article', $submission->article) }}" target="_blank"
-                                class="px-4 py-2.5 bg-white/10 hover:bg-white/20 text-amber-300 font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
+                                class="px-4 py-2.5 hover:bg-white/20 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+                                style="background-color: rgba(255, 255, 255, 0.12); color: #fde047 !important;">
                                 🎓 Publication Certificates
                             </a>
                             <button @click="customOpen = !customOpen" type="button"
-                                class="px-4 py-2.5 bg-white/5 hover:bg-white/15 text-slate-300 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all ml-auto">
+                                class="px-4 py-2.5 hover:bg-white/15 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all ml-auto"
+                                style="background-color: rgba(255, 255, 255, 0.08); color: #e2e8f0 !important;">
                                 <span x-text="customOpen ? 'Hide Edit Form' : 'Update Publication Details'"></span>
                                 <svg class="w-3.5 h-3.5 transition-transform" :class="{ 'rotate-180': customOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                             </button>
