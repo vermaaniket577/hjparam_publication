@@ -162,6 +162,7 @@ Route::post('/contact', [\App\Http\Controllers\Public\ContactController::class, 
 // Article Routes
 Route::get('/journals/{journalSlug}/{articleSlug}', [ArticleController::class, 'show'])->name('articles.show');
 Route::get('/articles/{id}/download', [ArticleController::class, 'download'])->name('articles.download');
+Route::get('/articles/{id}/manuscript', [ArticleController::class, 'downloadManuscript'])->name('articles.manuscript');
 Route::get('/articles/{article}/bibtex', [CitationController::class, 'downloadBibtex'])->name('articles.bibtex');
 
 // Payment Gateway & Offline APC / Fee Routes
@@ -284,6 +285,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
 
             // Ensure certificates table and required columns exist
             \App\Services\CertificateIssuanceService::ensureTableExists();
+            \App\Models\Article::ensureManuscriptColumns();
             if (\Illuminate\Support\Facades\Schema::hasTable('editorial_boards') && !\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'designation')) {
                 \Illuminate\Support\Facades\Schema::table('editorial_boards', function (\Illuminate\Database\Schema\Blueprint $table) {
                     $table->string('designation')->nullable()->after('affiliation');

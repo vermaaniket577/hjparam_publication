@@ -212,6 +212,34 @@ class SubmissionController extends Controller
             }
         }
 
+        // Handle Original Microsoft Word Document (.doc / .docx)
+        $existingArticle = $submission->article;
+        $manuscriptPath = $existingArticle?->manuscript_path;
+        $originalFilename = $existingArticle?->original_filename;
+        $fileExtension = $existingArticle?->file_extension;
+        $fileSize = $existingArticle?->file_size;
+        $mimeType = $existingArticle?->mime_type;
+
+        if ($request->hasFile('manuscript_file')) {
+            $mFile = $request->file('manuscript_file');
+            $ext = strtolower($mFile->getClientOriginalExtension() ?: 'docx');
+            $safeName = 'manuscript_' . $submission->id . '_' . time() . '_' . Str::random(8) . '.' . $ext;
+            $manuscriptPath = $mFile->storeAs('articles/manuscripts', $safeName, 'local');
+            $originalFilename = $mFile->getClientOriginalName();
+            $fileExtension = $ext;
+            $fileSize = $mFile->getSize();
+            $mimeType = $mFile->getClientMimeType() ?: ($ext === 'doc' ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+        } elseif (empty($manuscriptPath)) {
+            // Inherit directly from submitted manuscript so it is instantly available
+            if (!empty($submission->file_path)) {
+                $manuscriptPath = $submission->file_path;
+                $originalFilename = $submission->filename ?: ($request->title . '.' . ($submission->extension ?: 'docx'));
+                $fileExtension = $submission->extension ?: 'docx';
+                $fileSize = $submission->file_size;
+                $mimeType = $submission->mime_type;
+            }
+        }
+
         // Create or update Article
         $article = Article::updateOrCreate(
             ['submission_id' => $submission->id],
@@ -225,6 +253,11 @@ class SubmissionController extends Controller
                 'keywords' => $request->keywords ?? $submission->keywords,
                 'doi' => $doi,
                 'pdf_path' => $pdfPath,
+                'manuscript_path' => $manuscriptPath,
+                'original_filename' => $originalFilename,
+                'file_extension' => $fileExtension,
+                'file_size' => $fileSize,
+                'mime_type' => $mimeType,
                 'status' => 'published',
                 'submitted_at' => $submission->created_at ?? now(),
                 'accepted_at' => now(),

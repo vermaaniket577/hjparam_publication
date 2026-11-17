@@ -202,17 +202,47 @@
                 <div class="lg:col-span-4 space-y-12">
                     {{-- Primary Actions --}}
                     <div class="space-y-4">
-                        <a href="{{ route('articles.download', $article->id) }}"
-                            class="w-full h-20 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-4 transition-all duration-500 shadow-2xl shadow-blue-600/20 hover:-translate-y-1 group">
-                            <svg class="w-7 h-7 group-hover:translate-y-1 transition-transform" fill="none"
+                        <a href="{{ route('articles.download', $article->id) }}" target="_blank"
+                            class="w-full h-18 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 group">
+                            <svg class="w-6 h-6 group-hover:translate-y-0.5 transition-transform" fill="none"
                                 stroke="currentColor" viewBox="0 0 24 24">
                                 <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" stroke-width="2.5">
                                 </path>
                             </svg>
-                            <span class="text-lg font-black uppercase tracking-widest">Download Full-Text</span>
+                            <span class="text-base font-black uppercase tracking-wider">Download Full-Text (PDF)</span>
                         </a>
+
+                        @if($article->has_manuscript)
+                            <a href="{{ route('articles.manuscript', $article->id) }}"
+                                class="w-full py-4 px-5 bg-white hover:bg-slate-50 text-slate-800 rounded-[1.25rem] flex items-center justify-between transition-all duration-200 border-2 border-slate-200 hover:border-blue-400 shadow-sm hover:shadow-md group">
+                                <div class="flex items-center gap-3.5">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                        </svg>
+                                    </div>
+                                    <div class="text-left">
+                                        <div class="text-xs font-black uppercase tracking-wider text-slate-800 group-hover:text-blue-600 transition-colors">
+                                            Download Original Word Document
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-semibold flex items-center gap-2 mt-0.5">
+                                            <span class="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-black text-[9px] uppercase">{{ $article->manuscript_extension }}</span>
+                                            @if($article->manuscript_size_formatted)
+                                                <span>{{ $article->manuscript_size_formatted }}</span>
+                                                <span>•</span>
+                                            @endif
+                                            <span>Original File</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <svg class="w-4 h-4 text-slate-400 group-hover:text-blue-600 group-hover:translate-x-0.5 transition-all" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                </svg>
+                            </a>
+                        @endif
+
                         <div class="text-[10px] text-center font-black uppercase tracking-[0.3em] text-slate-400">Scholarly
-                            Open Access PDF</div>
+                            Open Access Edition</div>
                     </div>
 
                     {{-- Metrics Dashboard --}}

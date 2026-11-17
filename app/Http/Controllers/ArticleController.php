@@ -3,40 +3,49 @@
 namespace App\Http\Controllers;
 
 use App\Models\Article;
-use App\Models\DownloadLog;
 use App\Services\AcademicPdfService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class ArticleController extends Controller
 {
+    /**
+     * Display the specified article.
+     */
     public function show($journalSlug, $articleSlug)
     {
-        $article = Article::where('slug', $articleSlug)
-            ->whereHas('journal', function ($query) use ($journalSlug) {
-                $query->where('slug', $journalSlug);
-            })
-            ->with(['journal', 'authors', 'issue.volume'])
+        $article = Article::with(['journal', 'issue.volume', 'authors', 'certificates'])
+            ->where('slug', $articleSlug)
             ->firstOrFail();
 
-        // Increment view count
+        // Increment Views
         $article->increment('views_count');
 
         return view('articles.show', compact('article'));
     }
 
-    public function download($id, Request $request)
+    /**
+     * Download or view the official publication PDF.
+     */
+    public function download(Request $request, $id)
     {
+        // 1. If user explicitly requests the raw/original Word manuscript
+        if ($request->has('raw') || $request->has('manuscript') || in_array(strtolower($request->get('format', '')), ['docx', 'doc', 'word'])) {
+            return $this->downloadManuscript($request, $id);
+        }
+
         $article = Article::with(['journal', 'issue.volume', 'authors', 'submission'])->findOrFail($id);
 
-        // Log download
+        // Track download analytics
         try {
-            DownloadLog::create([
+            DB::table('article_downloads')->insert([
                 'article_id' => $article->id,
-                'ip_address' => request()->ip(),
-                'user_agent' => request()->userAgent(),
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string)$request->userAgent(), 0, 500),
                 'downloaded_at' => now(),
             ]);
         } catch (\Throwable $e) {
@@ -54,21 +63,6 @@ class ArticleController extends Controller
         $cleanJournalTitle = Str::slug($journal ? $journal->title : 'journal');
         $cleanArticleTitle = Str::slug($article->title);
         $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
-
-        // 1. If user explicitly requests the raw manuscript file (e.g. Word .docx)
-        if ($request->has('raw') || $request->has('manuscript') || $request->get('format') === 'docx') {
-            $rawDoc = $this->findRawManuscriptPath($article);
-            if ($rawDoc && file_exists($rawDoc['path'])) {
-                return response()->download($rawDoc['path'], $rawDoc['filename']);
-            }
-            if (!empty($article->submission?->binary_content)) {
-                $ext = $article->submission->extension ?: 'docx';
-                $fn = $cleanArticleTitle . '.' . $ext;
-                return response($article->submission->binary_content)
-                    ->header('Content-Type', $article->submission->mime_type ?: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
-                    ->header('Content-Disposition', 'attachment; filename="' . $fn . '"');
-            }
-        }
 
         // 2. Check if the article has a verified, real PDF manuscript on disk
         $realPdfPath = $this->findRealPdfPath($article->pdf_path);
@@ -155,9 +149,85 @@ class ArticleController extends Controller
             Log::error('AcademicPdfService generation error: ' . $e->getMessage());
         }
 
-        // 5. Ultimate fallback: printable HTML view
+        // 6. Ultimate fallback: printable HTML view
         return response()->view('articles.pdf', compact('article', 'journal', 'issue', 'volume', 'issueMonth', 'issueYear'))
             ->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * Download the byte-for-byte exact original Microsoft Word document (.doc or .docx)
+     * uploaded by the author/admin, without any conversion, template recreation, or style modification.
+     */
+    public function downloadManuscript(Request $request, $id)
+    {
+        $article = Article::with(['journal', 'issue.volume', 'authors', 'submission'])->findOrFail($id);
+
+        // Security check: Only allow public download if article is published, or user is authenticated
+        if ($article->status !== 'published' && !Auth::check()) {
+            abort(403, 'This manuscript is not yet publicly released.');
+        }
+
+        $article->increment('downloads_count');
+
+        // Track download analytics
+        try {
+            DB::table('article_downloads')->insert([
+                'article_id' => $article->id,
+                'ip_address' => $request->ip(),
+                'user_agent' => substr((string)$request->userAgent(), 0, 500),
+                'downloaded_at' => now(),
+            ]);
+        } catch (\Throwable $e) {}
+
+        // 1. Check for original manuscript on disk
+        $diskPath = $article->resolveManuscriptDiskPath();
+        if ($diskPath && file_exists($diskPath) && !is_dir($diskPath)) {
+            $ext = strtolower($article->file_extension ?: pathinfo($diskPath, PATHINFO_EXTENSION) ?: 'docx');
+            $downloadFilename = $article->original_filename ?: $article->manuscript_filename;
+
+            // Ensure filename has extension
+            if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
+                $downloadFilename .= '.' . $ext;
+            }
+
+            $mime = $article->mime_type;
+            if (empty($mime)) {
+                $mime = ($ext === 'doc') ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+            }
+
+            return response()->download($diskPath, $downloadFilename, [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'attachment; filename="' . addslashes($downloadFilename) . '"',
+                'Cache-Control' => 'private, max-age=3600, must-revalidate',
+            ]);
+        }
+
+        // 2. Check for original binary content in database (Submission binary storage)
+        if ($article->submission && !empty($article->submission->binary_content)) {
+            $binStr = is_resource($article->submission->binary_content)
+                ? stream_get_contents($article->submission->binary_content)
+                : (string)$article->submission->binary_content;
+
+            if (!empty($binStr)) {
+                $ext = strtolower($article->submission->extension ?: 'docx');
+                $downloadFilename = $article->original_filename ?: ($article->submission->filename ?: (Str::slug($article->title) . '.' . $ext));
+
+                if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
+                    $downloadFilename .= '.' . $ext;
+                }
+
+                $mime = $article->submission->mime_type ?: (($ext === 'doc') ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+
+                return response($binStr, 200, [
+                    'Content-Type' => $mime,
+                    'Content-Disposition' => 'attachment; filename="' . addslashes($downloadFilename) . '"',
+                    'Content-Length' => strlen($binStr),
+                    'Cache-Control' => 'private, max-age=3600, must-revalidate',
+                ]);
+            }
+        }
+
+        return back()->with('error', 'The original Word document for this paper is not currently available for download.');
     }
 
     /**
@@ -214,6 +284,7 @@ class ArticleController extends Controller
     protected function findRawManuscriptPath(Article $article): ?array
     {
         $relPaths = array_filter([
+            $article->manuscript_path,
             $article->submission?->file_path,
             $article->pdf_path,
         ]);
@@ -224,13 +295,13 @@ class ArticleController extends Controller
 
         foreach ($relPaths as $relPath) {
             $candidates = [
-                Storage::disk('public')->path($relPath),
                 Storage::disk('local')->path($relPath),
+                storage_path('app/private/' . $relPath),
+                storage_path('app/' . $relPath),
+                Storage::disk('public')->path($relPath),
+                storage_path('app/public/' . $relPath),
                 public_path('storage/' . $relPath),
                 public_path($relPath),
-                storage_path('app/' . $relPath),
-                storage_path('app/private/' . $relPath),
-                storage_path('app/public/' . $relPath),
             ];
 
             foreach ($candidates as $cand) {
@@ -248,4 +319,3 @@ class ArticleController extends Controller
         return null;
     }
 }
-

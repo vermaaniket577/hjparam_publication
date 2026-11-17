@@ -298,24 +298,45 @@
                             placeholder="e.g. Machine Learning, Neuroscience, Neural Networks">
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
+                        <div>
+                            <label for="manuscript_file"
+                                class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">
+                                Original Word Document (.doc, .docx)
+                            </label>
+                            <input type="file" name="manuscript_file" id="manuscript_file" class="hidden"
+                                accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                @change="docFileName = $event.target.files[0]?.name || 'Select Word Document'"
+                                x-data="{ docFileName: 'Select Word Document (.doc, .docx)' }">
+                            <label for="manuscript_file"
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-dashed border-blue-200 hover:border-blue-500 transition-all flex items-center justify-center gap-4 text-sm text-slate-600 font-bold cursor-pointer">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <span x-text="docFileName">Select Word Document (.doc, .docx)</span>
+                            </label>
+                            <p class="text-[11px] text-slate-400 mt-2 ml-1">Stored securely in private server storage and served byte-for-byte to users.</p>
+                        </div>
+
                         <div>
                             <label for="pdf_path"
-                                class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Manuscript
-                                PDF</label>
-                            <input type="file" name="pdf_path" id="pdf_path" class="hidden"
-                                @change="fileName = $event.target.files[0].name"
+                                class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Production
+                                PDF (Optional)</label>
+                            <input type="file" name="pdf_path" id="pdf_path" class="hidden" accept=".pdf"
+                                @change="fileName = $event.target.files[0]?.name || 'Select PDF Document'"
                                 x-data="{ fileName: 'Select PDF Document' }">
                             <label for="pdf_path"
-                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-dashed border-blue-200 hover:border-blue-500 transition-all flex items-center justify-center gap-4 text-sm text-slate-600 font-bold cursor-pointer">
-                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 hover:border-slate-400 transition-all flex items-center justify-center gap-4 text-sm text-slate-600 font-bold cursor-pointer">
+                                <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path
                                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                         stroke-width="2"></path>
                                 </svg>
                                 <span x-text="fileName"></span>
                             </label>
+                            <p class="text-[11px] text-slate-400 mt-2 ml-1">Optional. The dynamic academic PDF engine will generate this if omitted.</p>
                         </div>
+                    </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label for="status"

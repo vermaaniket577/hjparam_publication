@@ -212,6 +212,56 @@
                             placeholder="Summary of research findings...">{{ $article->abstract }}</textarea>
                     </div>
 
+                    {{-- Original Word Document Management Module --}}
+                    <div class="p-6 bg-slate-50 rounded-3xl border border-slate-200/80 space-y-4">
+                        <div class="flex items-center justify-between flex-wrap gap-2">
+                            <div>
+                                <h3 class="text-xs font-black uppercase tracking-widest text-slate-800 flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    Original Word Document (.doc, .docx)
+                                </h3>
+                                <p class="text-[11px] text-slate-500 mt-0.5">Stored in private server storage and served byte-for-byte to readers.</p>
+                            </div>
+                            @if($article->has_manuscript)
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-blue-100 text-blue-800">
+                                        {{ $article->manuscript_extension }}
+                                        @if($article->manuscript_size_formatted)
+                                            • {{ $article->manuscript_size_formatted }}
+                                        @endif
+                                    </span>
+                                    <a href="{{ route('articles.manuscript', $article->id) }}" class="px-3 py-1 bg-white hover:bg-blue-50 border border-slate-200 text-blue-600 rounded-xl text-xs font-bold transition-colors inline-flex items-center gap-1.5 shadow-2xs">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        Download File
+                                    </a>
+                                </div>
+                            @endif
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+                            <div>
+                                <label for="manuscript_file" class="block text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">
+                                    {{ $article->has_manuscript ? 'Replace Word Document (.doc, .docx)' : 'Upload Word Document (.doc, .docx)' }}
+                                </label>
+                                <input type="file" name="manuscript_file" id="manuscript_file"
+                                    accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                    class="w-full px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-xs text-slate-700 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                                @if($article->original_filename)
+                                    <p class="text-[11px] text-slate-400 mt-1">Current file: <span class="font-mono text-slate-600 font-bold">{{ $article->original_filename }}</span></p>
+                                @endif
+                            </div>
+
+                            @if($article->has_manuscript)
+                                <div class="pt-6">
+                                    <label class="inline-flex items-center gap-2 cursor-pointer text-xs text-red-600 font-bold hover:text-red-700">
+                                        <input type="checkbox" name="remove_manuscript" value="1" class="rounded border-slate-300 text-red-600 focus:ring-red-500">
+                                        <span>Remove / Delete currently uploaded Word document</span>
+                                    </label>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                         <div>
                             <label for="pdf_path"
@@ -221,8 +271,8 @@
                                 @change="fileName = $event.target.files[0].name"
                                 x-data="{ fileName: 'Change PDF Document' }">
                             <label for="pdf_path"
-                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-dashed border-blue-200 hover:border-blue-500 transition-all flex items-center justify-center gap-4 text-sm text-slate-600 font-bold cursor-pointer">
-                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                class="w-full px-5 py-4 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 hover:border-slate-400 transition-all flex items-center justify-center gap-4 text-sm text-slate-600 font-bold cursor-pointer">
+                                <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path
                                         d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
                                         stroke-width="2"></path>
@@ -230,7 +280,7 @@
                                 <span x-text="fileName"></span>
                             </label>
                             @if($article->pdf_path)
-                                <p class="text-[10px] text-slate-400 mt-2 ml-2">Current: {{ basename($article->pdf_path) }}</p>
+                                <p class="text-[10px] text-slate-400 mt-2 ml-2">Current PDF: {{ basename($article->pdf_path) }}</p>
                             @endif
                         </div>
                         <div class="grid grid-cols-2 gap-4">

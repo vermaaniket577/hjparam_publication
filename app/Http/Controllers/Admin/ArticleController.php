@@ -68,6 +68,7 @@ class ArticleController extends Controller
             'keywords' => 'nullable|string',
             'doi' => 'nullable|string',
             'pdf_path' => 'nullable|file|mimes:pdf|max:20480', // Support up to 20MB
+            'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200', // Word doc/docx up to 50MB
             'status' => 'required|string',
             'published_at' => 'nullable|date',
             'authors' => 'required|array|min:1',
@@ -95,12 +96,23 @@ class ArticleController extends Controller
             }
         }
 
-        $article = new Article($request->except('authors', 'pdf_path'));
+        $article = new Article($request->except('authors', 'pdf_path', 'manuscript_file'));
         $article->issue_id = $issueId;
 
         if ($request->hasFile('pdf_path')) {
             $path = $request->file('pdf_path')->store('articles/pdf', 'public');
             $article->pdf_path = $path;
+        }
+
+        if ($request->hasFile('manuscript_file')) {
+            $mFile = $request->file('manuscript_file');
+            $ext = strtolower($mFile->getClientOriginalExtension() ?: 'docx');
+            $safeName = 'manuscript_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
+            $article->manuscript_path = $mFile->storeAs('articles/manuscripts', $safeName, 'local');
+            $article->original_filename = $mFile->getClientOriginalName();
+            $article->file_extension = $ext;
+            $article->file_size = $mFile->getSize();
+            $article->mime_type = $mFile->getClientMimeType() ?: ($ext === 'doc' ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
 
         $article->submitted_at = now();
@@ -164,6 +176,8 @@ class ArticleController extends Controller
             'keywords' => 'nullable|string',
             'doi' => 'nullable|string',
             'pdf_path' => 'nullable|file|mimes:pdf|max:20480',
+            'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200',
+            'remove_manuscript' => 'nullable|boolean',
             'status' => 'required|string',
             'published_at' => 'nullable|date',
             'authors' => 'required|array|min:1',
@@ -173,7 +187,7 @@ class ArticleController extends Controller
             'authors.*.is_corresponding' => 'nullable|boolean',
         ]);
 
-        $article->fill($request->except('authors', 'pdf_path'));
+        $article->fill($request->except('authors', 'pdf_path', 'manuscript_file', 'remove_manuscript'));
 
         if ($request->hasFile('pdf_path')) {
             // Option: delete old PDF
@@ -182,6 +196,30 @@ class ArticleController extends Controller
             }
             $path = $request->file('pdf_path')->store('articles/pdf', 'public');
             $article->pdf_path = $path;
+        }
+
+        // Handle Original Word Manuscript replacement or deletion
+        if ($request->boolean('remove_manuscript')) {
+            if ($article->manuscript_path && \Storage::disk('local')->exists($article->manuscript_path)) {
+                \Storage::disk('local')->delete($article->manuscript_path);
+            }
+            $article->manuscript_path = null;
+            $article->original_filename = null;
+            $article->file_extension = null;
+            $article->file_size = null;
+            $article->mime_type = null;
+        } elseif ($request->hasFile('manuscript_file')) {
+            if ($article->manuscript_path && \Storage::disk('local')->exists($article->manuscript_path)) {
+                \Storage::disk('local')->delete($article->manuscript_path);
+            }
+            $mFile = $request->file('manuscript_file');
+            $ext = strtolower($mFile->getClientOriginalExtension() ?: 'docx');
+            $safeName = 'manuscript_' . $article->id . '_' . time() . '_' . \Illuminate\Support\Str::random(8) . '.' . $ext;
+            $article->manuscript_path = $mFile->storeAs('articles/manuscripts', $safeName, 'local');
+            $article->original_filename = $mFile->getClientOriginalName();
+            $article->file_extension = $ext;
+            $article->file_size = $mFile->getSize();
+            $article->mime_type = $mFile->getClientMimeType() ?: ($ext === 'doc' ? 'application/msword' : 'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
         }
 
         if ($request->status === 'published' && !$article->published_at) {
@@ -218,6 +256,10 @@ class ArticleController extends Controller
 
         if ($article->pdf_path && \Storage::disk('public')->exists($article->pdf_path)) {
             \Storage::disk('public')->delete($article->pdf_path);
+        }
+
+        if ($article->manuscript_path && \Storage::disk('local')->exists($article->manuscript_path)) {
+            \Storage::disk('local')->delete($article->manuscript_path);
         }
 
         $article->delete();

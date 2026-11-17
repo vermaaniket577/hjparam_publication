@@ -314,6 +314,15 @@
                                 style="background-color: rgba(255, 255, 255, 0.12); color: #fde047 !important;">
                                 🎓 Publication Certificates
                             </a>
+                            @if($submission->article->has_manuscript)
+                                <a href="{{ route('articles.manuscript', $submission->article->id) }}"
+                                    class="px-4 py-2.5 hover:bg-blue-500/30 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+                                    style="background-color: rgba(59, 130, 246, 0.25); color: #bfdbfe !important; border: 1px solid rgba(147, 197, 253, 0.3);"
+                                    title="Download exact original Word document ({{ $submission->article->manuscript_extension }})">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    Original Word ({{ $submission->article->manuscript_extension }})
+                                </a>
+                            @endif
                             <button @click="customOpen = !customOpen" type="button"
                                 class="px-4 py-2.5 hover:bg-white/15 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all ml-auto"
                                 style="background-color: rgba(255, 255, 255, 0.08); color: #e2e8f0 !important;">
@@ -435,11 +444,27 @@
                             </div>
                         </div>
 
-                        <!-- Upload Final Proof PDF (Optional) -->
-                        <div>
-                            <label class="block text-xs font-bold text-slate-200 uppercase mb-2">Final Production PDF (Optional)</label>
-                            <input type="file" name="pdf_file" accept=".pdf" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
-                            <p class="text-[11px] text-slate-400 mt-1">If not uploaded, the author's submitted manuscript or dynamic PDF renderer will automatically serve as the document.</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Upload Original Word Document (.doc, .docx) -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-200 uppercase mb-2">
+                                    Original Word Document (.doc, .docx)
+                                    @if($submission->article?->has_manuscript)
+                                        <span class="ml-1.5 px-2 py-0.5 rounded text-[10px] bg-blue-500/20 text-blue-300 font-mono">
+                                            Current: {{ $submission->article->manuscript_extension }} ({{ $submission->article->manuscript_size_formatted ?: 'Saved' }})
+                                        </span>
+                                    @endif
+                                </label>
+                                <input type="file" name="manuscript_file" accept=".doc,.docx,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                                <p class="text-[11px] text-slate-400 mt-1">Upload or replace the author's original Word manuscript. Stored securely and served byte-for-byte to readers.</p>
+                            </div>
+
+                            <!-- Upload Final Proof PDF (Optional) -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-200 uppercase mb-2">Final Production PDF (Optional)</label>
+                                <input type="file" name="pdf_file" accept=".pdf" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
+                                <p class="text-[11px] text-slate-400 mt-1">Optional. If not provided, the multi-page academic PDF engine will generate it automatically.</p>
+                            </div>
                         </div>
 
                         <!-- Authors & Scholar Attribution -->
