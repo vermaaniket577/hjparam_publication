@@ -141,7 +141,7 @@ class Article extends Model
     }
 
     /**
-     * Check whether a disk file is a genuine PDF via its %PDF magic header.
+     * Check whether a disk file is a genuine PDF via its %PDF- header (within first 1024 bytes per PDF spec).
      */
     public function isPdfFile(?string $path): bool
     {
@@ -154,16 +154,49 @@ class Article extends Model
             return false;
         }
 
-        $magic = fread($h, 4);
+        $header = fread($h, 1024);
         fclose($h);
 
-        return $magic === '%PDF';
+        return $header !== false && str_contains($header, '%PDF-');
+    }
+
+    /**
+     * Safely read submission binary_content as a string without consuming stream pointers.
+     */
+    public function getSubmissionBinaryContent(): ?string
+    {
+        if (empty($this->submission_id) || empty($this->submission?->binary_content)) {
+            return null;
+        }
+
+        $raw = $this->submission->binary_content;
+        if (is_resource($raw)) {
+            @rewind($raw);
+            $str = stream_get_contents($raw);
+            @rewind($raw);
+            return $str !== false && $str !== '' ? $str : null;
+        }
+
+        $str = (string) $raw;
+        return $str !== '' ? $str : null;
+    }
+
+    /**
+     * Check whether a binary string is a genuine PDF.
+     */
+    public function isPdfBinary(?string $binStr): bool
+    {
+        if (empty($binStr)) {
+            return false;
+        }
+
+        return str_contains(substr($binStr, 0, 1024), '%PDF-');
     }
 
     /**
      * Resolve the absolute path on disk for an uploaded real PDF file.
      * Prioritizes admin-uploaded article pdf_path, and falls back to submission file_path
-     * only if admin has not explicitly uploaded a Word manuscript override.
+     * unless admin has explicitly uploaded a valid Word manuscript override on disk.
      */
     public function resolveRealPdfPath(): ?string
     {
@@ -178,7 +211,10 @@ class Article extends Model
             $relPaths[] = $this->pdf_path;
         }
 
-        if (empty($this->manuscript_path) && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
+        $hasExplicitWordOverride = !empty($this->manuscript_path)
+            && $this->locateFileOnDisk($this->manuscript_path) !== null;
+
+        if (!$hasExplicitWordOverride && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
             $relPaths[] = $this->submission->file_path;
         }
 
@@ -202,12 +238,12 @@ class Article extends Model
             return true;
         }
 
-        if (empty($this->manuscript_path) && !empty($this->submission_id) && !empty($this->submission?->binary_content)) {
-            $binStr = is_resource($this->submission->binary_content)
-                ? stream_get_contents($this->submission->binary_content)
-                : (string)$this->submission->binary_content;
+        $hasExplicitWordOverride = !empty($this->manuscript_path)
+            && $this->locateFileOnDisk($this->manuscript_path) !== null;
 
-            if (str_starts_with($binStr, '%PDF')) {
+        if (!$hasExplicitWordOverride) {
+            $binStr = $this->getSubmissionBinaryContent();
+            if ($this->isPdfBinary($binStr)) {
                 return true;
             }
         }
@@ -231,7 +267,8 @@ class Article extends Model
             $relPaths[] = $this->manuscript_path;
         }
 
-        if (empty($this->pdf_path) && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
+        // Fall back to submission file_path whenever no real PDF exists on disk
+        if ($this->resolveRealPdfPath() === null && !empty($this->submission_id) && !empty($this->submission?->file_path)) {
             $relPaths[] = $this->submission->file_path;
         }
 
@@ -262,12 +299,9 @@ class Article extends Model
             return true;
         }
 
-        if (empty($this->pdf_path) && !empty($this->submission_id) && !empty($this->submission?->binary_content)) {
-            $binStr = is_resource($this->submission->binary_content)
-                ? stream_get_contents($this->submission->binary_content)
-                : (string)$this->submission->binary_content;
-
-            if (!empty($binStr) && !str_starts_with($binStr, '%PDF')) {
+        if ($this->resolveRealPdfPath() === null) {
+            $binStr = $this->getSubmissionBinaryContent();
+            if ($binStr !== null && !$this->isPdfBinary($binStr)) {
                 return true;
             }
         }

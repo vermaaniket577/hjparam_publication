@@ -208,7 +208,7 @@
                             $primarySize = $article->primary_download_size_formatted;
                         @endphp
 
-                        <a href="{{ route('articles.download', $article->id) }}"
+                        <a href="{{ route('articles.download', $article->id) }}?v={{ $article->updated_at?->timestamp ?? time() }}"
                             @if($isPrimaryPdf) target="_blank" @endif
                             class="w-full py-4 px-6 bg-blue-600 hover:bg-blue-700 text-white rounded-[1.25rem] flex items-center justify-center gap-3 transition-all duration-300 shadow-xl shadow-blue-600/20 hover:-translate-y-0.5 group">
                             <svg class="w-6 h-6 group-hover:translate-y-0.5 transition-transform shrink-0" fill="none"

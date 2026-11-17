@@ -190,9 +190,9 @@ class SubmissionController extends Controller
             foreach ($candidates as $cand) {
                 if (!empty($cand) && file_exists($cand) && !is_dir($cand)) {
                     $h = @fopen($cand, 'rb');
-                    $magic = $h ? fread($h, 4) : '';
+                    $header = $h ? fread($h, 1024) : '';
                     if ($h) fclose($h);
-                    if ($magic === '%PDF') {
+                    if ($header !== false && str_contains($header, '%PDF-')) {
                         try {
                             $newFilename = 'articles/pdf/manuscript_' . $submission->id . '_' . basename($cand);
                             Storage::disk('public')->put($newFilename, file_get_contents($cand));
@@ -205,7 +205,7 @@ class SubmissionController extends Controller
 
             if (empty($pdfPath) && !empty($submission->binary_content)) {
                 $binStr = is_resource($submission->binary_content) ? stream_get_contents($submission->binary_content) : (string)$submission->binary_content;
-                if (str_starts_with($binStr, '%PDF')) {
+                if (str_contains(substr($binStr, 0, 1024), '%PDF-')) {
                     try {
                         $newFilename = 'articles/pdf/article_' . $submission->id . '_' . time() . '.pdf';
                         Storage::disk('public')->put($newFilename, $binStr);

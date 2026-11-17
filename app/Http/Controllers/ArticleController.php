@@ -62,29 +62,33 @@ class ArticleController extends Controller
         $cleanArticleTitle = Str::slug($article->title);
         $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
 
+        $noCacheHeaders = [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ];
+
         // 2. Priority 1: Exact uploaded PDF file on disk (Admin pdf_path or submission PDF when no Word override)
         $realPdfPath = $article->resolveRealPdfPath();
         if ($realPdfPath) {
-            return response()->file($realPdfPath, [
+            return response()->file($realPdfPath, array_merge($noCacheHeaders, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                'Cache-Control' => 'private, max-age=3600, must-revalidate',
-            ]);
+            ]));
         }
 
-        // 3. Priority 2: Exact uploaded PDF in submission binary_content (only if admin did not upload a Word override)
-        if (empty($article->manuscript_path) && $article->submission && !empty($article->submission->binary_content)) {
-            $binStr = is_resource($article->submission->binary_content)
-                ? stream_get_contents($article->submission->binary_content)
-                : (string)$article->submission->binary_content;
+        // 3. Priority 2: Exact uploaded PDF in submission binary_content (only if admin did not upload a Word override on disk)
+        $hasExplicitWordOverride = !empty($article->manuscript_path)
+            && $article->locateFileOnDisk($article->manuscript_path) !== null;
 
-            if (str_starts_with($binStr, '%PDF')) {
-                return response($binStr, 200, [
+        if (!$hasExplicitWordOverride) {
+            $binStr = $article->getSubmissionBinaryContent();
+            if ($article->isPdfBinary($binStr)) {
+                return response($binStr, 200, array_merge($noCacheHeaders, [
                     'Content-Type' => 'application/pdf',
                     'Content-Disposition' => 'inline; filename="' . $filename . '"',
                     'Content-Length' => strlen($binStr),
-                    'Cache-Control' => 'private, max-age=3600, must-revalidate',
-                ]);
+                ]));
             }
         }
 
@@ -130,12 +134,11 @@ class ArticleController extends Controller
                 'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),
             ]);
 
-            return response($pdfBytes, 200, [
+            return response($pdfBytes, 200, array_merge($noCacheHeaders, [
                 'Content-Type' => 'application/pdf',
                 'Content-Disposition' => 'inline; filename="' . $filename . '"',
                 'Content-Length' => strlen($pdfBytes),
-                'Cache-Control' => 'private, max-age=3600, must-revalidate',
-            ]);
+            ]));
         } catch (\Throwable $e) {
             Log::error('AcademicPdfService generation error: ' . $e->getMessage());
         }
@@ -192,6 +195,12 @@ class ArticleController extends Controller
      */
     protected function buildExactManuscriptResponse(Article $article)
     {
+        $noCacheHeaders = [
+            'Cache-Control' => 'no-store, no-cache, must-revalidate, max-age=0',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ];
+
         // 1. Check for original Word manuscript on disk
         $diskPath = $article->resolveWordManuscriptDiskPath();
         if ($diskPath && file_exists($diskPath) && !is_dir($diskPath)) {
@@ -206,36 +215,29 @@ class ArticleController extends Controller
 
             $mime = $this->resolveMimeType($ext, $article->mime_type);
 
-            return response()->download($diskPath, $downloadFilename, [
+            return response()->download($diskPath, $downloadFilename, array_merge($noCacheHeaders, [
                 'Content-Type' => $mime,
-                'Cache-Control' => 'private, max-age=3600, must-revalidate',
-            ]);
+            ]));
         }
 
         // 2. Check for original binary content in database (Submission binary storage)
-        if ($article->submission && !empty($article->submission->binary_content)) {
-            $binStr = is_resource($article->submission->binary_content)
-                ? stream_get_contents($article->submission->binary_content)
-                : (string)$article->submission->binary_content;
+        $binStr = $article->getSubmissionBinaryContent();
+        if ($binStr !== null && !$article->isPdfBinary($binStr)) {
+            $ext = strtolower($article->submission?->extension ?: $article->file_extension ?: 'docx');
+            $downloadFilename = $article->original_filename ?: ($article->submission?->filename ?: (Str::slug($article->title) . '.' . $ext));
+            $downloadFilename = str_replace(["\r", "\n", '"'], '', $downloadFilename);
 
-            if (!empty($binStr) && !str_starts_with($binStr, '%PDF')) {
-                $ext = strtolower($article->submission->extension ?: $article->file_extension ?: 'docx');
-                $downloadFilename = $article->original_filename ?: ($article->submission->filename ?: (Str::slug($article->title) . '.' . $ext));
-                $downloadFilename = str_replace(["\r", "\n", '"'], '', $downloadFilename);
-
-                if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
-                    $downloadFilename .= '.' . $ext;
-                }
-
-                $mime = $this->resolveMimeType($ext, $article->submission->mime_type);
-
-                return response($binStr, 200, [
-                    'Content-Type' => $mime,
-                    'Content-Disposition' => 'attachment; filename="' . addslashes($downloadFilename) . '"',
-                    'Content-Length' => strlen($binStr),
-                    'Cache-Control' => 'private, max-age=3600, must-revalidate',
-                ]);
+            if (!str_ends_with(strtolower($downloadFilename), '.' . $ext)) {
+                $downloadFilename .= '.' . $ext;
             }
+
+            $mime = $this->resolveMimeType($ext, $article->submission?->mime_type);
+
+            return response($binStr, 200, array_merge($noCacheHeaders, [
+                'Content-Type' => $mime,
+                'Content-Disposition' => 'attachment; filename="' . addslashes($downloadFilename) . '"',
+                'Content-Length' => strlen($binStr),
+            ]));
         }
 
         return null;
