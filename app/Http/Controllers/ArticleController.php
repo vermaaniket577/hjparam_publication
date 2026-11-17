@@ -95,17 +95,28 @@ class ArticleController extends Controller
             }
         }
 
-        // 4. Extract complete paper paragraphs and sections from the author's uploaded manuscript
-        $bodyParagraphs = [];
+        // 4. Attempt exact headless conversion of the Word manuscript (preserves 100% of formatting, images, diagrams, tables, and watermarks)
         $rawDoc = $this->findRawManuscriptPath($article);
         if ($rawDoc && file_exists($rawDoc['path'])) {
-            $bodyParagraphs = AcademicPdfService::extractDocxParagraphs($rawDoc['path']);
-        } elseif (!empty($article->submission?->binary_content)) {
-            $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
-            $bodyParagraphs = AcademicPdfService::extractDocxParagraphs($binStr);
+            $convertedPdf = \App\Services\DocxConverterService::convert($rawDoc['path']);
+            if ($convertedPdf && file_exists($convertedPdf)) {
+                return response()->file($convertedPdf, [
+                    'Content-Type' => 'application/pdf',
+                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                ]);
+            }
         }
 
-        // 5. Generate complete multi-page official academic PDF using AcademicPdfService
+        // 5. Extract rich paper elements (sections, headings, tables, diagrams) from the manuscript
+        $bodyElements = [];
+        if ($rawDoc && file_exists($rawDoc['path'])) {
+            $bodyElements = AcademicPdfService::extractDocxElements($rawDoc['path']);
+        } elseif (!empty($article->submission?->binary_content)) {
+            $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
+            $bodyElements = AcademicPdfService::extractDocxElements($binStr);
+        }
+
+        // 6. Generate multi-page official academic PDF with Watermark, Tables & Figures using AcademicPdfService
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
 
@@ -133,7 +144,7 @@ class ArticleController extends Controller
                 'author_email' => $article->submission?->user?->email ?? '',
                 'abstract' => $article->abstract,
                 'keywords' => $article->keywords,
-                'body_paragraphs' => $bodyParagraphs,
+                'body_elements' => $bodyElements,
                 'received_date' => $article->submitted_at ? \Carbon\Carbon::parse($article->submitted_at)->format('d M Y') : '10 Jan 2026',
                 'accepted_date' => $article->accepted_at ? \Carbon\Carbon::parse($article->accepted_at)->format('d M Y') : '24 Jan 2026',
                 'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),

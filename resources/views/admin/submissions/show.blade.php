@@ -459,11 +459,13 @@
                                 <p class="text-[11px] text-slate-400 mt-1">Upload or replace the author's original Word manuscript. Stored securely and served byte-for-byte to readers.</p>
                             </div>
 
-                            <!-- Upload Final Proof PDF (Optional) -->
+                            <!-- Upload Final Proof PDF -->
                             <div>
-                                <label class="block text-xs font-bold text-slate-200 uppercase mb-2">Final Production PDF (Optional)</label>
+                                <label class="block text-xs font-bold text-slate-200 uppercase mb-2">
+                                    Production PDF (Exact Diagrams, Tables, Images &amp; Watermarks)
+                                </label>
                                 <input type="file" name="pdf_file" accept=".pdf" class="w-full px-4 py-2 rounded-xl bg-slate-800 border border-slate-700 text-xs text-slate-300 file:mr-4 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-600 file:text-white hover:file:bg-purple-700 cursor-pointer">
-                                <p class="text-[11px] text-slate-400 mt-1">Optional. If not provided, the multi-page academic PDF engine will generate it automatically.</p>
+                                <p class="text-[11px] text-slate-400 mt-1">Upload the paper saved directly as PDF from Microsoft Word to guarantee 100% original diagrams, tables, images, watermarks, and layout.</p>
                             </div>
                         </div>
 

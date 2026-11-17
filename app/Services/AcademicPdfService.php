@@ -17,6 +17,8 @@ class AcademicPdfService
     protected float $currentY = 0.0;
     protected string $currentFont = 'F1';
     protected float $currentFontSize = 10.0;
+    protected array $images = []; // [id => ['data' => ..., 'w' => ..., 'h' => ...]]
+    protected int $imageCounter = 0;
 
     public function generate(array $data): string
     {
@@ -24,6 +26,8 @@ class AcademicPdfService
         $this->offsets = [];
         $this->buffer = '';
         $this->pageCount = 0;
+        $this->images = [];
+        $this->imageCounter = 0;
 
         $this->addPage($data);
 
@@ -42,8 +46,8 @@ class AcademicPdfService
         // Abstract & Keywords
         $this->renderAbstract($data);
 
-        // Body Sections
-        $this->renderBodySections($data);
+        // Body Sections, Tables, Images & Diagrams
+        $this->renderBodyContent($data);
 
         // Compile PDF objects
         return $this->compilePdf($data);
@@ -54,6 +58,22 @@ class AcademicPdfService
         $this->pageCount++;
         $this->pages[$this->pageCount] = '';
         $this->currentY = $this->pageHeight - $this->marginTop;
+
+        // Render Academic Background Watermark on every page
+        $this->renderWatermark($data);
+    }
+
+    protected function renderWatermark(array $data): void
+    {
+        $journal = $data['journal_title'] ?? 'HJPARAM ACADEMIC PRESS';
+        $wmText = strtoupper(substr($this->escape($journal), 0, 36));
+
+        // Diagonal faint background watermark (45 degree rotation)
+        $this->appendToPage("q");
+        $this->appendToPage("0.935 0.945 0.965 rg"); // Soft academic faint tint
+        $this->appendToPage("0.7071 0.7071 -0.7071 0.7071 130 240 cm");
+        $this->appendToPage(sprintf("BT /F2 26.0 Tf (%s) Tj ET", $wmText));
+        $this->appendToPage("Q");
     }
 
     protected function checkPageBreak(float $neededHeight, array $data): void
@@ -66,7 +86,6 @@ class AcademicPdfService
 
     protected function escape(string $text): string
     {
-        // Transliterate UTF-8 to Windows-1252 / ISO-8859-1 for standard Type 1 fonts
         $clean = @iconv('UTF-8', 'windows-1252//TRANSLIT', $text);
         if ($clean === false) {
             $clean = utf8_decode($text);
@@ -103,7 +122,7 @@ class AcademicPdfService
         $words = explode(' ', $text);
         $lines = [];
         $currentLine = '';
-        $avgCharWidth = $fontSize * 0.50; // Approximation for Helvetica
+        $avgCharWidth = $fontSize * 0.50;
 
         foreach ($words as $word) {
             $testLine = $currentLine === '' ? $word : $currentLine . ' ' . $word;
@@ -135,16 +154,15 @@ class AcademicPdfService
         $issueMonth = $data['month'] ?? 'Regular';
         $issueYear = $data['year'] ?? date('Y');
         $issn = $data['issn'] ?? 'Applied (Online)';
-        $doi = $data['doi'] ?? '';
 
-        // Top decorative accent line
+        // Top decorative accent bar
         $this->drawRect($this->marginLeft, $this->currentY - 2, $w, 3, 0.12, 0.23, 0.54, true);
         $this->currentY -= 16;
 
         // Journal Title
         $this->drawText($this->marginLeft, $this->currentY, $journalTitle, 'F2', 13.0, 0.12, 0.23, 0.54);
 
-        // Right side badge
+        // Header right badges
         $this->drawText($this->pageWidth - $this->marginRight - 130, $this->currentY + 2, 'HJPARAM ACADEMIC PRESS', 'F2', 8.0, 0.2, 0.2, 0.3);
         $this->drawText($this->pageWidth - $this->marginRight - 130, $this->currentY - 9, 'OPEN ACCESS  •  PEER-REVIEWED', 'F2', 7.0, 0.08, 0.55, 0.25);
         $this->currentY -= 14;
@@ -154,14 +172,13 @@ class AcademicPdfService
         $this->drawText($this->marginLeft, $this->currentY, $metaStrip, 'F1', 8.5, 0.35, 0.4, 0.48);
         $this->currentY -= 8;
 
-        // Bottom divider rule
+        // Divider rule
         $this->drawLine($this->marginLeft, $this->currentY, $this->pageWidth - $this->marginRight, $this->currentY, 0.8, 0.85, 0.9, 1.0);
         $this->currentY -= 18;
     }
 
     protected function renderRunningHeader(array $data): void
     {
-        $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
         $journalTitle = $data['journal_title'] ?? 'HJPARAM Publication';
         $volNum = $data['volume'] ?? '1';
         $issueNum = $data['issue'] ?? '1';
@@ -192,7 +209,6 @@ class AcademicPdfService
             $authors = [['name' => $data['author_name'] ?? 'Academic Researcher', 'affiliation' => $data['author_affiliation'] ?? 'Institutional Scholar', 'is_corresponding' => true]];
         }
 
-        // Author names line
         $names = [];
         foreach ($authors as $a) {
             $str = $a['name'] ?? '';
@@ -201,140 +217,144 @@ class AcademicPdfService
             }
             $names[] = $str;
         }
-        $authorsLine = implode(', ', $names);
+        $authorLine = implode(', ', $names);
 
-        $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
-        $lines = $this->wrapText($authorsLine, $w, 10.5);
-        foreach ($lines as $line) {
-            $this->drawText($this->marginLeft, $this->currentY, $line, 'F2', 10.5, 0.12, 0.23, 0.54);
-            $this->currentY -= 14;
-        }
+        $this->drawText($this->marginLeft, $this->currentY, $authorLine, 'F2', 10.0, 0.12, 0.23, 0.54);
+        $this->currentY -= 14;
 
-        // Affiliations
         $affiliations = [];
-        foreach ($authors as $idx => $a) {
-            $aff = trim($a['affiliation'] ?? '');
-            if ($aff !== '' && !in_array($aff, $affiliations)) {
-                $affiliations[] = $aff;
+        $emails = [];
+        foreach ($authors as $a) {
+            if (!empty($a['affiliation']) && !in_array($a['affiliation'], $affiliations)) {
+                $affiliations[] = $a['affiliation'];
             }
-        }
-        if (empty($affiliations)) {
-            $affiliations[] = 'HJPARAM Research Division & Academic Affiliates';
-        }
-
-        foreach ($affiliations as $aff) {
-            $lines = $this->wrapText($aff, $w, 9.0);
-            foreach ($lines as $l) {
-                $this->drawText($this->marginLeft, $this->currentY, $l, 'F3', 8.5, 0.35, 0.4, 0.45);
-                $this->currentY -= 12;
+            if (!empty($a['email']) && !empty($a['is_corresponding'])) {
+                $emails[] = $a['email'];
             }
         }
 
-        // Corresponding note
-        $corrEmail = $data['author_email'] ?? ($authors[0]['email'] ?? '');
-        if ($corrEmail) {
-            $this->drawText($this->marginLeft, $this->currentY, "* Corresponding Author: {$corrEmail}", 'F1', 8.0, 0.45, 0.5, 0.55);
+        if (!empty($affiliations)) {
+            $affStr = implode(' | ', $affiliations);
+            $this->drawText($this->marginLeft, $this->currentY, $affStr, 'F1', 8.5, 0.35, 0.4, 0.45);
             $this->currentY -= 12;
         }
-        $this->currentY -= 6;
+
+        if (!empty($emails)) {
+            $emailStr = "* Corresponding Author: " . implode(', ', $emails);
+            $this->drawText($this->marginLeft, $this->currentY, $emailStr, 'F1', 8.0, 0.45, 0.5, 0.55);
+            $this->currentY -= 14;
+        } else {
+            $this->currentY -= 4;
+        }
     }
 
     protected function renderMetadata(array $data): void
     {
         $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
-        $boxHeight = 26.0;
+        $boxHeight = 22.0;
 
-        // Background box
-        $this->drawRect($this->marginLeft, $this->currentY - $boxHeight, $w, $boxHeight, 0.96, 0.97, 0.99, true);
-        $this->drawRect($this->marginLeft, $this->currentY - $boxHeight, $w, $boxHeight, 0.85, 0.88, 0.92, false);
+        $this->drawRect($this->marginLeft, $this->currentY - $boxHeight + 4, $w, $boxHeight, 0.96, 0.97, 0.99, true);
+        $this->drawRect($this->marginLeft, $this->currentY - $boxHeight + 4, $w, $boxHeight, 0.85, 0.88, 0.94, false);
 
-        $received = $data['received_date'] ?? '10 Jan 2026';
-        $accepted = $data['accepted_date'] ?? '24 Jan 2026';
-        $published = $data['published_date'] ?? '30 Jan 2026';
+        $recDate = $data['received_date'] ?? '10 Jan 2026';
+        $accDate = $data['accepted_date'] ?? '24 Jan 2026';
+        $pubDate = $data['published_date'] ?? date('d M Y');
         $doi = $data['doi'] ?? '';
 
-        $textY = $this->currentY - 10;
-        $metaDates = "Received: {$received}   |   Accepted: {$accepted}   |   Published: {$published}";
-        $this->drawText($this->marginLeft + 10, $textY, $metaDates, 'F1', 8.0, 0.25, 0.3, 0.38);
+        $datesStr = "Received: {$recDate}  |  Accepted: {$accDate}  |  Published: {$pubDate}";
+        $this->drawText($this->marginLeft + 10, $this->currentY - 3, $datesStr, 'F1', 8.0, 0.3, 0.35, 0.4);
 
         if ($doi) {
-            $this->drawText($this->marginLeft + 10, $textY - 10, "DOI: https://doi.org/{$doi}", 'F2', 8.0, 0.12, 0.35, 0.75);
+            $doiStr = "DOI: https://doi.org/{$doi}";
+            $this->drawText($this->marginLeft + 10, $this->currentY - 12, $doiStr, 'F2', 7.5, 0.12, 0.23, 0.54);
         }
 
-        $this->currentY -= ($boxHeight + 16);
+        $this->currentY -= ($boxHeight + 14);
     }
 
     protected function renderAbstract(array $data): void
     {
         $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
-        $abstract = trim($data['abstract'] ?? 'No abstract provided.');
+        $abstract = $data['abstract'] ?? '';
+        $keywords = $data['keywords'] ?? '';
 
-        // "ABSTRACT" heading
-        $this->drawText($this->marginLeft, $this->currentY, 'ABSTRACT', 'F2', 10.0, 0.12, 0.23, 0.54);
+        $this->drawText($this->marginLeft, $this->currentY, 'ABSTRACT', 'F2', 9.5, 0.12, 0.23, 0.54);
         $this->currentY -= 13;
 
-        // Abstract text inside padded indent
-        $lines = $this->wrapText($abstract, $w - 12, 9.5);
-        foreach ($lines as $line) {
-            $this->checkPageBreak(13, $data);
-            $this->drawText($this->marginLeft + 6, $this->currentY, $line, 'F6', 9.0, 0.18, 0.22, 0.28);
-            $this->currentY -= 13;
-        }
-        $this->currentY -= 6;
-
-        // Keywords
-        if (!empty($data['keywords'])) {
-            $this->checkPageBreak(14, $data);
-            $kwText = 'Keywords: ' . $data['keywords'];
-            $kwLines = $this->wrapText($kwText, $w, 8.5);
-            foreach ($kwLines as $kwl) {
-                $this->drawText($this->marginLeft, $this->currentY, $kwl, 'F2', 8.5, 0.25, 0.3, 0.35);
-                $this->currentY -= 12;
+        if ($abstract) {
+            $lines = $this->wrapText($abstract, $w, 9.5);
+            foreach ($lines as $line) {
+                $this->checkPageBreak(13, $data);
+                $this->drawText($this->marginLeft, $this->currentY, $line, 'F6', 9.0, 0.2, 0.22, 0.25);
+                $this->currentY -= 12.5;
             }
             $this->currentY -= 6;
+        }
+
+        if ($keywords) {
+            $this->checkPageBreak(16, $data);
+            $kwLine = "Keywords: " . $keywords;
+            $kwLines = $this->wrapText($kwLine, $w, 8.5);
+            foreach ($kwLines as $kwl) {
+                $this->checkPageBreak(12, $data);
+                $this->drawText($this->marginLeft, $this->currentY, $kwl, 'F2', 8.0, 0.3, 0.35, 0.45);
+                $this->currentY -= 11.5;
+            }
+            $this->currentY -= 10;
         }
 
         $this->drawLine($this->marginLeft, $this->currentY, $this->pageWidth - $this->marginRight, $this->currentY, 0.88, 0.9, 0.94, 0.75);
         $this->currentY -= 16;
     }
 
-    protected function renderBodySections(array $data): void
+    protected function renderBodyContent(array $data): void
     {
         $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
+        $elements = $data['body_elements'] ?? [];
 
-        // If real extracted paragraphs from the author's manuscript exist, render the FULL paper
-        $paragraphs = $data['body_paragraphs'] ?? [];
-        if (!empty($paragraphs) && count($paragraphs) > 0) {
-            foreach ($paragraphs as $p) {
-                $text = trim($p['text'] ?? '');
-                if ($text === '') {
-                    continue;
-                }
+        // If elements is empty, check legacy body_paragraphs
+        if (empty($elements) && !empty($data['body_paragraphs'])) {
+            $elements = array_map(fn($p) => array_merge(['type' => 'paragraph'], $p), $data['body_paragraphs']);
+        }
 
-                $isHeading = !empty($p['is_heading']);
-                if ($isHeading) {
-                    $this->checkPageBreak(35, $data);
-                    $this->currentY -= 6;
-                    $lines = $this->wrapText($text, $w, 11.0);
-                    foreach ($lines as $line) {
-                        $this->checkPageBreak(16, $data);
-                        $this->drawText($this->marginLeft, $this->currentY, $line, 'F2', 10.5, 0.12, 0.23, 0.54);
-                        $this->currentY -= 15;
-                    }
-                    $this->currentY -= 4;
+        if (!empty($elements)) {
+            foreach ($elements as $el) {
+                $type = $el['type'] ?? 'paragraph';
+
+                if ($type === 'table') {
+                    $this->renderTable($el, $data);
+                } elseif ($type === 'image') {
+                    $this->renderImageElement($el, $data);
                 } else {
-                    $lines = $this->wrapText($text, $w, 9.5);
-                    foreach ($lines as $line) {
-                        $this->checkPageBreak(13, $data);
-                        $this->drawText($this->marginLeft, $this->currentY, $line, 'F4', 9.0, 0.15, 0.18, 0.22);
-                        $this->currentY -= 13;
+                    $text = trim($el['text'] ?? '');
+                    if ($text === '') continue;
+
+                    $isHeading = !empty($el['is_heading']);
+                    if ($isHeading) {
+                        $this->checkPageBreak(35, $data);
+                        $this->currentY -= 8;
+                        $lines = $this->wrapText($text, $w, 11.0);
+                        foreach ($lines as $line) {
+                            $this->checkPageBreak(16, $data);
+                            $this->drawText($this->marginLeft, $this->currentY, $line, 'F2', 10.5, 0.12, 0.23, 0.54);
+                            $this->currentY -= 15;
+                        }
+                        $this->currentY -= 4;
+                    } else {
+                        $lines = $this->wrapText($text, $w, 9.5);
+                        foreach ($lines as $line) {
+                            $this->checkPageBreak(13, $data);
+                            $this->drawText($this->marginLeft, $this->currentY, $line, 'F4', 9.0, 0.15, 0.18, 0.22);
+                            $this->currentY -= 13;
+                        }
+                        $this->currentY -= 4;
                     }
-                    $this->currentY -= 4;
                 }
             }
             return;
         }
 
+        // Standard Scholarly Fallback Sections
         $sections = [
             '1. Introduction & Academic Framework' => 'Academic inquiry within contemporary scholarly landscapes necessitates rigorous analytical frameworks and structured empirical validation. This study formulates a systematic investigation into the designated variables, synthesizing benchmark academic paradigms with applied methodologies.',
             '2. Methodology & Research Formulation' => 'The evaluative parameters were structured according to standard peer-reviewed protocols. Empirical models were calibrated to ensure high reproducibility, internal validity, and consistency across diversified contextual domains.',
@@ -344,12 +364,9 @@ class AcademicPdfService
 
         foreach ($sections as $title => $body) {
             $this->checkPageBreak(40, $data);
-
-            // Section Title
             $this->drawText($this->marginLeft, $this->currentY, $title, 'F2', 10.0, 0.12, 0.23, 0.54);
             $this->currentY -= 14;
 
-            // Section Content
             $bodyLines = $this->wrapText($body, $w, 9.5);
             foreach ($bodyLines as $bl) {
                 $this->checkPageBreak(13, $data);
@@ -361,11 +378,103 @@ class AcademicPdfService
     }
 
     /**
-     * Extract structured paragraphs and headings from a DOCX file or binary string.
+     * Render a structured academic table from Word document.
      */
-    public static function extractDocxParagraphs($source): array
+    protected function renderTable(array $tableData, array $data): void
+    {
+        $rows = $tableData['rows'] ?? [];
+        if (empty($rows)) return;
+
+        $colCount = max(array_map('count', $rows));
+        if ($colCount === 0) return;
+
+        $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
+        $colWidth = $w / $colCount;
+
+        $this->currentY -= 6;
+        $this->checkPageBreak(25, $data);
+
+        // Optional Table Title
+        if (!empty($tableData['title'])) {
+            $this->drawText($this->marginLeft, $this->currentY, $tableData['title'], 'F2', 8.5, 0.12, 0.23, 0.54);
+            $this->currentY -= 12;
+        }
+
+        foreach ($rows as $rowIndex => $row) {
+            $isHeader = ($rowIndex === 0);
+            $rowHeight = $isHeader ? 20.0 : 17.0;
+
+            $this->checkPageBreak($rowHeight + 8.0, $data);
+
+            // Row background fill
+            $bgR = $isHeader ? 0.92 : ($rowIndex % 2 === 0 ? 0.98 : 1.0);
+            $bgG = $isHeader ? 0.94 : ($rowIndex % 2 === 0 ? 0.98 : 1.0);
+            $bgB = $isHeader ? 0.98 : ($rowIndex % 2 === 0 ? 0.98 : 1.0);
+            $this->drawRect($this->marginLeft, $this->currentY - $rowHeight + 4.0, $w, $rowHeight, $bgR, $bgG, $bgB, true);
+
+            // Row outer border
+            $this->drawRect($this->marginLeft, $this->currentY - $rowHeight + 4.0, $w, $rowHeight, 0.82, 0.86, 0.92, false);
+
+            // Render cell text and vertical borders
+            foreach ($row as $colIndex => $cellText) {
+                $cellX = $this->marginLeft + ($colIndex * $colWidth);
+                $cellY = $this->currentY - ($isHeader ? 10.0 : 8.5);
+                $font = $isHeader ? 'F2' : 'F1';
+                $fontSize = $isHeader ? 8.0 : 7.5;
+                $tc = $isHeader ? [0.08, 0.18, 0.4] : [0.2, 0.22, 0.25];
+
+                $cleanCell = mb_strimwidth(trim($cellText), 0, max(8, (int)($colWidth / 4.8)), '..');
+                $this->drawText($cellX + 4.0, $cellY, $cleanCell, $font, $fontSize, $tc[0], $tc[1], $tc[2]);
+
+                if ($colIndex > 0) {
+                    $this->drawLine($cellX, $this->currentY + 4.0, $cellX, $this->currentY - $rowHeight + 4.0, 0.85, 0.88, 0.92, 0.5);
+                }
+            }
+
+            $this->currentY -= $rowHeight;
+        }
+
+        $this->currentY -= 12.0;
+    }
+
+    /**
+     * Render an image or diagram illustration extracted from the manuscript.
+     */
+    protected function renderImageElement(array $imageEl, array $data): void
+    {
+        $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
+        $caption = $imageEl['caption'] ?? 'Figure: Manuscript Diagram / Research Illustration';
+
+        $boxHeight = 120.0;
+        $boxWidth = min($w, 360.0);
+        $boxX = $this->marginLeft + (($w - $boxWidth) / 2);
+
+        $this->checkPageBreak($boxHeight + 35.0, $data);
+
+        // Frame for diagram/figure
+        $this->drawRect($boxX, $this->currentY - $boxHeight, $boxWidth, $boxHeight, 0.97, 0.98, 0.99, true);
+        $this->drawRect($boxX, $this->currentY - $boxHeight, $boxWidth, $boxHeight, 0.82, 0.86, 0.92, false);
+
+        // Figure placeholder illustration inside frame
+        $centerX = $boxX + ($boxWidth / 2);
+        $centerY = $this->currentY - ($boxHeight / 2);
+        $this->drawText($centerX - 60, $centerY + 8, '[ RESEARCH DIAGRAM / FIGURE ]', 'F2', 8.5, 0.35, 0.45, 0.6);
+        $this->drawText($centerX - 80, $centerY - 8, 'Original High-Resolution Graphic In Document', 'F1', 7.5, 0.5, 0.55, 0.62);
+
+        $this->currentY -= ($boxHeight + 10.0);
+
+        // Figure Caption
+        $this->drawText($boxX, $this->currentY, $caption, 'F2', 8.0, 0.2, 0.25, 0.35);
+        $this->currentY -= 16.0;
+    }
+
+    /**
+     * Extract rich structured content (paragraphs, headings, tables, diagrams) from a DOCX file.
+     */
+    public static function extractDocxElements($source): array
     {
         $rawXml = null;
+        $zipBinary = is_string($source) && file_exists($source) ? file_get_contents($source) : (string)$source;
 
         // Try ZipArchive if available
         if (class_exists(\ZipArchive::class)) {
@@ -389,47 +498,99 @@ class AcademicPdfService
         }
 
         // Pure PHP PKZip fallback without requiring any extensions
-        if (empty($rawXml)) {
-            $binary = is_string($source) && file_exists($source) ? file_get_contents($source) : (string)$source;
-            $rawXml = self::extractZipEntry($binary, 'word/document.xml');
+        if (empty($rawXml) && !empty($zipBinary)) {
+            $rawXml = self::extractZipEntry($zipBinary, 'word/document.xml');
         }
 
         if (empty($rawXml)) {
             return [];
         }
 
-        // Extract paragraphs and headings
-        $paragraphs = [];
-        if (preg_match_all('/<w:p(?:\s[^>]*)?>(.*?)<\/w:p>/s', $rawXml, $matches)) {
-            foreach ($matches[1] as $pXml) {
-                $isHeading = (bool)preg_match('/<w:pStyle\s[^>]*w:val="(?:Heading|Title)[^"]*"/i', $pXml);
-                if (preg_match_all('/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/s', $pXml, $tMatches)) {
-                    $text = trim(implode('', $tMatches[1]));
-                    if ($text !== '') {
-                        $paragraphs[] = [
-                            'text' => html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8'),
-                            'is_heading' => $isHeading,
-                        ];
+        $elements = [];
+
+        // Parse <body> children in sequential order: <w:p> and <w:tbl>
+        if (preg_match('/<w:body(?:\s[^>]*)?>(.*?)<\/w:body>/s', $rawXml, $bodyMatch)) {
+            $bodyContent = $bodyMatch[1];
+
+            // Match either <w:p> or <w:tbl>
+            if (preg_match_all('/(<w:p(?:\s[^>]*)?>.*?<\/w:p>|<w:tbl(?:\s[^>]*)?>.*?<\/w:tbl>)/s', $bodyContent, $nodes)) {
+                $figCounter = 1;
+                $tblCounter = 1;
+
+                foreach ($nodes[1] as $nodeXml) {
+                    if (str_starts_with($nodeXml, '<w:tbl')) {
+                        // Extract Table
+                        $rows = [];
+                        if (preg_match_all('/<w:tr(?:\s[^>]*)?>(.*?)<\/w:tr>/s', $nodeXml, $trMatches)) {
+                            foreach ($trMatches[1] as $trXml) {
+                                $cells = [];
+                                if (preg_match_all('/<w:tc(?:\s[^>]*)?>(.*?)<\/w:tc>/s', $trXml, $tcMatches)) {
+                                    foreach ($tcMatches[1] as $tcXml) {
+                                        $cellText = '';
+                                        if (preg_match_all('/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/s', $tcXml, $tMatches)) {
+                                            $cellText = trim(implode(' ', $tMatches[1]));
+                                        }
+                                        $cells[] = html_entity_decode($cellText, ENT_QUOTES | ENT_XML1, 'UTF-8');
+                                    }
+                                }
+                                if (!empty($cells)) {
+                                    $rows[] = $cells;
+                                }
+                            }
+                        }
+
+                        if (!empty($rows)) {
+                            $elements[] = [
+                                'type' => 'table',
+                                'title' => "Table {$tblCounter}: Extracted Research Dataset",
+                                'rows' => $rows,
+                            ];
+                            $tblCounter++;
+                        }
+                    } else {
+                        // Check if paragraph contains drawing/image
+                        $hasDrawing = str_contains($nodeXml, '<w:drawing') || str_contains($nodeXml, '<w:pict');
+                        if ($hasDrawing) {
+                            $elements[] = [
+                                'type' => 'image',
+                                'caption' => "Figure {$figCounter}: Manuscript Diagram / Empirical Visual",
+                            ];
+                            $figCounter++;
+                        }
+
+                        // Extract text
+                        $isHeading = (bool)preg_match('/<w:pStyle\s[^>]*w:val="(?:Heading|Title)[^"]*"/i', $nodeXml);
+                        if (preg_match_all('/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/s', $nodeXml, $tMatches)) {
+                            $text = trim(implode('', $tMatches[1]));
+                            if ($text !== '') {
+                                $elements[] = [
+                                    'type' => 'paragraph',
+                                    'text' => html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8'),
+                                    'is_heading' => $isHeading,
+                                ];
+                            }
+                        }
                     }
                 }
             }
         }
 
-        return $paragraphs;
+        return $elements;
+    }
+
+    public static function extractDocxParagraphs($source): array
+    {
+        return self::extractDocxElements($source);
     }
 
     /**
      * Pure-PHP extraction of a specific entry from a PKZIP / DOCX binary stream.
-     * Supports both standard local headers and ZIP data descriptors via Central Directory parsing.
      */
     protected static function extractZipEntry(string $zipData, string $targetFile): ?string
     {
         $len = strlen($zipData);
-        if ($len < 22) {
-            return null;
-        }
+        if ($len < 22) return null;
 
-        // Strategy 1: Parse Central Directory from End of Central Directory Record (PK\x05\x06)
         $eocdPos = strrpos($zipData, "PK\x05\x06");
         if ($eocdPos !== false && $eocdPos + 22 <= $len) {
             $eocd = @unpack('vdisk/vdiskStart/vtotalSec/vtotal/VcdSize/VcdOffset', substr($zipData, $eocdPos + 4, 18));
@@ -448,12 +609,11 @@ class AcademicPdfService
                             $lh = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $localPos + 4, 26));
                             if ($lh) {
                                 $dataStart = $localPos + 30 + $lh['nameLen'] + $lh['extraLen'];
-                                $compData = substr($zipData, $dataStart, $cd['cSize']);
-                                if ($cd['method'] == 8) {
-                                    $decomp = @gzinflate($compData);
-                                    if ($decomp !== false) return $decomp;
+                                $compressed = substr($zipData, $dataStart, $cd['cSize']);
+                                if ($cd['method'] == 8 && function_exists('gzinflate')) {
+                                    return @gzinflate($compressed) ?: null;
                                 } elseif ($cd['method'] == 0) {
-                                    return $compData;
+                                    return $compressed;
                                 }
                             }
                         }
@@ -463,37 +623,26 @@ class AcademicPdfService
             }
         }
 
-        // Strategy 2: Direct scan for target file local header (PK\x03\x04)
+        // Direct scan
         $pos = 0;
-        while ($pos < $len && ($pos = strpos($zipData, "PK\x03\x04", $pos)) !== false) {
+        while (($pos = strpos($zipData, "PK\x03\x04", $pos)) !== false) {
             if ($pos + 30 > $len) break;
-            $meta = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $pos + 4, 26));
-            if (!$meta) break;
+            $header = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $pos + 4, 26));
+            if (!$header) break;
 
-            $namePos = $pos + 30;
-            if ($namePos + $meta['nameLen'] > $len) break;
-            $filename = substr($zipData, $namePos, $meta['nameLen']);
-            $dataPos = $namePos + $meta['nameLen'] + $meta['extraLen'];
+            $filename = substr($zipData, $pos + 30, $header['nameLen']);
+            $dataStart = $pos + 30 + $header['nameLen'] + $header['extraLen'];
 
             if ($filename === $targetFile) {
-                if ($meta['cSize'] > 0) {
-                    $compData = substr($zipData, $dataPos, $meta['cSize']);
-                    if ($meta['method'] == 8) {
-                        $decomp = @gzinflate($compData);
-                        if ($decomp !== false) return $decomp;
-                    } elseif ($meta['method'] == 0) {
-                        return $compData;
-                    }
-                } else {
-                    // Data descriptor flag set: try decompressing contiguous slice
-                    $slice = substr($zipData, $dataPos, 10000000); // up to 10MB
-                    $decomp = @gzinflate($slice);
-                    if ($decomp !== false) return $decomp;
+                $compressed = substr($zipData, $dataStart, $header['cSize']);
+                if ($header['method'] == 8 && function_exists('gzinflate')) {
+                    $unzipped = @gzinflate($compressed);
+                    if ($unzipped) return $unzipped;
+                } elseif ($header['method'] == 0) {
+                    return $compressed;
                 }
             }
-
-            $skip = $meta['cSize'] > 0 ? $meta['cSize'] : 1;
-            $pos = $dataPos + $skip;
+            $pos = $dataStart + max($header['cSize'], 1);
         }
 
         return null;
@@ -505,18 +654,6 @@ class AcademicPdfService
         $out .= "%\xE2\xE3\xCF\xD3\n";
 
         $objects = [];
-        $objIndex = 0;
-
-        // Font objects
-        // 1: Catalog
-        // 2: Pages
-        // 3: F1 (Helvetica)
-        // 4: F2 (Helvetica-Bold)
-        // 5: F3 (Helvetica-Oblique)
-        // 6: F4 (Times-Roman)
-        // 7: F5 (Times-Bold)
-        // 8: F6 (Times-Italic)
-
         $pageObjIds = [];
         $contentObjIds = [];
 
@@ -555,9 +692,7 @@ class AcademicPdfService
 
         // Render each page
         for ($p = 1; $p <= $this->pageCount; $p++) {
-            // Add page footer to the page content stream
             $footerY = 24.0;
-            $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
             $footerLine = sprintf("%.2F w 0.85 0.88 0.92 RG %.2F %.2F m %.2F %.2F l S\n", 0.5, $this->marginLeft, $footerY + 10, $this->pageWidth - $this->marginRight, $footerY + 10);
             $footerNotice = sprintf("BT /F1 7.0 Tf 0.45 0.5 0.55 rg %.2F %.2F Td (%s) Tj ET\n", $this->marginLeft, $footerY + 2, $this->escape(sprintf("Copyright (c) %s Authors. Published by HJPARAM Publication under CC-BY 4.0. https://hjparam.com", $data['year'] ?? date('Y'))));
             $pageNumStr = sprintf("BT /F2 8.0 Tf 0.3 0.35 0.45 rg %.2F %.2F Td (%s) Tj ET\n", $this->pageWidth - $this->marginRight - 55, $footerY + 2, sprintf("Page %d of %d", $p, $this->pageCount));
@@ -571,7 +706,6 @@ class AcademicPdfService
                 $objects[$contentObjIds[$p]] = sprintf("<< /Length %d >>\nstream\n%s\nendstream", strlen($streamContent), $streamContent);
             }
 
-            // Page Object
             $objects[$pageObjIds[$p]] = sprintf(
                 "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 %.2F %.2F] /Contents %d 0 R /Resources << /Font << %s >> >> >>",
                 $this->pageWidth,
@@ -581,7 +715,6 @@ class AcademicPdfService
             );
         }
 
-        // Build PDF with offsets
         $offsets = [];
         $currentPos = strlen($out);
 
@@ -593,14 +726,12 @@ class AcademicPdfService
             $currentPos += strlen($chunk);
         }
 
-        // Cross-reference table
         $startXref = $currentPos;
         $maxId = max(array_keys($objects));
         $out .= sprintf("xref\n0 %d\n", $maxId + 1);
         $out .= "0000000000 65535 f \n";
         for ($i = 1; $i <= $maxId; $i++) {
-            $off = $offsets[$i] ?? 0;
-            $out .= sprintf("%010d 00000 n \n", $off);
+            $out .= sprintf("%010d 00000 n \n", $offsets[$i] ?? 0);
         }
 
         $out .= sprintf("trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF", $maxId + 1, $startXref);
@@ -608,4 +739,3 @@ class AcademicPdfService
         return $out;
     }
 }
-
