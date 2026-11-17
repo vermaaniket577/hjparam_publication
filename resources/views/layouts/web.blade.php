@@ -26,7 +26,7 @@
             display: none !important;
         }
         html, body {
-            overflow-x: hidden;
+            overflow-x: clip;
             max-width: 100vw;
         }
         .custom-scrollbar::-webkit-scrollbar {
@@ -295,11 +295,53 @@
     </div>
 
     <!-- Main Navigation (Standard Clean Academic Style) -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-50 transition-all duration-300 shadow-xs"
-        style="position: sticky; top: 0; z-index: 50; width: 100%; background-color: #ffffff;"
-        :class="{ 'shadow-md': scrolled }"
-        x-data="{ open: false, activeDropdown: null, searchOpen: false, advancedSearchOpen: false, scrolled: false }"
-        x-init="window.addEventListener('scroll', () => { scrolled = window.scrollY > 20 })">
+    <div id="header-container"
+        x-data="{
+            open: false,
+            activeDropdown: null,
+            searchOpen: false,
+            advancedSearchOpen: false,
+            isFixed: false,
+            isVisible: true,
+            lastScrollY: 0,
+            scrollThreshold: 10,
+            init() {
+                this.lastScrollY = window.pageYOffset || document.documentElement.scrollTop;
+                window.addEventListener('scroll', () => {
+                    const currentScroll = window.pageYOffset || document.documentElement.scrollTop;
+                    const diff = currentScroll - this.lastScrollY;
+
+                    if (currentScroll <= 60) {
+                        this.isFixed = false;
+                        this.isVisible = true;
+                    } else if (diff > this.scrollThreshold) {
+                        // Scrolling DOWN -> hide header so user can read paper unobstructed
+                        if (!this.open && !this.searchOpen) {
+                            this.isVisible = false;
+                        }
+                    } else if (diff < -this.scrollThreshold) {
+                        // Scrolling UPWARD -> fix header at top!
+                        this.isFixed = true;
+                        this.isVisible = true;
+                    }
+
+                    this.lastScrollY = currentScroll <= 0 ? 0 : currentScroll;
+                }, { passive: true });
+            }
+        }">
+
+        {{-- Spacer to prevent layout shift when header becomes fixed --}}
+        <div x-show="isFixed" style="height: 76px;" class="w-full" x-cloak></div>
+
+        <header id="main-header"
+            class="bg-white border-b border-slate-200 z-[90] w-full transition-all duration-300 ease-out"
+            :class="{
+                'fixed top-0 left-0 right-0 shadow-lg shadow-slate-900/5 bg-white/95 backdrop-blur-md': isFixed,
+                'relative': !isFixed,
+                '-translate-y-full': isFixed && !isVisible && !open && !searchOpen,
+                'translate-y-0': isVisible || !isFixed || open || searchOpen
+            }"
+            style="width: 100%; background-color: #ffffff;">
         <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center transition-all duration-300"
                 style="height: 76px;">
@@ -777,6 +819,7 @@
             </div>
         </div>
     </header>
+    </div>
 
     <main class="flex-grow">
         @yield('content')
