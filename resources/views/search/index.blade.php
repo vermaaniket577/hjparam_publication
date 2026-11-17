@@ -145,7 +145,7 @@
                                     <div class="text-sm text-gray-500 mb-3">
                                         <span class="italic">{{ $article->journal->title }}</span>
                                         <span
-                                            class="font-bold">{{ $article->published_at ? $article->published_at->format('Y') : '' }}</span>,
+                                            class="font-bold">{{ !empty($article->published_at) ? \Carbon\Carbon::parse($article->published_at)->format('Y') : '' }}</span>,
                                         <a href="https://doi.org/{{ $article->doi }}" target="_blank"
                                             class="text-blue-600 hover:underline">https://doi.org/{{ $article->doi }}</a>
                                     </div>

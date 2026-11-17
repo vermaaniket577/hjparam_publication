@@ -356,7 +356,7 @@
                                 Volume {{ $latestIssue->volume->volume_number }}, Issue {{ $latestIssue->issue_number }}
                             </p>
                             <p class="text-[11px] text-slate-500 mt-0.5">
-                                {{ ($latestIssue->volume->month ? $latestIssue->volume->month . ' ' : '') . \Carbon\Carbon::parse($latestIssue->publication_date)->format('Y') }}
+                                {{ ($latestIssue->volume->month ? $latestIssue->volume->month . ' ' : '') . ($latestIssue->volume->year ?: (!empty($latestIssue->publication_date) ? \Carbon\Carbon::parse($latestIssue->publication_date)->format('Y') : date('Y'))) }}
                             </p>
                         </div>
 

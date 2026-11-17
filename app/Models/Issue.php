@@ -17,6 +17,11 @@ class Issue extends Model
         'is_published',
     ];
 
+    protected $casts = [
+        'publication_date' => 'date',
+        'is_published' => 'boolean',
+    ];
+
     public function volume()
     {
         return $this->belongsTo(Volume::class);

@@ -61,16 +61,30 @@
                         <div>
                             <span class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Journal
                                 Registry</span>
+                            @php
+                                $registryYear = date('Y');
+                                if (!empty($article->issue?->volume?->year)) {
+                                    $registryYear = $article->issue->volume->year;
+                                } elseif (!empty($article->issue?->publication_date)) {
+                                    $registryYear = \Carbon\Carbon::parse($article->issue->publication_date)->format('Y');
+                                } elseif (!empty($article->published_at)) {
+                                    $registryYear = \Carbon\Carbon::parse($article->published_at)->format('Y');
+                                }
+                            @endphp
                             <span class="text-sm font-bold text-slate-700">Vol.
                                 {{ $article->issue?->volume?->volume_number ?? '1' }}, No. {{ $article->issue?->issue_number ?? '1' }}
-                                ({{ $article->issue?->publication_date ? $article->issue->publication_date->format('Y') : ($article->published_at ? $article->published_at->format('Y') : date('Y')) }})</span>
+                                ({{ $registryYear }})</span>
                         </div>
                         <div>
                             <span
                                 class="block text-[9px] font-black uppercase tracking-widest text-slate-400 mb-1">Chronology</span>
+                            @php
+                                $receivedDate = !empty($article->submitted_at) ? \Carbon\Carbon::parse($article->submitted_at)->format('M d, Y') : (!empty($article->created_at) ? \Carbon\Carbon::parse($article->created_at)->format('M d, Y') : now()->format('M d, Y'));
+                                $publishedDate = !empty($article->published_at) ? \Carbon\Carbon::parse($article->published_at)->format('M d, Y') : now()->format('M d, Y');
+                            @endphp
                             <span class="text-sm font-bold text-slate-700">Received:
-                                {{ $article->submitted_at ? $article->submitted_at->format('M d, Y') : ($article->created_at ? $article->created_at->format('M d, Y') : now()->format('M d, Y')) }} | Published:
-                                {{ $article->published_at ? $article->published_at->format('M d, Y') : now()->format('M d, Y') }}</span>
+                                {{ $receivedDate }} | Published:
+                                {{ $publishedDate }}</span>
                         </div>
                     </div>
                 </div>

@@ -60,27 +60,35 @@ class Article extends Model
 
     public function getApaCitationAttribute()
     {
-        $year = $this->published_at ? $this->published_at->format('Y') : date('Y');
+        $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
         $authors = $this->authors->pluck('name')->map(function ($name) {
-            $parts = explode(' ', $name);
+            $parts = explode(' ', trim($name));
             $last = array_pop($parts);
             $initials = array_map(fn($n) => substr($n, 0, 1) . '.', $parts);
             return $last . ', ' . implode(' ', $initials);
         })->join(', ', ' & ');
 
-        return "{$authors} ({$year}). {$this->title}. {$this->journal->title}, {$this->issue->volume->volume_number}({$this->issue->issue_number}). https://doi.org/{$this->doi}";
+        $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
+        $vol = $this->issue?->volume?->volume_number ?? '1';
+        $iss = $this->issue?->issue_number ?? '1';
+
+        return "{$authors} ({$year}). {$this->title}. {$journalTitle}, {$vol}({$iss}). " . ($this->doi ? "https://doi.org/{$this->doi}" : "");
     }
 
     public function getMlaCitationAttribute()
     {
         $authors = $this->authors->pluck('name')->map(function ($name) {
-            $parts = explode(' ', $name);
+            $parts = explode(' ', trim($name));
             $last = array_pop($parts);
             return $last . ', ' . implode(' ', $parts);
         })->join(', and ');
 
-        $year = $this->published_at ? $this->published_at->format('Y') : date('Y');
-        return "{$authors}. \"{$this->title}.\" {$this->journal->title}, vol. {$this->issue->volume->volume_number}, no. {$this->issue->issue_number}, {$year}. doi:{$this->doi}";
+        $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
+        $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
+        $vol = $this->issue?->volume?->volume_number ?? '1';
+        $iss = $this->issue?->issue_number ?? '1';
+
+        return "{$authors}. \"{$this->title}.\" {$journalTitle}, vol. {$vol}, no. {$iss}, {$year}. " . ($this->doi ? "doi:{$this->doi}" : "");
     }
 
     public function getBibtexAttribute()
@@ -88,14 +96,17 @@ class Article extends Model
         $id = str_replace([' ', '/', '.'], '_', strtolower($this->title));
         $id = substr($id, 0, 20) . '_' . date('Y');
         $authors = $this->authors->pluck('name')->join(' and ');
-        $year = $this->published_at ? $this->published_at->format('Y') : date('Y');
+        $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
+        $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
+        $vol = $this->issue?->volume?->volume_number ?? '1';
+        $iss = $this->issue?->issue_number ?? '1';
 
         return "@article{{$id},
   title={{$this->title}},
   author={{$authors}},
-  journal={{$this->journal->title}},
-  volume={{$this->issue->volume->volume_number}},
-  number={{$this->issue->issue_number}},
+  journal={{$journalTitle}},
+  volume={{$vol}},
+  number={{$iss}},
   year={{$year}},
   doi={{$this->doi}},
   publisher={HJPARAM Publication}
