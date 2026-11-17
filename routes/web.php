@@ -188,6 +188,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/submissions', [SubmissionController::class, 'index'])->name('submission.index');
     Route::get('/submissions/{submission}', [SubmissionController::class, 'show'])->name('submission.show');
     Route::get('/submissions/{submission}/download', [SubmissionController::class, 'download'])->name('submission.download');
+    Route::get('/submissions/{submission}/copyright', [SubmissionController::class, 'copyright'])->name('submission.copyright');
+    Route::get('/submissions/{submission}/copyright/download-file', [SubmissionController::class, 'downloadCopyrightFile'])->name('submission.copyright.download-file');
+    Route::post('/submissions/{submission}/copyright/upload', [SubmissionController::class, 'uploadCopyrightFile'])->name('submission.copyright.upload');
     Route::get('/submit', [SubmissionController::class, 'create'])->name('submission.create');
     Route::post('/submit', [SubmissionController::class, 'store'])->name('submission.store');
 
@@ -278,6 +281,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         try {
             \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
             $output = \Illuminate\Support\Facades\Artisan::output();
+
+            // Ensure certificates table and required columns exist
+            \App\Services\CertificateIssuanceService::ensureTableExists();
+            if (\Illuminate\Support\Facades\Schema::hasTable('editorial_boards') && !\Illuminate\Support\Facades\Schema::hasColumn('editorial_boards', 'designation')) {
+                \Illuminate\Support\Facades\Schema::table('editorial_boards', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    $table->string('designation')->nullable()->after('affiliation');
+                });
+            }
 
             \Illuminate\Support\Facades\Artisan::call('optimize:clear');
             $cacheOutput = \Illuminate\Support\Facades\Artisan::output();

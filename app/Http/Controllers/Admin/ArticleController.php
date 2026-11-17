@@ -39,7 +39,18 @@ class ArticleController extends Controller
             $selectedSubmission = \App\Models\Submission::with(['journal', 'user'])->find($request->from_submission);
         }
 
-        return view('admin.articles.create', compact('journals', 'issues', 'submissions', 'selectedSubmission'));
+        $initialAuthors = old('authors');
+        if (!$initialAuthors) {
+            if ($selectedSubmission) {
+                $initialAuthors = \App\Services\CertificateIssuanceService::extractAuthors($selectedSubmission);
+            } else {
+                $initialAuthors = [
+                    ['name' => '', 'email' => '', 'affiliation' => '', 'is_corresponding' => 1],
+                ];
+            }
+        }
+
+        return view('admin.articles.create', compact('journals', 'issues', 'submissions', 'selectedSubmission', 'initialAuthors'));
     }
 
     /**

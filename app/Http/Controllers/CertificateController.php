@@ -8,6 +8,7 @@ use App\Models\Submission;
 use App\Services\CertificateIssuanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 
 class CertificateController extends Controller
 {
@@ -16,6 +17,7 @@ class CertificateController extends Controller
      */
     public function show(Certificate $certificate)
     {
+        CertificateIssuanceService::ensureTableExists();
         $certificate->loadMissing(['submission.journal', 'article.journal']);
         return view('certificates.publication', compact('certificate'));
     }
@@ -31,9 +33,19 @@ class CertificateController extends Controller
             abort(403, 'Certificate is available once the manuscript is accepted or published.');
         }
 
+        CertificateIssuanceService::ensureTableExists();
+
+        if (!Schema::hasTable('certificates')) {
+            return back()->with('error', 'Certificate service is initializing. Please try again or run migrations.');
+        }
+
         $certs = Certificate::where('submission_id', $submission->id)->get();
         if ($certs->isEmpty()) {
             $certs = collect(CertificateIssuanceService::issueForSubmission($submission));
+        }
+
+        if ($certs->isEmpty()) {
+            return back()->with('error', 'No certificate generated for this submission yet.');
         }
 
         // If an author index or cert id requested
@@ -60,9 +72,19 @@ class CertificateController extends Controller
             abort(403, 'Certificate is available once the article is published.');
         }
 
+        CertificateIssuanceService::ensureTableExists();
+
+        if (!Schema::hasTable('certificates')) {
+            return back()->with('error', 'Certificate service is initializing. Please try again or run migrations.');
+        }
+
         $certs = Certificate::where('article_id', $article->id)->get();
         if ($certs->isEmpty()) {
             $certs = collect(CertificateIssuanceService::issueForArticle($article));
+        }
+
+        if ($certs->isEmpty()) {
+            return back()->with('error', 'No certificate generated for this article yet.');
         }
 
         if ($request->has('cert_id')) {
@@ -129,11 +151,16 @@ class CertificateController extends Controller
      */
     public function verify($code)
     {
+        CertificateIssuanceService::ensureTableExists();
+
         // 1. Check in official publication certificates table
-        $certificate = Certificate::where('certificate_number', $code)
-            ->orWhere('verification_hash', $code)
-            ->with(['submission.journal', 'article.journal'])
-            ->first();
+        $certificate = null;
+        if (Schema::hasTable('certificates')) {
+            $certificate = Certificate::where('certificate_number', $code)
+                ->orWhere('verification_hash', $code)
+                ->with(['submission.journal', 'article.journal'])
+                ->first();
+        }
 
         if ($certificate) {
             return view('certificates.verify', [

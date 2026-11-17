@@ -116,6 +116,56 @@ class SubmissionController extends Controller
         return view('submissions.show', compact('submission'));
     }
 
+    public function copyright(Submission $submission)
+    {
+        abort_unless($submission->user_id === Auth::id() || (Auth::check() && in_array(Auth::user()->role, ['admin', 'editor'])), 403);
+        $submission->loadMissing(['journal', 'conference', 'user']);
+        return view('submissions.copyright', compact('submission'));
+    }
+
+    public function downloadCopyrightFile(Submission $submission)
+    {
+        abort_unless($submission->user_id === Auth::id() || (Auth::check() && in_array(Auth::user()->role, ['admin', 'editor'])), 403);
+
+        if ($submission->copyright_file_path) {
+            if (\Illuminate\Support\Facades\Storage::disk('public')->exists($submission->copyright_file_path)) {
+                return \Illuminate\Support\Facades\Storage::disk('public')->download(
+                    $submission->copyright_file_path,
+                    $submission->copyright_filename ?? ('copyright_signed_' . $submission->id . '.pdf')
+                );
+            }
+            if (\Illuminate\Support\Facades\Storage::disk('local')->exists($submission->copyright_file_path)) {
+                return \Illuminate\Support\Facades\Storage::disk('local')->download(
+                    $submission->copyright_file_path,
+                    $submission->copyright_filename ?? ('copyright_signed_' . $submission->id . '.pdf')
+                );
+            }
+        }
+
+        return back()->with('error', 'Signed copyright agreement file not found.');
+    }
+
+    public function uploadCopyrightFile(Request $request, Submission $submission)
+    {
+        abort_unless($submission->user_id === Auth::id() || (Auth::check() && in_array(Auth::user()->role, ['admin', 'editor'])), 403);
+
+        $request->validate([
+            'copyright_file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:51200',
+        ]);
+
+        $file = $request->file('copyright_file');
+        $filename = 'copyright_' . $submission->id . '_' . time() . '.' . $file->getClientOriginalExtension();
+        $path = $file->storeAs('submissions/copyright', $filename, 'public');
+
+        $submission->update([
+            'copyright_file_path' => $path,
+            'copyright_filename' => $file->getClientOriginalName(),
+            'copyright_uploaded_at' => now(),
+        ]);
+
+        return back()->with('success', 'Signed copyright transfer agreement uploaded successfully.');
+    }
+
     public function download(Submission $submission)
     {
         abort_unless($submission->user_id === Auth::id() || (Auth::check() && in_array(Auth::user()->role, ['admin', 'editor'])), 403);

@@ -6,15 +6,79 @@ use App\Models\Article;
 use App\Models\Certificate;
 use App\Models\Submission;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Database\Schema\Blueprint;
 
 class CertificateIssuanceService
 {
+    /**
+     * Ensure certificates table exists in database.
+     */
+    public static function ensureTableExists(): void
+    {
+        static $checked = false;
+        if ($checked) {
+            return;
+        }
+
+        try {
+            if (!Schema::hasTable('certificates')) {
+                Schema::create('certificates', function (Blueprint $table) {
+                    $table->id();
+                    $table->string('certificate_number')->unique();
+                    $table->string('type')->default('publication');
+                    $table->unsignedBigInteger('submission_id')->nullable()->index();
+                    $table->unsignedBigInteger('article_id')->nullable()->index();
+                    $table->unsignedBigInteger('user_id')->nullable()->index();
+                    
+                    // Recipient details
+                    $table->string('recipient_name');
+                    $table->string('recipient_role')->default('author');
+                    $table->string('recipient_email')->nullable();
+                    $table->string('designation')->nullable();
+                    $table->string('department')->nullable();
+                    $table->string('institution')->nullable();
+                    $table->string('city_country')->nullable();
+                    
+                    // Publication details snapshot
+                    $table->string('manuscript_id')->nullable();
+                    $table->text('paper_title');
+                    $table->string('journal_name')->nullable();
+                    $table->string('volume')->nullable();
+                    $table->string('issue')->nullable();
+                    $table->string('month_year')->nullable();
+                    $table->string('pages')->nullable();
+                    $table->string('issn')->nullable();
+                    $table->string('doi')->nullable();
+                    $table->date('issue_date')->nullable();
+                    
+                    // Verification / security
+                    $table->string('verification_hash')->nullable()->unique();
+                    
+                    $table->timestamps();
+
+                    $table->index(['type', 'recipient_role']);
+                    $table->index(['submission_id', 'article_id']);
+                });
+            }
+            $checked = true;
+        } catch (\Throwable $e) {
+            Log::warning('Certificate ensureTableExists: ' . $e->getMessage());
+        }
+    }
+
     /**
      * Issue certificates automatically for an accepted or published submission.
      * Generates one official certificate per author and co-author.
      */
     public static function issueForSubmission(Submission $submission): array
     {
+        self::ensureTableExists();
+        if (!Schema::hasTable('certificates')) {
+            return [];
+        }
+
         $submission->loadMissing(['journal', 'article', 'user']);
         $issued = [];
 
@@ -73,6 +137,11 @@ class CertificateIssuanceService
      */
     public static function issueForArticle(Article $article): array
     {
+        self::ensureTableExists();
+        if (!Schema::hasTable('certificates')) {
+            return [];
+        }
+
         $article->loadMissing(['journal', 'authors', 'issue.volume', 'submission']);
         $issued = [];
 

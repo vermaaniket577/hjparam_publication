@@ -84,7 +84,9 @@ class SubmissionController extends Controller
      */
     public function show(Submission $submission)
     {
-        $submission->load([
+        CertificateIssuanceService::ensureTableExists();
+
+        $relations = [
             'user',
             'journal',
             'conference',
@@ -93,8 +95,11 @@ class SubmissionController extends Controller
             'article.journal',
             'article.issue.volume',
             'article.authors',
-            'certificates',
-        ]);
+        ];
+        if (\Illuminate\Support\Facades\Schema::hasTable('certificates')) {
+            $relations[] = 'certificates';
+        }
+        $submission->load($relations);
         
         // Potential editors & reviewers
         $editors = User::whereIn('role', ['editor', 'admin'])->orderBy('name')->get();

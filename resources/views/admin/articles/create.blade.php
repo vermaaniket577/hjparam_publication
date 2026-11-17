@@ -3,6 +3,12 @@
 @section('title', 'Create Research Article')
 @section('breadcrumb', 'Articles / Create')
 
+@php
+    $initialAuthors = $initialAuthors ?? (old('authors') ?: (isset($selectedSubmission) && $selectedSubmission ? \App\Services\CertificateIssuanceService::extractAuthors($selectedSubmission) : [
+        ['name' => '', 'email' => '', 'affiliation' => '', 'is_corresponding' => 1]
+    ]));
+@endphp
+
 @section('content')
     <div class="max-w-5xl mx-auto" x-data="{ 
                     title: @js(old('title', $selectedSubmission->title ?? '')), 
@@ -12,10 +18,8 @@
                     doi: @js(old('doi', '')),
                     journal_id: '{{ old('journal_id', $selectedSubmission->journal_id ?? '') }}',
                     submission_id: '{{ old('submission_id', $selectedSubmission->id ?? '') }}',
-                    submissionsData: @json($submissions->keyBy('id') ?? []),
-                    authors: @json(old('authors', isset($selectedSubmission) ? \App\Services\CertificateIssuanceService::extractAuthors($selectedSubmission) : [
-                        ['name' => '', 'email' => '', 'affiliation' => '', 'is_corresponding' => 1]
-                    ])),
+                    submissionsData: @js($submissions->keyBy('id')),
+                    authors: @js($initialAuthors),
                     addAuthor() {
                         this.authors.push({ name: '', email: '', affiliation: '', is_corresponding: 0 });
                     },
