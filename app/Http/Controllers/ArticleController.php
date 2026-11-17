@@ -6,6 +6,7 @@ use App\Models\Article;
 use App\Services\AcademicPdfService;
 use App\Services\DocxConverterService;
 use App\Services\DocxToPdfService;
+use App\Services\PureDocxPdfService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -111,7 +112,20 @@ class ArticleController extends Controller
                 Log::warning('LibreOffice conversion skipped: ' . $e->getMessage());
             }
 
-            // 4b. Pure-PHP high-fidelity DOCX -> HTML -> DomPDF converter (works on shared hosting)
+            // 4b. Zero-dependency Pure-PHP direct DOCX -> PDF renderer (works on all shared hosts, exact 2-col layout)
+            try {
+                $purePdfPath = PureDocxPdfService::convert($wordPath, false);
+                if ($purePdfPath && file_exists($purePdfPath)) {
+                    return response()->file($purePdfPath, array_merge($noCacheHeaders, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('PureDocxPdfService disk conversion error: ' . $e->getMessage());
+            }
+
+            // 4c. DomPDF HTML converter fallback if installed
             try {
                 $domPdfPath = DocxToPdfService::convert($wordPath, false);
                 if ($domPdfPath && file_exists($domPdfPath)) {
@@ -129,6 +143,18 @@ class ArticleController extends Controller
         $binStr = $article->getSubmissionBinaryContent();
         if ($binStr !== null && !$article->isPdfBinary($binStr)) {
             try {
+                $purePdfPath = PureDocxPdfService::convert($binStr, true);
+                if ($purePdfPath && file_exists($purePdfPath)) {
+                    return response()->file($purePdfPath, array_merge($noCacheHeaders, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]));
+                }
+            } catch (\Throwable $e) {
+                Log::warning('PureDocxPdfService binary conversion error: ' . $e->getMessage());
+            }
+
+            try {
                 $domPdfPath = DocxToPdfService::convert($binStr, true);
                 if ($domPdfPath && file_exists($domPdfPath)) {
                     return response()->file($domPdfPath, array_merge($noCacheHeaders, [
@@ -142,7 +168,14 @@ class ArticleController extends Controller
         }
 
         // 6. Ultimate fallback ONLY when no convertible uploaded file exists for this article:
-        //    Generate official academic PDF from metadata using AcademicPdfService
+        //    Generate official academic PDF from metadata + extracted elements using AcademicPdfService
+        $bodyElements = [];
+        if ($wordPath && file_exists($wordPath)) {
+            $bodyElements = AcademicPdfService::extractDocxElements($wordPath);
+        } elseif ($binStr !== null && !$article->isPdfBinary($binStr)) {
+            $bodyElements = AcademicPdfService::extractDocxElements($binStr);
+        }
+
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
 
@@ -170,7 +203,7 @@ class ArticleController extends Controller
                 'author_email' => $article->submission?->user?->email ?? '',
                 'abstract' => $article->abstract,
                 'keywords' => $article->keywords,
-                'body_elements' => [],
+                'body_elements' => $bodyElements,
                 'received_date' => $article->submitted_at ? \Carbon\Carbon::parse($article->submitted_at)->format('d M Y') : '10 Jan 2026',
                 'accepted_date' => $article->accepted_at ? \Carbon\Carbon::parse($article->accepted_at)->format('d M Y') : '24 Jan 2026',
                 'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),
