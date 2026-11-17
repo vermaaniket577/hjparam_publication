@@ -24,7 +24,7 @@ use Illuminate\Support\Facades\Log;
  */
 class PureDocxPdfService
 {
-    protected const RENDERER_VERSION = 'pure_v3';
+    protected const RENDERER_VERSION = 'pure_v4';
 
     protected const W_NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main';
     protected const R_NS = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
@@ -71,6 +71,7 @@ class PureDocxPdfService
     protected int $currentCol = 0;
     protected float $colSpace = 21.25;
     protected float $colTopY = 0.0;
+    protected float $minColY = 0.0;
 
     // PDF Image XObjects: [name => ['w', 'h', 'filter', 'data', 'smask' => ...]]
     protected array $pdfImages = [];
@@ -237,16 +238,25 @@ class PureDocxPdfService
                 $this->currentCol = 0;
                 $this->addPage();
             } else {
-                // Continuous transition (e.g. 1-col title/abstract -> 2-col body on Page 1)
+                // Continuous transition (e.g. 1-col title/abstract -> 2-col body, or 2-col -> 1-col wide figure -> 2-col)
                 if ($this->numCols !== $cols) {
+                    $this->minColY = min($this->minColY, $this->currentY);
                     if ($this->numCols >= 2 && $cols === 1) {
-                        // Going from 2-col back to 1-col: start below lowest column
-                        $this->currentCol = 0;
+                        // Leaving 2-col for 1-col: ALWAYS move strictly below lowest column (or new page)
+                        $this->currentY = $this->minColY - 6.0;
+                        if ($this->currentY < ($this->mBottom + 40.0)) {
+                            $this->addPage();
+                        }
+                    } elseif ($this->numCols === 1 && $cols >= 2) {
+                        if ($this->currentY < ($this->mBottom + 40.0)) {
+                            $this->addPage();
+                        }
                     }
                     $this->numCols = $cols;
                     $this->colSpace = $colSpace;
                     $this->currentCol = 0;
                     $this->colTopY = $this->currentY;
+                    $this->minColY = $this->currentY;
                 }
             }
 
@@ -297,6 +307,7 @@ class PureDocxPdfService
         $this->currentCol = 0;
         $this->currentY = $this->pageH - $this->mTop;
         $this->colTopY = $this->currentY;
+        $this->minColY = $this->currentY;
 
         // Draw watermark first (behind content)
         if ($this->watermarkText !== '') {
@@ -310,11 +321,41 @@ class PureDocxPdfService
     }
 
     /**
+     * Record the lowest vertical Y reached on the current page across all columns.
+     */
+    protected function recordMinY(): void
+    {
+        if ($this->currentY < $this->minColY) {
+            $this->minColY = $this->currentY;
+        }
+    }
+
+    /**
+     * Position cursor safely for a full-width element (wide figure or wide table) inside a 2-col section:
+     * NEVER jumps into right column; moves strictly below all existing 2-col text or starts a fresh page.
+     */
+    protected function prepareFullWidthBlock(float $neededHeight): void
+    {
+        $this->recordMinY();
+        $this->currentCol = 0;
+        $this->currentY = $this->minColY - 6.0;
+
+        if (($this->currentY - $neededHeight) < $this->mBottom) {
+            $this->addPage();
+        }
+
+        $this->colTopY = $this->currentY;
+        $this->minColY = $this->currentY;
+    }
+
+    /**
      * Ensure at least $neededHeight pt remain in the active column; otherwise advance
      * to the right column (if in 2-col left column) or start a new page.
      */
     protected function ensureSpace(float $neededHeight): void
     {
+        $this->recordMinY();
+
         if (($this->currentY - $neededHeight) >= $this->mBottom) {
             return;
         }
@@ -712,19 +753,17 @@ class PureDocxPdfService
             return;
         }
 
-        // If paragraph contains a wide image exceeding 1 column in 2-col mode, span full width
+        // If paragraph contains a wide image exceeding 1 column in 2-col mode, span full width safely
         if ($this->numCols >= 2 && !empty($model['maxImageNaturalW']) && $model['maxImageNaturalW'] > ($maxW * 1.15)) {
             $fullW = $this->contentWidth();
             $model = $this->buildParagraphModel($p, $rels, $fullW, false);
             if ($model === null) return;
 
-            if ($this->currentCol === 1) {
-                $this->addPage();
-            }
-            $this->ensureSpace($model['totalHeight']);
+            $this->prepareFullWidthBlock($model['totalHeight']);
             $this->currentY = $this->drawParagraphModelAt($model, $this->mLeft, $this->currentY, $fullW);
             $this->currentCol = 0;
             $this->colTopY = $this->currentY;
+            $this->minColY = $this->currentY;
             return;
         }
 
@@ -771,9 +810,11 @@ class PureDocxPdfService
 
             $this->drawRichLine($line, $colX, $this->currentY, $colW, $model, $lIdx === 0, $isLastLine);
             $this->currentY -= $line['height'];
+            $this->recordMinY();
         }
 
         $this->currentY -= $spaceAfter;
+        $this->recordMinY();
     }
 
     /**
@@ -1295,10 +1336,8 @@ class PureDocxPdfService
         }
 
         if ($spanFull) {
-            if ($this->currentCol === 1) {
-                $this->addPage();
-            }
-            $this->currentY -= 4.0;
+            $firstNeed = min($model['totalHeight'], ($model['rows'][0]['height'] ?? 20.0) + 20.0);
+            $this->prepareFullWidthBlock($firstNeed);
             $headerRow = !empty($model['rows'][0]['isHeader']) ? $model['rows'][0] : null;
             foreach ($model['rows'] as $rIdx => $row) {
                 if (($this->currentY - $row['height']) < $this->mBottom) {
@@ -1312,6 +1351,7 @@ class PureDocxPdfService
             $this->currentY -= 6.0;
             $this->currentCol = 0;
             $this->colTopY = $this->currentY;
+            $this->minColY = $this->currentY;
             return;
         }
 
@@ -1334,9 +1374,11 @@ class PureDocxPdfService
             }
             $x = $this->activeColumnLeftX() + $model['tableX'];
             $this->currentY = $this->drawTableRowAt($row, $x, $this->currentY);
+            $this->recordMinY();
         }
 
         $this->currentY -= 6.0;
+        $this->recordMinY();
     }
 
     protected function measureDeclaredTableWidth(\DOMElement $tbl): float
@@ -1622,6 +1664,14 @@ class PureDocxPdfService
             $scale = $maxW / $wPt;
             $wPt = $maxW;
             $hPt *= $scale;
+        }
+
+        // Also clamp image height to usable page height so tall figures never clip header/footer
+        $maxPageH = max(100.0, ($this->pageH - $this->mTop - $this->mBottom) - 24.0);
+        if ($hPt > $maxPageH) {
+            $scale = $maxPageH / $hPt;
+            $hPt = $maxPageH;
+            $wPt *= $scale;
         }
 
         return [
