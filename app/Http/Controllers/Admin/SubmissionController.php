@@ -178,23 +178,37 @@ class SubmissionController extends Controller
         if ($request->hasFile('pdf_file')) {
             $pdfPath = $request->file('pdf_file')->store('articles/pdf', 'public');
         } elseif (empty($pdfPath)) {
-            if (!empty($submission->file_path) && str_ends_with(strtolower($submission->file_path), '.pdf')) {
-                try {
-                    $originalFull = storage_path('app/' . $submission->file_path);
-                    if (file_exists($originalFull)) {
-                        $newFilename = 'articles/pdf/manuscript_' . $submission->id . '_' . basename($submission->file_path);
-                        Storage::disk('public')->put($newFilename, file_get_contents($originalFull));
-                        $pdfPath = $newFilename;
+            // Check if submission file on disk is an actual PDF
+            $candidates = [
+                !empty($submission->file_path) ? Storage::disk('local')->path($submission->file_path) : null,
+                !empty($submission->file_path) ? storage_path('app/' . $submission->file_path) : null,
+                !empty($submission->file_path) ? storage_path('app/private/' . $submission->file_path) : null,
+            ];
+            foreach ($candidates as $cand) {
+                if (!empty($cand) && file_exists($cand) && !is_dir($cand)) {
+                    $h = @fopen($cand, 'rb');
+                    $magic = $h ? fread($h, 4) : '';
+                    if ($h) fclose($h);
+                    if ($magic === '%PDF') {
+                        try {
+                            $newFilename = 'articles/pdf/manuscript_' . $submission->id . '_' . basename($cand);
+                            Storage::disk('public')->put($newFilename, file_get_contents($cand));
+                            $pdfPath = $newFilename;
+                            break;
+                        } catch (\Throwable $e) {}
                     }
-                } catch (\Throwable $e) {
-                    $pdfPath = $submission->file_path;
                 }
-            } elseif (!empty($submission->binary_content) && ($submission->extension === 'pdf' || $submission->mime_type === 'application/pdf')) {
-                try {
-                    $newFilename = 'articles/pdf/article_' . $submission->id . '_' . time() . '.pdf';
-                    Storage::disk('public')->put($newFilename, $submission->binary_content);
-                    $pdfPath = $newFilename;
-                } catch (\Throwable $e) {}
+            }
+
+            if (empty($pdfPath) && !empty($submission->binary_content)) {
+                $binStr = is_resource($submission->binary_content) ? stream_get_contents($submission->binary_content) : (string)$submission->binary_content;
+                if (str_starts_with($binStr, '%PDF')) {
+                    try {
+                        $newFilename = 'articles/pdf/article_' . $submission->id . '_' . time() . '.pdf';
+                        Storage::disk('public')->put($newFilename, $binStr);
+                        $pdfPath = $newFilename;
+                    } catch (\Throwable $e) {}
+                }
             }
         }
 

@@ -56,10 +56,17 @@ class ArticleController extends Controller
         $filename = "{$cleanJournalTitle}-vol-{$volNum}-issue-{$issNum}-{$cleanArticleTitle}.pdf";
 
         // 1. If user explicitly requests the raw manuscript file (e.g. Word .docx)
-        if ($request->has('raw') || $request->has('manuscript')) {
+        if ($request->has('raw') || $request->has('manuscript') || $request->get('format') === 'docx') {
             $rawDoc = $this->findRawManuscriptPath($article);
-            if ($rawDoc) {
+            if ($rawDoc && file_exists($rawDoc['path'])) {
                 return response()->download($rawDoc['path'], $rawDoc['filename']);
+            }
+            if (!empty($article->submission?->binary_content)) {
+                $ext = $article->submission->extension ?: 'docx';
+                $fn = $cleanArticleTitle . '.' . $ext;
+                return response($article->submission->binary_content)
+                    ->header('Content-Type', $article->submission->mime_type ?: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document')
+                    ->header('Content-Disposition', 'attachment; filename="' . $fn . '"');
             }
         }
 
@@ -83,15 +90,28 @@ class ArticleController extends Controller
             }
 
             // Check if submission binary_content is a real PDF
-            if (!empty($article->submission->binary_content) && str_starts_with($article->submission->binary_content, '%PDF')) {
-                return response($article->submission->binary_content, 200, [
-                    'Content-Type' => 'application/pdf',
-                    'Content-Disposition' => 'inline; filename="' . $filename . '"',
-                ]);
+            if (!empty($article->submission->binary_content)) {
+                $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
+                if (str_starts_with($binStr, '%PDF')) {
+                    return response($binStr, 200, [
+                        'Content-Type' => 'application/pdf',
+                        'Content-Disposition' => 'inline; filename="' . $filename . '"',
+                    ]);
+                }
             }
         }
 
-        // 4. Generate guaranteed valid, standalone official academic PDF using AcademicPdfService
+        // 4. Extract complete paper paragraphs and sections from the author's uploaded manuscript
+        $bodyParagraphs = [];
+        $rawDoc = $this->findRawManuscriptPath($article);
+        if ($rawDoc && file_exists($rawDoc['path'])) {
+            $bodyParagraphs = AcademicPdfService::extractDocxParagraphs($rawDoc['path']);
+        } elseif (!empty($article->submission?->binary_content)) {
+            $binStr = is_resource($article->submission->binary_content) ? stream_get_contents($article->submission->binary_content) : (string)$article->submission->binary_content;
+            $bodyParagraphs = AcademicPdfService::extractDocxParagraphs($binStr);
+        }
+
+        // 5. Generate complete multi-page official academic PDF using AcademicPdfService
         $issueMonth = $volume && $volume->month ? $volume->month : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('F') : 'Regular');
         $issueYear = $volume && $volume->year ? $volume->year : ($issue && $issue->publication_date ? \Carbon\Carbon::parse($issue->publication_date)->format('Y') : date('Y'));
 
@@ -119,6 +139,7 @@ class ArticleController extends Controller
                 'author_email' => $article->submission?->user?->email ?? '',
                 'abstract' => $article->abstract,
                 'keywords' => $article->keywords,
+                'body_paragraphs' => $bodyParagraphs,
                 'received_date' => $article->submitted_at ? \Carbon\Carbon::parse($article->submitted_at)->format('d M Y') : '10 Jan 2026',
                 'accepted_date' => $article->accepted_at ? \Carbon\Carbon::parse($article->accepted_at)->format('d M Y') : '24 Jan 2026',
                 'published_date' => $article->published_at ? \Carbon\Carbon::parse($article->published_at)->format('d M Y') : date('d M Y'),

@@ -302,6 +302,39 @@ class AcademicPdfService
     {
         $w = $this->pageWidth - $this->marginLeft - $this->marginRight;
 
+        // If real extracted paragraphs from the author's manuscript exist, render the FULL paper
+        $paragraphs = $data['body_paragraphs'] ?? [];
+        if (!empty($paragraphs) && count($paragraphs) > 0) {
+            foreach ($paragraphs as $p) {
+                $text = trim($p['text'] ?? '');
+                if ($text === '') {
+                    continue;
+                }
+
+                $isHeading = !empty($p['is_heading']);
+                if ($isHeading) {
+                    $this->checkPageBreak(35, $data);
+                    $this->currentY -= 6;
+                    $lines = $this->wrapText($text, $w, 11.0);
+                    foreach ($lines as $line) {
+                        $this->checkPageBreak(16, $data);
+                        $this->drawText($this->marginLeft, $this->currentY, $line, 'F2', 10.5, 0.12, 0.23, 0.54);
+                        $this->currentY -= 15;
+                    }
+                    $this->currentY -= 4;
+                } else {
+                    $lines = $this->wrapText($text, $w, 9.5);
+                    foreach ($lines as $line) {
+                        $this->checkPageBreak(13, $data);
+                        $this->drawText($this->marginLeft, $this->currentY, $line, 'F4', 9.0, 0.15, 0.18, 0.22);
+                        $this->currentY -= 13;
+                    }
+                    $this->currentY -= 4;
+                }
+            }
+            return;
+        }
+
         $sections = [
             '1. Introduction & Academic Framework' => 'Academic inquiry within contemporary scholarly landscapes necessitates rigorous analytical frameworks and structured empirical validation. This study formulates a systematic investigation into the designated variables, synthesizing benchmark academic paradigms with applied methodologies.',
             '2. Methodology & Research Formulation' => 'The evaluative parameters were structured according to standard peer-reviewed protocols. Empirical models were calibrated to ensure high reproducibility, internal validity, and consistency across diversified contextual domains.',
@@ -325,6 +358,101 @@ class AcademicPdfService
             }
             $this->currentY -= 8;
         }
+    }
+
+    /**
+     * Extract structured paragraphs and headings from a DOCX file or binary string.
+     */
+    public static function extractDocxParagraphs($source): array
+    {
+        $rawXml = null;
+
+        // Try ZipArchive if available
+        if (class_exists(\ZipArchive::class)) {
+            $zip = new \ZipArchive();
+            $tempFile = null;
+            if (is_string($source) && !file_exists($source)) {
+                $tempFile = tempnam(sys_get_temp_dir(), 'docx_');
+                file_put_contents($tempFile, $source);
+                $fileToOpen = $tempFile;
+            } else {
+                $fileToOpen = $source;
+            }
+
+            if ($fileToOpen && file_exists($fileToOpen) && $zip->open($fileToOpen) === true) {
+                $rawXml = $zip->getFromName('word/document.xml');
+                $zip->close();
+            }
+            if ($tempFile && file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
+        }
+
+        // Pure PHP PKZip fallback without requiring any extensions
+        if (empty($rawXml)) {
+            $binary = is_string($source) && file_exists($source) ? file_get_contents($source) : (string)$source;
+            $rawXml = self::extractZipEntry($binary, 'word/document.xml');
+        }
+
+        if (empty($rawXml)) {
+            return [];
+        }
+
+        // Extract paragraphs and headings
+        $paragraphs = [];
+        if (preg_match_all('/<w:p(?:\s[^>]*)?>(.*?)<\/w:p>/s', $rawXml, $matches)) {
+            foreach ($matches[1] as $pXml) {
+                $isHeading = (bool)preg_match('/<w:pStyle\s[^>]*w:val="(?:Heading|Title)[^"]*"/i', $pXml);
+                if (preg_match_all('/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>/s', $pXml, $tMatches)) {
+                    $text = trim(implode('', $tMatches[1]));
+                    if ($text !== '') {
+                        $paragraphs[] = [
+                            'text' => html_entity_decode($text, ENT_QUOTES | ENT_XML1, 'UTF-8'),
+                            'is_heading' => $isHeading,
+                        ];
+                    }
+                }
+            }
+        }
+
+        return $paragraphs;
+    }
+
+    /**
+     * Pure-PHP extraction of a specific entry from a PKZIP / DOCX binary stream.
+     */
+    protected static function extractZipEntry(string $zipData, string $targetFile): ?string
+    {
+        $pos = 0;
+        $len = strlen($zipData);
+
+        while ($pos < $len && ($pos = strpos($zipData, "PK\x03\x04", $pos)) !== false) {
+            if ($pos + 30 > $len) break;
+            $meta = @unpack('vver/vflags/vmethod/vtime/vdate/Vcrc/VcSize/VuSize/vnameLen/vextraLen', substr($zipData, $pos + 4, 26));
+            if (!$meta) break;
+
+            $namePos = $pos + 30;
+            if ($namePos + $meta['nameLen'] > $len) break;
+            $filename = substr($zipData, $namePos, $meta['nameLen']);
+
+            $dataPos = $namePos + $meta['nameLen'] + $meta['extraLen'];
+            if ($dataPos + $meta['cSize'] > $len) break;
+
+            if ($filename === $targetFile) {
+                $compData = substr($zipData, $dataPos, $meta['cSize']);
+                if ($meta['method'] == 8) {
+                    $decomp = @gzinflate($compData);
+                    return $decomp !== false ? $decomp : null;
+                }
+                if ($meta['method'] == 0) {
+                    return $compData;
+                }
+            }
+
+            $pos = $dataPos + $meta['cSize'];
+        }
+
+        return null;
     }
 
     protected function compilePdf(array $data): string
@@ -436,3 +564,4 @@ class AcademicPdfService
         return $out;
     }
 }
+
