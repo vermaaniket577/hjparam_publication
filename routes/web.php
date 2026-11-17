@@ -347,6 +347,21 @@ Route::get('/clear-cache', function () {
     }
 });
 
+Route::get('/sys-check', function () {
+    $info = [
+        'php_version' => PHP_VERSION,
+        'os' => php_uname(),
+        'disabled_functions' => ini_get('disable_functions'),
+        'has_exec' => function_exists('exec') && !in_array('exec', explode(',', ini_get('disable_functions'))),
+        'has_shell_exec' => function_exists('shell_exec') && !in_array('shell_exec', explode(',', ini_get('disable_functions'))),
+        'soffice' => @shell_exec('which soffice 2>&1') ?: @shell_exec('where soffice 2>&1'),
+        'libreoffice' => @shell_exec('which libreoffice 2>&1') ?: @shell_exec('where libreoffice 2>&1'),
+        'python3' => @shell_exec('which python3 2>&1') ?: @shell_exec('where python3 2>&1'),
+        'pdftoppm' => @shell_exec('which pdftoppm 2>&1'),
+    ];
+    return response()->json($info);
+});
+
 require __DIR__ . '/auth.php';
 require __DIR__ . '/ecosystem.php';
 
