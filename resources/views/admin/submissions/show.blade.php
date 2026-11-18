@@ -3,6 +3,70 @@
 @section('breadcrumb', 'Submissions / #' . $submission->id)
 
 @section('content')
+<script>
+    window.submissionAuthorsCard = function () {
+        var initialAuthors = @json($authorsList ?? []);
+        if (!Array.isArray(initialAuthors) || initialAuthors.length === 0) {
+            initialAuthors = [{
+                name: @json($submission->user->name ?? ''),
+                email: @json($submission->user->email ?? ''),
+                institution: '',
+                department: '',
+                designation: '',
+                mobile: '',
+                orcid: ''
+            }];
+        }
+        return {
+            manageAuthors: false,
+            authors: initialAuthors,
+            addAuthor: function () {
+                this.authors.push({
+                    name: '',
+                    email: '',
+                    institution: '',
+                    department: '',
+                    designation: '',
+                    mobile: '',
+                    orcid: ''
+                });
+            },
+            removeAuthor: function (idx) {
+                if (this.authors.length > 1) {
+                    this.authors.splice(idx, 1);
+                }
+            }
+        };
+    };
+
+    window.submissionPublishModule = function () {
+        var initialAuthors = @json($authorsList ?? []);
+        if (!Array.isArray(initialAuthors) || initialAuthors.length === 0) {
+            initialAuthors = [{
+                name: @json($submission->user->name ?? ''),
+                email: @json($submission->user->email ?? ''),
+                institution: '',
+                role: 'author'
+            }];
+        }
+        return {
+            customOpen: false,
+            selectedJournalId: @json((string) ($submission->journal_id ?? ($journals->first()->id ?? ''))),
+            title: @json($submission->title ?? ''),
+            abstract: @json($submission->abstract ?? ''),
+            doi: @json($submission->article?->doi ?? ('10.5281/hjparam.' . ($submission->journal->slug ?? 'pub') . '.' . date('Y') . '.' . str_pad($submission->id, 4, '0', STR_PAD_LEFT))),
+            authors: initialAuthors,
+            addAuthor: function () {
+                this.authors.push({ name: '', email: '', institution: '', role: 'co_author' });
+            },
+            removeAuthor: function (idx) {
+                if (this.authors.length > 1) {
+                    this.authors.splice(idx, 1);
+                }
+            }
+        };
+    };
+</script>
 <div class="max-w-7xl mx-auto space-y-8 pb-24">
 
     <!-- Top Status Banner -->
@@ -97,35 +161,25 @@
 
             <!-- Scholar & Authors List & Management -->
             <div class="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200/80 dark:border-slate-700 shadow-sm space-y-4"
-                x-data="{ 
-                    manageAuthors: false,
-                    authors: @json($authorsList ?? []),
-                    addAuthor() {
-                        this.authors.push({
-                            name: '',
-                            email: '',
-                            institution: '',
-                            department: '',
-                            designation: '',
-                            mobile: '',
-                            orcid: ''
-                        });
-                    },
-                    removeAuthor(idx) {
-                        if (this.authors.length > 1) {
-                            this.authors.splice(idx, 1);
-                        }
-                    }
-                }">
-                <div class="flex items-center justify-between">
+                x-data="submissionAuthorsCard()">
+                <div class="flex items-center justify-between gap-2 flex-wrap">
                     <div>
                         <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Scholar &amp; Author Details</h3>
                         <p class="text-[11px] text-slate-500">Author attribution &amp; certificate recipients</p>
                     </div>
-                    <button type="button" @click="manageAuthors = !manageAuthors"
-                        class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
-                        <span x-text="manageAuthors ? 'Cancel Edit' : '✏️ Manage Authors'"></span>
-                    </button>
+                    <div class="flex items-center gap-2">
+                        @if($submission->article)
+                            <a href="{{ route('admin.articles.authors.manage', $submission->article) }}"
+                                class="px-3 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors"
+                                title="Open full Paper Authors Manager (reorder, corresponding author, live preview)">
+                                👥 Full Editor
+                            </a>
+                        @endif
+                        <button type="button" @click="manageAuthors = !manageAuthors"
+                            class="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors">
+                            <span x-text="manageAuthors ? 'Cancel Edit' : '✏️ Manage Authors'"></span>
+                        </button>
+                    </div>
                 </div>
 
                 {{-- View Mode --}}
@@ -242,20 +296,7 @@
             <!-- DIRECT JOURNAL PUBLICATION MODULE (COMPLETE ADMINISTRATIVE FLOW) -->
             <div id="publish-paper-section" class="rounded-3xl p-6 md:p-8 shadow-xl transition-all border {{ $submission->article ? 'border-emerald-600/50' : 'border-purple-600/50' }}"
                 style="background: {{ $submission->article ? 'linear-gradient(135deg, #022c22 0%, #0f172a 50%, #042f2e 100%)' : 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 50%, #3b0764 100%)' }}; color: #ffffff;"
-                x-data="{ 
-                    customOpen: {{ $submission->article ? 'false' : 'false' }},
-                    selectedJournalId: '{{ $submission->journal_id ?? ($journals->first()->id ?? '') }}',
-                    title: @js($submission->title),
-                    abstract: @js($submission->abstract),
-                    doi: '{{ $submission->article?->doi ?? ('10.5281/hjparam.' . ($submission->journal->slug ?? 'pub') . '.' . date('Y') . '.' . str_pad($submission->id, 4, '0', STR_PAD_LEFT)) }}',
-                    authors: @json($authorsList ?? []),
-                    addAuthor() {
-                        this.authors.push({ name: '', email: '', institution: '', role: 'co_author' });
-                    },
-                    removeAuthor(idx) {
-                        if (this.authors.length > 1) this.authors.splice(idx, 1);
-                    }
-                }">
+                x-data="submissionPublishModule()">
 
                 @if($submission->article)
                     {{-- Published Article Summary & Management --}}
@@ -313,6 +354,11 @@
                                 class="px-4 py-2.5 hover:bg-white/20 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
                                 style="background-color: rgba(255, 255, 255, 0.12); color: #fde047 !important;">
                                 🎓 Publication Certificates
+                            </a>
+                            <a href="{{ route('admin.articles.authors.manage', $submission->article) }}"
+                                class="px-4 py-2.5 hover:bg-indigo-500/30 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+                                style="background-color: rgba(99, 102, 241, 0.25); color: #c7d2fe !important; border: 1px solid rgba(165, 180, 252, 0.35);">
+                                👥 Manage Paper Authors ({{ $submission->article->authors->count() }})
                             </a>
                             @if($submission->article->has_manuscript)
                                 <a href="{{ route('articles.manuscript', $submission->article->id) }}"

@@ -4,36 +4,40 @@
 @section('breadcrumb', 'Journals / Paper Authors / Manage')
 
 @section('content')
-    <div class="max-w-5xl mx-auto space-y-6"
-        x-data="{
-            authors: @js($initialAuthors),
-            addAuthor() {
-                this.authors.push({
-                    id: null,
-                    name: '',
-                    email: '',
-                    affiliation: '',
-                    is_corresponding: 0
-                });
-            },
-            removeAuthor(index) {
-                if (this.authors.length > 1) {
-                    this.authors.splice(index, 1);
+    <script>
+        window.articleAuthorsManager = function () {
+            return {
+                authors: @json($initialAuthors),
+                addAuthor: function () {
+                    this.authors.push({
+                        id: null,
+                        name: '',
+                        email: '',
+                        affiliation: '',
+                        is_corresponding: 0
+                    });
+                },
+                removeAuthor: function (index) {
+                    if (this.authors.length > 1) {
+                        this.authors.splice(index, 1);
+                    }
+                },
+                moveUp: function (index) {
+                    if (index > 0) {
+                        var item = this.authors.splice(index, 1)[0];
+                        this.authors.splice(index - 1, 0, item);
+                    }
+                },
+                moveDown: function (index) {
+                    if (index < this.authors.length - 1) {
+                        var item = this.authors.splice(index, 1)[0];
+                        this.authors.splice(index + 1, 0, item);
+                    }
                 }
-            },
-            moveUp(index) {
-                if (index > 0) {
-                    const item = this.authors.splice(index, 1)[0];
-                    this.authors.splice(index - 1, 0, item);
-                }
-            },
-            moveDown(index) {
-                if (index < this.authors.length - 1) {
-                    const item = this.authors.splice(index, 1)[0];
-                    this.authors.splice(index + 1, 0, item);
-                }
-            }
-        }">
+            };
+        };
+    </script>
+    <div class="max-w-5xl mx-auto space-y-6" x-data="articleAuthorsManager()">
 
         {{-- Flash Messages --}}
         @if(session('success'))
