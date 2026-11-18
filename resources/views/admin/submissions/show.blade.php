@@ -3,13 +3,27 @@
 @section('breadcrumb', 'Submissions / #' . $submission->id)
 
 @section('content')
+@php
+    $jsSubmissionData = [
+        'authors' => array_values($authorsList ?? []),
+        'fallbackName' => (string) ($submission->user->name ?? ''),
+        'fallbackEmail' => (string) ($submission->user->email ?? ''),
+        'selectedJournalId' => (string) ($submission->journal_id ?? ($journals->first()->id ?? '')),
+        'title' => (string) ($submission->title ?? ''),
+        'abstract' => (string) ($submission->abstract ?? ''),
+        'doi' => (string) ($submission->article?->doi ?? ('10.5281/hjparam.' . ($submission->journal->slug ?? 'pub') . '.' . date('Y') . '.' . str_pad((string) $submission->id, 4, '0', STR_PAD_LEFT))),
+    ];
+@endphp
 <script>
+    window.__submissionPageData = @json($jsSubmissionData);
+
     window.submissionAuthorsCard = function () {
-        var initialAuthors = @json($authorsList ?? []);
-        if (!Array.isArray(initialAuthors) || initialAuthors.length === 0) {
+        var d = window.__submissionPageData || {};
+        var initialAuthors = Array.isArray(d.authors) ? JSON.parse(JSON.stringify(d.authors)) : [];
+        if (initialAuthors.length === 0) {
             initialAuthors = [{
-                name: @json($submission->user->name ?? ''),
-                email: @json($submission->user->email ?? ''),
+                name: d.fallbackName || '',
+                email: d.fallbackEmail || '',
                 institution: '',
                 department: '',
                 designation: '',
@@ -40,21 +54,22 @@
     };
 
     window.submissionPublishModule = function () {
-        var initialAuthors = @json($authorsList ?? []);
-        if (!Array.isArray(initialAuthors) || initialAuthors.length === 0) {
+        var d = window.__submissionPageData || {};
+        var initialAuthors = Array.isArray(d.authors) ? JSON.parse(JSON.stringify(d.authors)) : [];
+        if (initialAuthors.length === 0) {
             initialAuthors = [{
-                name: @json($submission->user->name ?? ''),
-                email: @json($submission->user->email ?? ''),
+                name: d.fallbackName || '',
+                email: d.fallbackEmail || '',
                 institution: '',
                 role: 'author'
             }];
         }
         return {
             customOpen: false,
-            selectedJournalId: @json((string) ($submission->journal_id ?? ($journals->first()->id ?? ''))),
-            title: @json($submission->title ?? ''),
-            abstract: @json($submission->abstract ?? ''),
-            doi: @json($submission->article?->doi ?? ('10.5281/hjparam.' . ($submission->journal->slug ?? 'pub') . '.' . date('Y') . '.' . str_pad($submission->id, 4, '0', STR_PAD_LEFT))),
+            selectedJournalId: d.selectedJournalId || '',
+            title: d.title || '',
+            abstract: d.abstract || '',
+            doi: d.doi || '',
             authors: initialAuthors,
             addAuthor: function () {
                 this.authors.push({ name: '', email: '', institution: '', role: 'co_author' });
