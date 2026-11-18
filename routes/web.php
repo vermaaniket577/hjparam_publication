@@ -238,6 +238,14 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('editorial-board/{member}', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'destroyGlobal'])->name('editorial-board.destroy');
     Route::post('editorial-board/settings', [\App\Http\Controllers\Admin\EditorialBoardController::class, 'updatePageSettings'])->name('editorial-board.settings');
 
+    // Journal Paper Authors Management (Central Hub, Per-Journal & Per-Article)
+    Route::get('authors', [\App\Http\Controllers\Admin\AuthorController::class, 'index'])->name('authors.index');
+    Route::get('journals/{journal}/authors', [\App\Http\Controllers\Admin\AuthorController::class, 'journalAuthors'])->name('journals.authors.index');
+    Route::get('articles/{article}/authors', [\App\Http\Controllers\Admin\AuthorController::class, 'manage'])->name('articles.authors.manage');
+    Route::put('articles/{article}/authors', [\App\Http\Controllers\Admin\AuthorController::class, 'sync'])->name('articles.authors.sync');
+    Route::post('articles/{article}/authors', [\App\Http\Controllers\Admin\AuthorController::class, 'store'])->name('articles.authors.store');
+    Route::delete('articles/{article}/authors/{author}', [\App\Http\Controllers\Admin\AuthorController::class, 'destroy'])->name('articles.authors.destroy');
+
     Route::post('articles/{article}/toggle-publish', [\App\Http\Controllers\Admin\ArticleController::class, 'togglePublish'])->name('articles.toggle-publish');
     Route::resource('articles', \App\Http\Controllers\Admin\ArticleController::class);
 

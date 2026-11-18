@@ -238,14 +238,22 @@ class ArticleController extends Controller
 
         $article->save();
 
-        // Update Authors (Wipe and recreate for simplicity in this admin context)
-        $article->authors()->delete();
+        // Update Authors and sync linked Submission & Publication Certificates atomically
+        $cleanAuthors = [];
         foreach ($request->authors as $authorData) {
-            $article->authors()->create($authorData);
+            if (!empty(trim((string) ($authorData['name'] ?? '')))) {
+                $cleanAuthors[] = [
+                    'name' => trim((string) $authorData['name']),
+                    'email' => !empty($authorData['email']) ? trim((string) $authorData['email']) : null,
+                    'affiliation' => !empty($authorData['affiliation']) ? trim((string) $authorData['affiliation']) : null,
+                    'is_corresponding' => !empty($authorData['is_corresponding']) ? 1 : 0,
+                ];
+            }
         }
 
-        // Issue certificates automatically if published
-        if ($article->status === 'published') {
+        if (!empty($cleanAuthors)) {
+            AuthorController::persistAndSyncAuthors($article, $cleanAuthors);
+        } elseif ($article->status === 'published') {
             try {
                 CertificateIssuanceService::issueForArticle($article);
             } catch (\Throwable $e) {

@@ -94,7 +94,7 @@ class Article extends Model
 
     public function authors()
     {
-        return $this->hasMany(Author::class);
+        return $this->hasMany(Author::class)->orderBy('id', 'asc');
     }
 
     public function certificates()

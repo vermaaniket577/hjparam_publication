@@ -48,6 +48,12 @@
                                             class="text-sm font-bold text-slate-800 leading-tight mb-1 group-hover:text-blue-600 transition-colors">
                                             {{ Str::limit($article->title, 100) }}
                                         </h3>
+                                        @if($article->authors->isNotEmpty())
+                                            <p class="text-xs text-slate-500 mb-1.5">
+                                                <span class="font-semibold text-slate-600">Authors:</span>
+                                                {{ $article->authors->pluck('name')->join(', ') }}
+                                            </p>
+                                        @endif
                                         <div class="flex items-center gap-3">
                                             <span
                                                 class="text-[10px] font-mono text-slate-400 bg-slate-50 px-2 py-0.5 rounded border border-slate-100">DOI:
@@ -107,6 +113,11 @@
                                             </button>
                                         </form>
 
+                                        <a href="{{ route('admin.articles.authors.manage', $article->id) }}"
+                                            class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all"
+                                            title="Manage Authors for this Paper">
+                                            Authors ({{ $article->authors->count() }})
+                                        </a>
                                         <a href="{{ route('articles.show', [$article->journal->slug, $article->slug]) }}"
                                             target="_blank" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors"
                                             title="Public Live View">

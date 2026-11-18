@@ -36,7 +36,10 @@
                                     class="absolute bottom-full left-0 mb-3 w-72 p-4 bg-slate-900 text-white rounded-2xl shadow-2xl z-50 text-xs leading-relaxed border border-white/10 backdrop-blur-xl">
                                     <div class="font-black uppercase tracking-widest text-[9px] text-blue-400 mb-2">Academic
                                         Affiliation</div>
-                                    {{ $author->affiliation }}
+                                    <div>{{ $author->affiliation ?: 'Academic Researcher' }}</div>
+                                    @if($author->is_corresponding && $author->email)
+                                        <div class="mt-2 text-[11px] text-blue-300 font-medium break-all">{{ $author->email }}</div>
+                                    @endif
                                     <div class="mt-3 pt-3 border-t border-white/5 flex items-center justify-between">
                                         <span class="text-[9px] text-slate-400">ID:
                                             {{ substr(md5($author->name), 0, 8) }}</span>
@@ -128,8 +131,8 @@
                     <section class="bg-[#0f172a] rounded-[2.5rem] p-10 relative overflow-hidden group shadow-2xl" x-data="{ 
                                 style: 'apa', 
                                 text: { 
-                                    apa: '{{ $article->apa_citation }}', 
-                                    mla: '{{ $article->mla_citation }}' 
+                                    apa: @js($article->apa_citation), 
+                                    mla: @js($article->mla_citation) 
                                 },
                                 copied: false,
                                 copy() {
