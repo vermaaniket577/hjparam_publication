@@ -824,47 +824,90 @@
             </div>
 
             <!-- STEP 8: Certificate Generation -->
-            <div class="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-3xl p-6 md:p-8 shadow-xl space-y-4">
+            <div class="bg-gradient-to-br from-slate-900 to-blue-950 text-white rounded-3xl p-6 md:p-8 shadow-xl space-y-5">
                 <div class="flex items-center justify-between border-b border-white/10 pb-3">
                     <h3 class="text-sm font-bold flex items-center gap-2">
-                        <span class="w-6 h-6 rounded-full bg-rose-500 text-white flex items-center justify-center text-xs font-black">8</span>
-                        Certificate Generation & Issuance
+                        <span class="w-6 h-6 rounded-full bg-emerald-500 text-slate-950 flex items-center justify-center text-xs font-black">8</span>
+                        Official Publication Certificate &amp; Issuance
                     </h3>
+                    @if(in_array($submission->status, ['accepted', 'published']))
+                        <span class="px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
+                            ✓ Ready to View / Print
+                        </span>
+                    @endif
                 </div>
 
-                <p class="text-xs text-slate-300">Generate and download official verified certificates for this participant:</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                    <!-- Attendee Certificate Card -->
-                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-amber-300">Attendee Certificate</span>
-                            @if($submission->certificate_attendee_code)
-                                <span class="text-[10px] font-mono bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/30">{{ $submission->certificate_attendee_code }}</span>
+                {{-- PRIMARY: Official Journal Publication Certificate (Image 2 format) --}}
+                <div class="p-5 rounded-2xl border" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(15, 23, 42, 0.8) 100%); border-color: rgba(52, 211, 153, 0.4);">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="space-y-1">
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-emerald-500 text-slate-950">Official Certificate</span>
+                                <h4 class="text-base font-bold text-white flex items-center gap-2">
+                                    📜 Certificate of Publication
+                                </h4>
+                            </div>
+                            <p class="text-xs text-slate-300">
+                                Official academic publication certificate with verified certificate number, DOI, ISSN, Volume, Issue &amp; QR verification. Automatically issued for the lead author and all co-authors in official verified format.
+                            </p>
+                        </div>
+                        <div class="shrink-0 flex items-center gap-2">
+                            @if($submission->article)
+                                <a href="{{ route('certificates.publication.article', $submission->article) }}" target="_blank"
+                                    class="px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all flex items-center gap-2 hover:opacity-95"
+                                    style="background-color: #10b981; color: #022c22;">
+                                    <span>🎓 View / Print Publication Certificate</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                </a>
+                            @else
+                                <a href="{{ route('certificates.publication.submission', $submission) }}" target="_blank"
+                                    class="px-5 py-3 rounded-xl font-black text-xs uppercase tracking-wider shadow-lg transition-all flex items-center gap-2 hover:opacity-95"
+                                    style="background-color: #10b981; color: #022c22;">
+                                    <span>🎓 View / Print Publication Certificate</span>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                                </a>
                             @endif
                         </div>
-                        <a href="{{ route('certificates.attendee', $submission) }}" target="_blank" 
-                           class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            View & Print Attendee Certificate
-                        </a>
-                    </div>
-
-                    <!-- Presentation Certificate Card -->
-                    <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
-                        <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-emerald-300">Presentation Certificate</span>
-                            @if($submission->certificate_presentation_code)
-                                <span class="text-[10px] font-mono bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/30">{{ $submission->certificate_presentation_code }}</span>
-                            @endif
-                        </div>
-                        <a href="{{ route('certificates.presentation', $submission) }}" target="_blank" 
-                           class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                            View & Print Presentation Certificate
-                        </a>
                     </div>
                 </div>
+
+                {{-- Conference Certificates (Only if linked to a conference) --}}
+                @if($submission->conference_id || $submission->conference)
+                    <div class="space-y-2 pt-2 border-t border-white/10">
+                        <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Conference Participation Records</span>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <!-- Attendee Certificate Card -->
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-amber-300">Attendee Certificate</span>
+                                    @if($submission->certificate_attendee_code)
+                                        <span class="text-[10px] font-mono bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/30">{{ $submission->certificate_attendee_code }}</span>
+                                    @endif
+                                </div>
+                                <a href="{{ route('certificates.attendee', $submission) }}" target="_blank" 
+                                   class="w-full py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View &amp; Print Attendee Certificate
+                                </a>
+                            </div>
+
+                            <!-- Presentation Certificate Card -->
+                            <div class="bg-white/10 p-4 rounded-2xl border border-white/10 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-xs font-bold text-emerald-300">Presentation Certificate</span>
+                                    @if($submission->certificate_presentation_code)
+                                        <span class="text-[10px] font-mono bg-emerald-500/30 text-emerald-300 px-2 py-0.5 rounded border border-emerald-400/30">{{ $submission->certificate_presentation_code }}</span>
+                                    @endif
+                                </div>
+                                <a href="{{ route('certificates.presentation', $submission) }}" target="_blank" 
+                                   class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-2 transition-all">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                    View &amp; Print Presentation Certificate
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     </div>

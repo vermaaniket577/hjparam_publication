@@ -173,12 +173,30 @@ class CertificateIssuanceService
                 $cert->verification_hash = hash('sha256', $code . '|' . $author->name . '|' . $article->id . '|' . config('app.key'));
             }
 
+            // Find matching submission author metadata if available
+            $meta = null;
+            if ($article->submission) {
+                $subAuthors = self::extractAuthors($article->submission);
+                foreach ($subAuthors as $sa) {
+                    if (strcasecmp(trim($sa['name'] ?? ''), trim($author->name)) === 0) {
+                        $meta = $sa;
+                        break;
+                    }
+                }
+                if (!$meta && isset($subAuthors[$idx])) {
+                    $meta = $subAuthors[$idx];
+                }
+            }
+
             $cert->type = 'publication';
             $cert->submission_id = $article->submission_id;
             $cert->user_id = $article->user_id ?? $article->submission?->user_id;
             $cert->recipient_role = $author->is_corresponding ? 'author' : 'co_author';
-            $cert->recipient_email = $author->email;
-            $cert->institution = $author->affiliation;
+            $cert->recipient_email = $author->email ?? ($meta['email'] ?? null);
+            $cert->designation = $meta['designation'] ?? ($cert->designation ?? null);
+            $cert->department = $meta['department'] ?? ($cert->department ?? null);
+            $cert->institution = $author->affiliation ?? ($meta['institution'] ?? ($cert->institution ?? null));
+            $cert->city_country = $meta['city_country'] ?? ($cert->city_country ?? null);
 
             $cert->manuscript_id = $manuscriptId;
             $cert->paper_title = $article->title;

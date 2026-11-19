@@ -590,11 +590,27 @@ class SubmissionController extends Controller
     }
 
     /**
-     * Step 8: Generate Certificate Codes
+     * Step 8: Generate Certificate Codes / Issue Official Publication Certificate
      */
     public function generateCertificate(Request $request, Submission $submission)
     {
-        $type = $request->type ?? 'presentation';
+        $type = $request->type ?? (empty($submission->conference_id) ? 'publication' : 'presentation');
+
+        if ($type === 'publication' || empty($submission->conference_id) || $submission->article_id || in_array($submission->status, ['accepted', 'published'])) {
+            CertificateIssuanceService::ensureTableExists();
+            if ($submission->article) {
+                CertificateIssuanceService::issueForArticle($submission->article);
+            } else {
+                CertificateIssuanceService::issueForSubmission($submission);
+            }
+
+            $this->notifyAuthor($submission, 'certificate', [
+                'type' => 'publication',
+            ]);
+
+            return redirect()->route('certificates.publication.submission', $submission)
+                ->with('success', 'Official Certificate of Publication generated successfully!');
+        }
 
         if ($type === 'attendee' && empty($submission->certificate_attendee_code)) {
             $submission->certificate_attendee_code = 'CERT-ATT-' . strtoupper(Str::random(8));

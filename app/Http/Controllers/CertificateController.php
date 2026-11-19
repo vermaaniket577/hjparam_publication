@@ -40,8 +40,15 @@ class CertificateController extends Controller
         }
 
         $certs = Certificate::where('submission_id', $submission->id)->get();
+        if ($certs->isEmpty() && $submission->article) {
+            $certs = Certificate::where('article_id', $submission->article->id)->get();
+        }
         if ($certs->isEmpty()) {
-            $certs = collect(CertificateIssuanceService::issueForSubmission($submission));
+            if ($submission->article) {
+                $certs = collect(CertificateIssuanceService::issueForArticle($submission->article));
+            } else {
+                $certs = collect(CertificateIssuanceService::issueForSubmission($submission));
+            }
         }
 
         if ($certs->isEmpty()) {
@@ -105,7 +112,13 @@ class CertificateController extends Controller
      */
     public function attendee(Submission $submission)
     {
-        $submission->load(['conference', 'user']);
+        $submission->loadMissing(['conference', 'user', 'article']);
+
+        // If this submission has no conference (journal submission), or is published/has an article:
+        // it must show the official Publication Certificate (Image 2 format)
+        if (empty($submission->conference_id) || $submission->article_id || $submission->journal_id || in_array($submission->status, ['accepted', 'published'])) {
+            return $this->forSubmission($submission, request());
+        }
 
         if (!$submission->certificate_attendee_code) {
             $submission->certificate_attendee_code = 'CERT-ATT-' . strtoupper(\Illuminate\Support\Str::random(8));
@@ -128,7 +141,13 @@ class CertificateController extends Controller
      */
     public function presentation(Submission $submission)
     {
-        $submission->load(['conference', 'user']);
+        $submission->loadMissing(['conference', 'user', 'article']);
+
+        // If this submission has no conference (journal submission), or is published/has an article:
+        // it must show the official Publication Certificate (Image 2 format)
+        if (empty($submission->conference_id) || $submission->article_id || $submission->journal_id || in_array($submission->status, ['accepted', 'published'])) {
+            return $this->forSubmission($submission, request());
+        }
 
         if (!$submission->certificate_presentation_code) {
             $submission->certificate_presentation_code = 'CERT-PRES-' . strtoupper(\Illuminate\Support\Str::random(8));
