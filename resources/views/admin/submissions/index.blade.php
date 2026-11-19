@@ -71,8 +71,23 @@
                                 <a href="{{ route('admin.submissions.show', $submission) }}" class="font-bold text-slate-900 dark:text-white hover:text-blue-600 block line-clamp-1">
                                     {{ $submission->title }}
                                 </a>
-                                <div class="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                                    {{ $submission->user ? $submission->user->name : 'Anonymous' }}
+                                <div class="flex flex-wrap items-center gap-1.5 text-[11px] mt-1">
+                                    <span class="inline-flex items-center gap-1 text-slate-700 dark:text-slate-300 font-semibold" title="Authors">
+                                        <svg class="w-3.5 h-3.5 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                        {{ $submission->formatted_authors }}
+                                    </span>
+                                    @if($submission->article)
+                                        <a href="{{ route('admin.articles.authors.manage', $submission->article) }}" 
+                                            class="text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 transition"
+                                            title="Edit Paper Authors">
+                                            ✏️ Edit Authors
+                                        </a>
+                                    @endif
+                                    @if($submission->user && $submission->user->name !== $submission->formatted_authors)
+                                        <span class="text-[10px] text-slate-400">
+                                            (by {{ $submission->user->name }})
+                                        </span>
+                                    @endif
                                 </div>
                             </td>
                             <td class="px-6 py-4">
@@ -92,12 +107,18 @@
                                 {{ $submission->created_at->format('M d, Y') }}
                             </td>
                             <td class="px-6 py-4">
-                                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase
-                                    {{ $submission->status === 'accepted' || $submission->status === 'published' ? 'bg-emerald-100 text-emerald-800' :
-                                      ($submission->status === 'revision_requested' ? 'bg-amber-100 text-amber-800' :
-                                      ($submission->status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800')) }}">
-                                    {{ str_replace('_', ' ', $submission->status) }}
-                                </span>
+                                @if($submission->article)
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-100 text-emerald-800 border border-emerald-200">
+                                        PUBLISHED
+                                    </span>
+                                @else
+                                    <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase
+                                        {{ $submission->status === 'accepted' || $submission->status === 'published' ? 'bg-emerald-100 text-emerald-800' :
+                                          ($submission->status === 'revision_requested' ? 'bg-amber-100 text-amber-800' :
+                                          ($submission->status === 'rejected' ? 'bg-rose-100 text-rose-800' : 'bg-blue-100 text-blue-800')) }}">
+                                        {{ str_replace('_', ' ', $submission->status) }}
+                                    </span>
+                                @endif
                             </td>
                             <td class="px-6 py-4">
                                 <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase
@@ -106,8 +127,18 @@
                                     {{ $submission->payment_status ?? 'unpaid' }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right space-x-2">
+                            <td class="px-6 py-4 text-right space-x-1.5 whitespace-nowrap">
                                 @if($submission->article)
+                                    <a href="{{ route('admin.articles.authors.manage', $submission->article) }}"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-lg text-xs font-bold transition-all shadow-xs"
+                                        title="Manage Authors for this Published Article">
+                                        👥 Authors
+                                    </a>
+                                    <a href="{{ route('certificates.publication.article', $submission->article) }}" target="_blank"
+                                        class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-amber-50 text-amber-800 hover:bg-amber-100 border border-amber-200 rounded-lg text-xs font-bold transition-all shadow-xs"
+                                        title="View Official Certificate of Publication">
+                                        🎓 Cert ↗
+                                    </a>
                                     <a href="{{ route('articles.show', [$submission->article->journal->slug, $submission->article->slug]) }}" target="_blank"
                                         class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-all shadow-xs"
                                         title="View Published Article">

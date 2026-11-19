@@ -55,7 +55,7 @@ class SubmissionController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Submission::with(['user', 'journal', 'conference', 'editor', 'article.journal']);
+        $query = Submission::with(['user', 'journal', 'conference', 'editor', 'article.journal', 'article.authors']);
 
         if ($request->filled('status')) {
             $query->where('status', $request->status);

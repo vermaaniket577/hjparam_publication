@@ -59,6 +59,36 @@ class Submission extends Model
         return round($bytes, 2) . ' ' . ($units[$i] ?? 'B');
     }
 
+    /**
+     * Get human-readable formatted list of authors for display.
+     */
+    public function getFormattedAuthorsAttribute(): string
+    {
+        if ($this->article && $this->article->authors && $this->article->authors->isNotEmpty()) {
+            return $this->article->authors->pluck('name')->join(', ');
+        }
+
+        if (!empty($this->authors_data) && is_array($this->authors_data)) {
+            $names = array_filter(array_map(function ($a) {
+                return trim($a['name'] ?? (($a['first_name'] ?? '') . ' ' . ($a['last_name'] ?? '')));
+            }, $this->authors_data));
+            if (!empty($names)) {
+                return implode(', ', $names);
+            }
+        }
+
+        if (!empty($this->scholars_data) && is_array($this->scholars_data)) {
+            $names = array_filter(array_map(function ($s) {
+                return trim(($s['first_name'] ?? '') . ' ' . ($s['last_name'] ?? ''));
+            }, $this->scholars_data));
+            if (!empty($names)) {
+                return implode(', ', $names);
+            }
+        }
+
+        return $this->user->name ?? 'Author';
+    }
+
     public function getPaymentReceiptUrlAttribute(): ?string
     {
         if (empty($this->payment_receipt_path)) {
