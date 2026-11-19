@@ -243,29 +243,37 @@ class SubmissionController extends Controller
             }
         }
 
+        // Prepare Article data (safe against schema variations without user_id)
+        $articleData = [
+            'journal_id' => $journal->id,
+            'issue_id' => $issueId,
+            'title' => $request->title,
+            'slug' => $slug,
+            'abstract' => $request->abstract,
+            'keywords' => $request->keywords ?? $submission->keywords,
+            'doi' => $doi,
+            'pdf_path' => $pdfPath,
+            'manuscript_path' => $manuscriptPath,
+            'original_filename' => $originalFilename,
+            'file_extension' => $fileExtension,
+            'file_size' => $fileSize,
+            'mime_type' => $mimeType,
+            'status' => 'published',
+            'submitted_at' => $submission->created_at ?? now(),
+            'accepted_at' => now(),
+            'published_at' => $request->published_at ? \Carbon\Carbon::parse($request->published_at) : now(),
+        ];
+
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasColumn('articles', 'user_id')) {
+                $articleData['user_id'] = $submission->user_id;
+            }
+        } catch (\Throwable $e) {}
+
         // Create or update Article
         $article = Article::updateOrCreate(
             ['submission_id' => $submission->id],
-            [
-                'journal_id' => $journal->id,
-                'issue_id' => $issueId,
-                'user_id' => $submission->user_id,
-                'title' => $request->title,
-                'slug' => $slug,
-                'abstract' => $request->abstract,
-                'keywords' => $request->keywords ?? $submission->keywords,
-                'doi' => $doi,
-                'pdf_path' => $pdfPath,
-                'manuscript_path' => $manuscriptPath,
-                'original_filename' => $originalFilename,
-                'file_extension' => $fileExtension,
-                'file_size' => $fileSize,
-                'mime_type' => $mimeType,
-                'status' => 'published',
-                'submitted_at' => $submission->created_at ?? now(),
-                'accepted_at' => now(),
-                'published_at' => $request->published_at ? \Carbon\Carbon::parse($request->published_at) : now(),
-            ]
+            $articleData
         );
 
         // Process authors: use provided or fallback to extracted
@@ -282,31 +290,36 @@ class SubmissionController extends Controller
             }, $extracted);
         }
 
-        // Sync authors
-        $article->authors()->delete();
+        $cleanAuthors = [];
         foreach ($authorsData as $authorItem) {
-            if (!empty($authorItem['name'])) {
-                $article->authors()->create([
-                    'name' => $authorItem['name'],
-                    'email' => $authorItem['email'] ?? null,
-                    'affiliation' => $authorItem['affiliation'] ?? null,
-                    'is_corresponding' => !empty($authorItem['is_corresponding']),
-                ]);
+            $name = trim((string) ($authorItem['name'] ?? ''));
+            if ($name !== '') {
+                $cleanAuthors[] = [
+                    'name' => $name,
+                    'email' => !empty($authorItem['email']) ? trim((string) $authorItem['email']) : null,
+                    'affiliation' => !empty($authorItem['affiliation']) ? trim((string) $authorItem['affiliation']) : (!empty($authorItem['institution']) ? trim((string) $authorItem['institution']) : null),
+                    'is_corresponding' => !empty($authorItem['is_corresponding']) ? 1 : 0,
+                ];
             }
         }
+
+        if (empty($cleanAuthors)) {
+            $cleanAuthors[] = [
+                'name' => $submission->user->name ?? 'Author',
+                'email' => $submission->user->email ?? null,
+                'affiliation' => 'Academic Researcher',
+                'is_corresponding' => 1,
+            ];
+        }
+
+        // Atomically sync authors, submission scholars_data, and certificates
+        AuthorController::persistAndSyncAuthors($article, $cleanAuthors);
 
         // Update submission status to published
         $submission->update([
             'status' => 'published',
             'journal_id' => $journal->id,
         ]);
-
-        // Issue official publication certificates
-        try {
-            CertificateIssuanceService::issueForArticle($article);
-        } catch (\Throwable $e) {
-            Log::warning('Automatic certificate issuance error on publishing article: ' . $e->getMessage());
-        }
 
         // Send email to author
         $this->notifyAuthor($submission, 'status_change', [

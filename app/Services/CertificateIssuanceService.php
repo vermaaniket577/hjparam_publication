@@ -175,7 +175,7 @@ class CertificateIssuanceService
 
             $cert->type = 'publication';
             $cert->submission_id = $article->submission_id;
-            $cert->user_id = $article->user_id;
+            $cert->user_id = $article->user_id ?? $article->submission?->user_id;
             $cert->recipient_role = $author->is_corresponding ? 'author' : 'co_author';
             $cert->recipient_email = $author->email;
             $cert->institution = $author->affiliation;

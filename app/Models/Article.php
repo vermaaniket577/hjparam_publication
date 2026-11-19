@@ -45,16 +45,24 @@ class Article extends Model
 
     protected static function booted()
     {
-        static::retrieved(function ($article) {
-            // Lazy safeguard for legacy environments
+        static::saving(function ($article) {
+            // Guard against legacy or drifted databases lacking 'user_id' column
+            try {
+                if (array_key_exists('user_id', $article->attributes) && !Schema::hasColumn('articles', 'user_id')) {
+                    unset($article->attributes['user_id']);
+                }
+            } catch (\Throwable $e) {}
         });
     }
 
     public static function ensureManuscriptColumns(): void
     {
         try {
-            if (Schema::hasTable('articles') && !Schema::hasColumn('articles', 'manuscript_path')) {
+            if (Schema::hasTable('articles')) {
                 Schema::table('articles', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    if (!Schema::hasColumn('articles', 'user_id')) {
+                        $table->unsignedBigInteger('user_id')->nullable()->after('submission_id');
+                    }
                     if (!Schema::hasColumn('articles', 'manuscript_path')) {
                         $table->string('manuscript_path')->nullable()->after('pdf_path');
                     }
@@ -80,6 +88,11 @@ class Article extends Model
     public function journal()
     {
         return $this->belongsTo(Journal::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
     }
 
     public function issue()
