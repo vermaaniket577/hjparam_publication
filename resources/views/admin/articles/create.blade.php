@@ -337,7 +337,7 @@
                             <p class="text-[11px] text-slate-400 mt-2 ml-1">Optional. The dynamic academic PDF engine will generate this if omitted.</p>
                         </div>
                     </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="status"
                                     class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Status</label>
@@ -354,6 +354,14 @@
                                     Date</label>
                                 <input type="date" name="published_at" value="{{ date('Y-m-d') }}"
                                     class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200">
+                            </div>
+                            <div>
+                                <label for="pages"
+                                    class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Page Numbers (Optional)</label>
+                                <input type="text" name="pages" id="pages" value="{{ old('pages') }}"
+                                    placeholder="Auto-calculated (e.g. 01–08)"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs font-bold text-slate-700">
+                                <p class="text-[10px] text-slate-400 mt-1 ml-1">Calculated automatically if left empty.</p>
                             </div>
                         </div>
                     </div>

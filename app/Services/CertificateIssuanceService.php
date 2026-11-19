@@ -61,6 +61,13 @@ class CertificateIssuanceService
                     $table->index(['type', 'recipient_role']);
                     $table->index(['submission_id', 'article_id']);
                 });
+            } else {
+                // Ensure pages column exists if table existed previously
+                if (!Schema::hasColumn('certificates', 'pages')) {
+                    Schema::table('certificates', function (Blueprint $table) {
+                        $table->string('pages')->nullable()->after('month_year');
+                    });
+                }
             }
             $checked = true;
         } catch (\Throwable $e) {
@@ -117,10 +124,17 @@ class CertificateIssuanceService
             $cert->manuscript_id = $manuscriptId;
             $cert->paper_title = $submission->title;
             $cert->journal_name = $journalName;
-            $cert->volume = 'Volume ' . max(1, ((int)date('Y') - 2026 + 1));
-            $cert->issue = 'Issue ' . date('n');
+            
+            $rawVol = $submission->article?->issue?->volume?->volume_number ?? max(1, ((int)date('Y') - 2026 + 1));
+            $rawIssue = $submission->article?->issue?->issue_number ?? date('n');
+            $cert->volume = preg_replace('/^volume\s*/i', '', trim((string)$rawVol)) ?: '1';
+            $cert->issue = preg_replace('/^issue\s*/i', '', trim((string)$rawIssue)) ?: '1';
             $cert->month_year = $monthYear;
-            $cert->pages = 'pp. 01–' . str_pad(rand(8, 22), 2, '0', STR_PAD_LEFT);
+            
+            // Exact page numbers from published article or auto-calculated
+            $articlePages = $submission->article ? $submission->article->formatted_pages : '01–08';
+            $cert->pages = !empty($cert->pages) ? preg_replace('/^pp?\.?\s*/i', '', trim($cert->pages)) : $articlePages;
+            
             $cert->issn = $issn;
             $cert->doi = $doi;
             $cert->issue_date = $cert->issue_date ?? $issueDate;
@@ -201,10 +215,15 @@ class CertificateIssuanceService
             $cert->manuscript_id = $manuscriptId;
             $cert->paper_title = $article->title;
             $cert->journal_name = $journalName;
-            $cert->volume = is_numeric($volNum) ? 'Volume ' . $volNum : $volNum;
-            $cert->issue = is_numeric($issueNum) ? 'Issue ' . $issueNum : $issueNum;
+            
+            $cert->volume = preg_replace('/^volume\s*/i', '', trim((string)$volNum)) ?: '1';
+            $cert->issue = preg_replace('/^issue\s*/i', '', trim((string)$issueNum)) ?: '1';
             $cert->month_year = $monthYear;
-            $cert->pages = 'pp. 01–' . str_pad(rand(8, 22), 2, '0', STR_PAD_LEFT);
+            
+            // Exact page numbers from article record
+            $articlePages = $article->formatted_pages ?: '01–08';
+            $cert->pages = !empty($cert->pages) ? preg_replace('/^pp?\.?\s*/i', '', trim($cert->pages)) : $articlePages;
+            
             $cert->issn = $issn;
             $cert->doi = $doi;
             $cert->issue_date = $cert->issue_date ?? $issueDate;

@@ -22,6 +22,7 @@ class Article extends Model
         'abstract',
         'keywords',
         'doi',
+        'pages',
         'pdf_path',
         'manuscript_path',
         'original_filename',
@@ -46,10 +47,13 @@ class Article extends Model
     protected static function booted()
     {
         static::saving(function ($article) {
-            // Guard against legacy or drifted databases lacking 'user_id' column
+            // Guard against legacy or drifted databases lacking columns
             try {
                 if (array_key_exists('user_id', $article->attributes) && !Schema::hasColumn('articles', 'user_id')) {
                     unset($article->attributes['user_id']);
+                }
+                if (array_key_exists('pages', $article->attributes) && !Schema::hasColumn('articles', 'pages')) {
+                    unset($article->attributes['pages']);
                 }
             } catch (\Throwable $e) {}
         });
@@ -60,6 +64,12 @@ class Article extends Model
         try {
             if (Schema::hasTable('articles')) {
                 Schema::table('articles', function (\Illuminate\Database\Schema\Blueprint $table) {
+                    if (!Schema::hasColumn('articles', 'doi')) {
+                        $table->string('doi')->nullable()->after('keywords');
+                    }
+                    if (!Schema::hasColumn('articles', 'pages')) {
+                        $table->string('pages', 50)->nullable()->after('doi');
+                    }
                     if (!Schema::hasColumn('articles', 'user_id')) {
                         $table->unsignedBigInteger('user_id')->nullable()->after('submission_id');
                     }
@@ -476,6 +486,106 @@ class Article extends Model
         return $this->formatBytes($bytes ? (int) $bytes : null);
     }
 
+    /**
+     * Detect total page count of PDF file if available.
+     */
+    public function detectPdfPageCount(): ?int
+    {
+        try {
+            $pdfDiskPath = $this->resolveRealPdfDiskPath();
+            if ($pdfDiskPath && file_exists($pdfDiskPath) && is_readable($pdfDiskPath)) {
+                $content = @file_get_contents($pdfDiskPath);
+                if ($content) {
+                    if (preg_match_all('/\/Type\s*\/Page\b/', $content, $matches)) {
+                        $count = count($matches[0]);
+                        if ($count > 0 && $count <= 500) {
+                            return $count;
+                        }
+                    }
+                    if (preg_match('/\/Type\s*\/Pages[^>]*\/Count\s+(\d+)/', $content, $matches)) {
+                        $count = (int)$matches[1];
+                        if ($count > 0 && $count <= 500) {
+                            return $count;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {}
+        return null;
+    }
+
+    /**
+     * Resolve the official page range for this article (e.g. "01–08" or "15–22").
+     * If explicitly set, returns normalized manual pages.
+     * If unset, automatically calculates cumulative page range based on position in issue.
+     */
+    public function resolvePages(bool $persistIfCalculated = false): string
+    {
+        if (!empty($this->pages)) {
+            $clean = preg_replace('/^pp?\.?\s*/iu', '', trim($this->pages));
+            if (!empty($clean)) {
+                return $clean;
+            }
+        }
+
+        // Determine this article's page length (PDF page count or standard default 8 pages)
+        $thisLength = $this->detectPdfPageCount() ?: 8;
+
+        // If assigned to an issue, calculate cumulative start page
+        $startPage = 1;
+        if (!empty($this->issue_id)) {
+            try {
+                $priorArticles = static::where('issue_id', $this->issue_id)
+                    ->where('id', '<', $this->id)
+                    ->orderBy('id', 'asc')
+                    ->get();
+
+                foreach ($priorArticles as $prior) {
+                    if (!empty($prior->pages)) {
+                        $pClean = preg_replace('/^pp?\.?\s*/iu', '', trim($prior->pages));
+                        if (preg_match('/(\d+)\s*[-–—]\s*(\d+)/u', $pClean, $pm)) {
+                            $startPage = max($startPage, ((int)$pm[2]) + 1);
+                            continue;
+                        } elseif (is_numeric($pClean)) {
+                            $startPage = max($startPage, ((int)$pClean) + 1);
+                            continue;
+                        }
+                    }
+                    $priorLen = $prior->detectPdfPageCount() ?: 8;
+                    $startPage += $priorLen;
+                }
+            } catch (\Throwable $e) {
+                $startPage = 1;
+            }
+        } else {
+            // Fallback when no issue: deterministic offset based on ID
+            $seq = max(0, ($this->id - 1) % 20);
+            $startPage = ($seq * 8) + 1;
+        }
+
+        $endPage = $startPage + $thisLength - 1;
+        $formatted = str_pad((string)$startPage, 2, '0', STR_PAD_LEFT) . '–' . str_pad((string)$endPage, 2, '0', STR_PAD_LEFT);
+
+        if ($persistIfCalculated && $this->exists) {
+            try {
+                if (Schema::hasColumn('articles', 'pages')) {
+                    $this->pages = $formatted;
+                    $this->saveQuietly();
+                }
+            } catch (\Throwable $e) {}
+        }
+
+        return $formatted;
+    }
+
+    /**
+     * Get clean formatted page range without "pp." prefix (e.g. "01–08").
+     */
+    public function getFormattedPagesAttribute(): string
+    {
+        return $this->resolvePages(true);
+    }
+
     public function getApaCitationAttribute()
     {
         $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
@@ -503,9 +613,10 @@ class Article extends Model
         $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
+        $pages = $this->formatted_pages;
 
         $doiPart = $this->doi ? "https://doi.org/{$this->doi}" : "";
-        $citation = "{$authors} ({$year}). {$this->title}. {$journalTitle}, {$vol}({$iss}). {$doiPart}";
+        $citation = "{$authors} ({$year}). {$this->title}. {$journalTitle}, {$vol}({$iss}), {$pages}. {$doiPart}";
         return mb_convert_encoding(trim($citation), 'UTF-8', 'UTF-8');
     }
 
@@ -532,9 +643,10 @@ class Article extends Model
         $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
+        $pages = $this->formatted_pages;
 
         $doiPart = $this->doi ? "doi:{$this->doi}" : "";
-        $citation = "{$authors}. \"{$this->title}.\" {$journalTitle}, vol. {$vol}, no. {$iss}, {$year}. {$doiPart}";
+        $citation = "{$authors}. \"{$this->title}.\" {$journalTitle}, vol. {$vol}, no. {$iss}, {$year}, pp. {$pages}. {$doiPart}";
         return mb_convert_encoding(trim($citation), 'UTF-8', 'UTF-8');
     }
 
@@ -550,6 +662,7 @@ class Article extends Model
         $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
+        $pages = $this->formatted_pages;
 
         $bibtex = "@article{{$id},
   title={{$this->title}},
@@ -557,6 +670,7 @@ class Article extends Model
   journal={{$journalTitle}},
   volume={{$vol}},
   number={{$iss}},
+  pages={{$pages}},
   year={{$year}},
   doi={{$this->doi}},
   publisher={HJPARAM Publication}

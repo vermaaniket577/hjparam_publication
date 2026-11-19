@@ -290,7 +290,7 @@
                                 </div>
                             @endif
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <div>
                                 <label for="status"
                                     class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Status</label>
@@ -311,6 +311,15 @@
                                 <input type="date" name="published_at"
                                     value="{{ $article->published_at ? $article->published_at->format('Y-m-d') : date('Y-m-d') }}"
                                     class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200">
+                            </div>
+                            <div>
+                                <label for="pages"
+                                    class="block text-xs font-black text-slate-400 uppercase tracking-widest mb-3 ml-1">Page Numbers (e.g. 01–08)</label>
+                                <input type="text" name="pages" id="pages"
+                                    value="{{ old('pages', $article->pages ?: $article->formatted_pages) }}"
+                                    placeholder="e.g. 01–08"
+                                    class="w-full px-5 py-4 rounded-2xl bg-slate-50 border border-slate-200 font-mono text-xs font-bold text-slate-700">
+                                <p class="text-[10px] text-slate-400 mt-1 ml-1">Syncs to certificate and citations.</p>
                             </div>
                         </div>
                     </div>

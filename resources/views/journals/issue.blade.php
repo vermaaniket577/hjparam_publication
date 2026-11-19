@@ -157,6 +157,7 @@
                         <article class="group">
                             <div class="flex flex-wrap items-center gap-2 mb-2 text-xs font-bold uppercase tracking-wider text-blue-600">
                                 <span class="bg-blue-50 px-2 py-0.5 rounded">Research Article</span>
+                                <span class="bg-slate-100 text-slate-700 px-2.5 py-0.5 rounded font-mono font-bold lowercase text-[11px]">pp. {{ $article->formatted_pages }}</span>
                                 <span>DOI: <a href="https://doi.org/{{ $article->doi }}" class="hover:underline transition">{{ $article->doi }}</a></span>
                             </div>
                             <h3 class="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition mb-3">

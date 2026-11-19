@@ -329,7 +329,7 @@
                             </span>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs p-4 rounded-2xl border" style="background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.12);">
+                        <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs p-4 rounded-2xl border" style="background-color: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.12);">
                             <div>
                                 <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">Journal &amp; ISSN</span>
                                 <span class="font-bold block" style="color: #ffffff !important;">{{ $submission->article->journal->title }}</span>
@@ -341,6 +341,13 @@
                                     Vol. {{ $submission->article->issue?->volume?->volume_number ?? '1' }} ({{ $submission->article->issue?->volume?->year ?? date('Y') }})
                                 </span>
                                 <span class="text-[11px]" style="color: #cbd5e1 !important;">Issue No. {{ $submission->article->issue?->issue_number ?? '1' }}</span>
+                            </div>
+                            <div>
+                                <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">Page Range</span>
+                                <span class="font-mono font-bold block text-sm" style="color: #34d399 !important;">
+                                    pp. {{ $submission->article->formatted_pages }}
+                                </span>
+                                <span class="text-[10px]" style="color: #cbd5e1 !important;">Syncs to certificate</span>
                             </div>
                             <div>
                                 <span class="text-[10px] font-bold uppercase block" style="color: #94a3b8 !important;">DOI &amp; Release Date</span>
@@ -358,6 +365,11 @@
                                 style="background-color: #10b981 !important; color: #022c22 !important;">
                                 <span>🌐 View Live Article on Website</span>
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                            </a>
+                            <a href="{{ route('admin.articles.edit', $submission->article) }}"
+                                class="px-4 py-2.5 hover:bg-white/20 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
+                                style="background-color: rgba(255, 255, 255, 0.12); color: #ffffff !important;">
+                                ✏️ Edit Article &amp; Pages
                             </a>
                             <a href="{{ route('articles.download', $submission->article->id) }}" target="_blank"
                                 class="px-4 py-2.5 hover:bg-white/20 font-bold rounded-xl text-xs flex items-center gap-2 transition-all"
@@ -485,11 +497,17 @@
                             <textarea name="abstract" x-model="abstract" rows="4" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs leading-relaxed text-slate-200 focus:ring-2 focus:ring-purple-500" required></textarea>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <!-- Digital Object Identifier (DOI) -->
                             <div>
                                 <label class="block text-xs font-bold text-slate-200 uppercase mb-2">Digital Object Identifier (DOI)</label>
                                 <input type="text" name="doi" x-model="doi" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-mono font-bold text-blue-300 focus:ring-2 focus:ring-purple-500">
+                            </div>
+
+                            <!-- Page Numbers (Auto or Manual) -->
+                            <div>
+                                <label class="block text-xs font-bold text-slate-200 uppercase mb-2">Page Numbers (e.g. 01–08)</label>
+                                <input type="text" name="pages" value="{{ $submission->article?->pages }}" placeholder="Auto if blank (e.g. 01–08)" class="w-full px-4 py-2.5 rounded-xl bg-slate-800 border border-slate-700 text-xs font-bold text-emerald-300 focus:ring-2 focus:ring-purple-500">
                             </div>
 
                             <!-- Keywords -->

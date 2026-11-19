@@ -76,7 +76,7 @@
                             @endphp
                             <span class="text-sm font-bold text-slate-700">Vol.
                                 {{ $article->issue?->volume?->volume_number ?? '1' }}, No. {{ $article->issue?->issue_number ?? '1' }}
-                                ({{ $registryYear }})</span>
+                                ({{ $registryYear }}), pp. {{ $article->formatted_pages }}</span>
                         </div>
                         <div>
                             <span

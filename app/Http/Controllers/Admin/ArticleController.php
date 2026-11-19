@@ -84,6 +84,7 @@ class ArticleController extends Controller
             'abstract' => 'required|string',
             'keywords' => 'nullable|string',
             'doi' => 'nullable|string',
+            'pages' => 'nullable|string|max:50',
             'pdf_path' => 'nullable|file|mimes:pdf|max:20480', // Support up to 20MB
             'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200', // Word doc/docx up to 50MB
             'status' => 'required|string',
@@ -194,6 +195,7 @@ class ArticleController extends Controller
             'abstract' => 'required|string',
             'keywords' => 'nullable|string',
             'doi' => 'nullable|string',
+            'pages' => 'nullable|string|max:50',
             'pdf_path' => 'nullable|file|mimes:pdf|max:20480',
             'remove_pdf' => 'nullable|boolean',
             'manuscript_file' => 'nullable|file|mimes:doc,docx|max:51200',
@@ -277,6 +279,16 @@ class ArticleController extends Controller
                 Log::warning('Automatic certificate issuance error on article update: ' . $e->getMessage());
             }
         }
+
+        // Keep certificates synchronized with updated article pages & doi
+        try {
+            if (\Illuminate\Support\Facades\Schema::hasTable('certificates')) {
+                \App\Models\Certificate::where('article_id', $article->id)->update([
+                    'pages' => $article->formatted_pages,
+                    'doi' => $article->doi,
+                ]);
+            }
+        } catch (\Throwable $e) {}
 
         return redirect()->route('admin.articles.index')
             ->with('success', 'Article registry updated successfully.');

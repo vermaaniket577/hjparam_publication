@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <title>HJPARAM Publication Certificate</title>
 <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&family=Arimo:wght@400;700&display=swap" rel="stylesheet">
 <style>
@@ -102,6 +103,8 @@
     </select>
   @endif
   <button type="button" onclick="window.print()">Print / Save as PDF</button>
+  <button type="button" onclick="saveCertificateInline()" id="btnSaveCert" style="background:#059669; font-weight:700; padding:8px 16px; border-radius:6px; border:none; color:#fff; cursor:pointer;" title="Save current inline edits permanently to database">💾 Save Changes</button>
+  <button type="button" onclick="openCertModal()" style="background:#4f46e5; font-weight:700; padding:8px 14px; border-radius:6px; border:none; color:#fff; cursor:pointer;" title="Adjust Page Numbers, Volume, Issue and details manually in a form">✏️ Manual Option</button>
   <a href="{{ route('certificates.verify', $certificate->certificate_number) }}" target="_blank" style="text-decoration:none; color:var(--navy); font-weight:700; padding:7px 12px; border:1px solid var(--navy); border-radius:6px; background:#fff;">Verify Online</a>
   <span class="hint">(choose A4 · Landscape · Margins: None · Background graphics on)</span>
 </div>
@@ -128,14 +131,24 @@
         <div class="subtitle">OF PUBLICATION</div>
 
         <div class="lead">This is to certify that</div>
-        <div class="name" contenteditable="true">{{ $certificate->recipient_name }}</div>
-        <div class="affil" contenteditable="true">{{ $certificate->formatted_affiliation ?: 'HJPARAM Academic & Research Network' }}</div>
+        <div class="name" contenteditable="true" id="field_recipient_name">{{ $certificate->recipient_name }}</div>
+        <div class="affil" contenteditable="true" id="field_affiliation">{{ $certificate->formatted_affiliation ?: 'HJPARAM Academic & Research Network' }}</div>
 
         <div class="lead second">has successfully published the research paper entitled</div>
-        <div class="paper" contenteditable="true">“{{ $certificate->paper_title }}”</div>
+        <div class="paper" contenteditable="true" id="field_paper_title">“{{ $certificate->paper_title }}”</div>
 
-        <div class="journal">in <b contenteditable="true">{{ $certificate->journal_name }}</b>, <span contenteditable="true">{{ $certificate->volume ? 'Volume ' . $certificate->volume . ', ' : '' }}{{ $certificate->issue ? 'Issue ' . $certificate->issue . ', ' : '' }}{{ $certificate->month_year ?? date('F Y') }}{{ $certificate->pages ? ', pp. ' . $certificate->pages : '' }}</span></div>
-        <div class="ids">ISSN: <span contenteditable="true">{{ $certificate->issn ?? '2583-XXXX' }}</span> (Online) &nbsp;|&nbsp; DOI: <span contenteditable="true">{{ $certificate->doi ?: '10.55524/hjparam.' . ($certificate->manuscript_id ?? 'pub') }}</span></div>
+        @php
+            $rawVol = $certificate->volume ?? '1';
+            $volClean = preg_replace('/^volume\s*/i', '', trim((string)$rawVol)) ?: '1';
+
+            $rawIssue = $certificate->issue ?? '1';
+            $issueClean = preg_replace('/^issue\s*/i', '', trim((string)$rawIssue)) ?: '1';
+
+            $rawPages = $certificate->pages ?: ($certificate->article?->formatted_pages ?? '01–08');
+            $pagesClean = preg_replace('/^pp?\.?\s*/i', '', trim((string)$rawPages)) ?: '01–08';
+        @endphp
+        <div class="journal">in <b contenteditable="true" id="field_journal_name">{{ $certificate->journal_name }}</b>, Volume <span contenteditable="true" id="field_volume">{{ $volClean }}</span>, Issue <span contenteditable="true" id="field_issue">{{ $issueClean }}</span>, <span contenteditable="true" id="field_month_year">{{ $certificate->month_year ?? date('F Y') }}</span>, pp. <span contenteditable="true" id="field_pages" style="font-weight:700; color:var(--navy); padding:0 2px;">{{ $pagesClean }}</span></div>
+        <div class="ids">ISSN: <span contenteditable="true" id="field_issn">{{ $certificate->issn ?? '2583-XXXX' }}</span> (Online) &nbsp;|&nbsp; DOI: <span contenteditable="true" id="field_doi">{{ $certificate->doi ?: '10.55524/hjparam.' . ($certificate->manuscript_id ?? 'pub') }}</span></div>
         <div class="note" contenteditable="true">The paper was peer reviewed and found suitable for publication. We congratulate the author(s) and wish them continued success in their research.</div>
       </div>
 
@@ -158,6 +171,64 @@
  </div>
 </div>
 
+<!-- Floating Toast Notification -->
+<div id="toastAlert" style="display:none; position:fixed; bottom:24px; right:24px; z-index:99999; background:#064e3b; color:#fff; padding:12px 20px; border-radius:10px; font-family:var(--sans); font-size:13px; font-weight:700; box-shadow:0 10px 25px rgba(0,0,0,0.3); border:1px solid #10b981; transition:all .3s ease;">
+  ✓ Certificate &amp; Article Pages saved successfully!
+</div>
+
+<!-- Manual Edit Modal -->
+<div id="certModal" style="display:none; position:fixed; inset:0; z-index:99990; background:rgba(15,23,42,0.6); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px;">
+  <div style="background:#fff; border-radius:16px; width:100%; max-width:540px; box-shadow:0 20px 40px rgba(0,0,0,0.25); border:1px solid #e2e8f0; overflow:hidden; font-family:var(--sans);">
+    <div style="padding:18px 24px; border-bottom:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; background:#f8fafc;">
+      <h3 style="margin:0; font-size:15px; font-weight:800; color:var(--navy);">Manual Certificate &amp; Journal Options</h3>
+      <button type="button" onclick="closeCertModal()" style="background:transparent; border:none; font-size:18px; cursor:pointer; color:#64748b; font-weight:bold;">&times;</button>
+    </div>
+    <form id="certModalForm" onsubmit="submitCertModal(event)" style="padding:20px 24px; display:flex; flex-direction:column; gap:14px; font-size:12px;">
+      <div>
+        <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Page Numbers (e.g. 01–08 or 15–22) *</label>
+        <input type="text" id="modal_pages" value="{{ $pagesClean }}" placeholder="e.g. 01–08" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; font-weight:700; color:var(--navy);" required>
+        <span style="font-size:11px; color:#64748b; display:block; margin-top:2px;">Automatically syncs to journal table of contents and citations.</span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Volume (e.g. 1)</label>
+          <input type="text" id="modal_volume" value="{{ $volClean }}" placeholder="e.g. 1" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;">
+        </div>
+        <div>
+          <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Issue (e.g. 1)</label>
+          <input type="text" id="modal_issue" value="{{ $issueClean }}" placeholder="e.g. 1" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;">
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+        <div>
+          <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Month &amp; Year</label>
+          <input type="text" id="modal_month_year" value="{{ $certificate->month_year ?? date('F Y') }}" placeholder="e.g. November 2026" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;">
+        </div>
+        <div>
+          <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">DOI</label>
+          <input type="text" id="modal_doi" value="{{ $certificate->doi }}" placeholder="e.g. 10.5281/..." style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;">
+        </div>
+      </div>
+      <div>
+        <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Author / Scholar Name</label>
+        <input type="text" id="modal_recipient_name" value="{{ $certificate->recipient_name }}" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;" required>
+      </div>
+      <div>
+        <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Institution / Affiliation</label>
+        <input type="text" id="modal_institution" value="{{ $certificate->formatted_affiliation }}" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; color:#334155;">
+      </div>
+      <div>
+        <label style="display:block; font-weight:700; color:#334155; margin-bottom:4px;">Paper Title</label>
+        <textarea id="modal_paper_title" rows="2" style="width:100%; padding:8px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:12px; color:#334155;">{{ $certificate->paper_title }}</textarea>
+      </div>
+      <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:8px;">
+        <button type="button" onclick="closeCertModal()" style="background:#f1f5f9; border:none; padding:8px 16px; border-radius:8px; font-weight:700; color:#475569; cursor:pointer;">Cancel</button>
+        <button type="submit" id="btnModalSave" style="background:var(--navy); border:none; padding:8px 20px; border-radius:8px; font-weight:700; color:#fff; cursor:pointer;">Apply &amp; Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   // Fit the A4 page to narrow screens (printing always uses full size)
   (function(){
@@ -168,6 +239,115 @@
     }
     window.addEventListener('resize',fit); window.addEventListener('load',fit); fit();
   })();
+
+  function showToast(msg) {
+    var t = document.getElementById('toastAlert');
+    if (t) {
+      t.innerHTML = msg;
+      t.style.display = 'block';
+      setTimeout(function(){ t.style.display = 'none'; }, 4000);
+    }
+  }
+
+  function openCertModal() {
+    var m = document.getElementById('certModal');
+    if (m) m.style.display = 'flex';
+  }
+
+  function closeCertModal() {
+    var m = document.getElementById('certModal');
+    if (m) m.style.display = 'none';
+  }
+
+  function postCertificateUpdate(data, successCallback) {
+    var token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    fetch("{{ route('certificates.update', $certificate) }}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'X-CSRF-TOKEN': token || ''
+      },
+      body: JSON.stringify(data)
+    })
+    .then(function(r){ return r.json(); })
+    .then(function(res){
+      if (res.success) {
+        showToast('✓ ' + (res.message || 'Saved successfully!'));
+        if (typeof successCallback === 'function') successCallback(res);
+      } else {
+        alert(res.message || 'Error updating certificate.');
+      }
+    })
+    .catch(function(err){
+      console.error(err);
+      alert('An unexpected error occurred while saving.');
+    });
+  }
+
+  function saveCertificateInline() {
+    var btn = document.getElementById('btnSaveCert');
+    if (btn) btn.innerText = 'Saving...';
+
+    var data = {
+      pages: (document.getElementById('field_pages')?.innerText || '').trim(),
+      volume: (document.getElementById('field_volume')?.innerText || '').trim(),
+      issue: (document.getElementById('field_issue')?.innerText || '').trim(),
+      month_year: (document.getElementById('field_month_year')?.innerText || '').trim(),
+      recipient_name: (document.getElementById('field_recipient_name')?.innerText || '').trim(),
+      institution: (document.getElementById('field_affiliation')?.innerText || '').trim(),
+      paper_title: (document.getElementById('field_paper_title')?.innerText || '').replace(/^[“"']+|[”"']+$/g, '').trim(),
+      journal_name: (document.getElementById('field_journal_name')?.innerText || '').trim(),
+      issn: (document.getElementById('field_issn')?.innerText || '').trim(),
+      doi: (document.getElementById('field_doi')?.innerText || '').trim()
+    };
+
+    postCertificateUpdate(data, function(res){
+      if (btn) btn.innerText = '💾 Saved ✓';
+      setTimeout(function(){ if (btn) btn.innerText = '💾 Save Changes'; }, 2500);
+    });
+  }
+
+  function submitCertModal(e) {
+    e.preventDefault();
+    var btn = document.getElementById('btnModalSave');
+    if (btn) btn.innerText = 'Saving...';
+
+    var pages = document.getElementById('modal_pages').value.trim();
+    var volume = document.getElementById('modal_volume').value.trim();
+    var issue = document.getElementById('modal_issue').value.trim();
+    var month_year = document.getElementById('modal_month_year').value.trim();
+    var recipient_name = document.getElementById('modal_recipient_name').value.trim();
+    var institution = document.getElementById('modal_institution').value.trim();
+    var paper_title = document.getElementById('modal_paper_title').value.trim();
+    var doi = document.getElementById('modal_doi').value.trim();
+
+    var data = {
+      pages: pages,
+      volume: volume,
+      issue: issue,
+      month_year: month_year,
+      recipient_name: recipient_name,
+      institution: institution,
+      paper_title: paper_title,
+      doi: doi
+    };
+
+    postCertificateUpdate(data, function(res){
+      // Update live DOM fields
+      if (document.getElementById('field_pages')) document.getElementById('field_pages').innerText = pages;
+      if (document.getElementById('field_volume')) document.getElementById('field_volume').innerText = volume;
+      if (document.getElementById('field_issue')) document.getElementById('field_issue').innerText = issue;
+      if (document.getElementById('field_month_year')) document.getElementById('field_month_year').innerText = month_year;
+      if (document.getElementById('field_recipient_name')) document.getElementById('field_recipient_name').innerText = recipient_name;
+      if (document.getElementById('field_affiliation')) document.getElementById('field_affiliation').innerText = institution;
+      if (document.getElementById('field_paper_title')) document.getElementById('field_paper_title').innerText = '“' + paper_title + '”';
+      if (document.getElementById('field_doi')) document.getElementById('field_doi').innerText = doi;
+
+      if (btn) btn.innerText = 'Apply & Save Changes';
+      closeCertModal();
+    });
+  }
 </script>
 </body>
 </html>

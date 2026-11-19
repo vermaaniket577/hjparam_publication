@@ -749,6 +749,8 @@
                                 <div class="flex items-center gap-2 text-[11px] text-slate-500 mb-2">
                                     <span class="font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Article</span>
                                     <span>•</span>
+                                    <span class="font-mono text-slate-700 bg-slate-100 px-2 py-0.5 rounded text-[11px] font-bold">pp. {{ $article->formatted_pages }}</span>
+                                    <span>•</span>
                                     <span>{{ \Carbon\Carbon::parse($article->publication_date ?? $article->created_at)->format('M d, Y') }}</span>
                                     @if($article->doi)
                                         <span>•</span>

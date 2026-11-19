@@ -37,6 +37,7 @@ Route::post('/conferences/{slug}/submit', [PublicConferenceController::class, 's
 Route::get('/certificates/attendee/{submission}', [CertificateController::class, 'attendee'])->name('certificates.attendee');
 Route::get('/certificates/presentation/{submission}', [CertificateController::class, 'presentation'])->name('certificates.presentation');
 Route::get('/certificates/publication/{certificate}', [CertificateController::class, 'show'])->name('certificates.publication.show');
+Route::post('/certificates/{certificate}/update', [CertificateController::class, 'update'])->name('certificates.update');
 Route::get('/submissions/{submission}/certificate', [CertificateController::class, 'forSubmission'])->name('certificates.publication.submission');
 Route::get('/articles/{article}/certificate', [CertificateController::class, 'forArticle'])->name('certificates.publication.article');
 Route::get('/certificates/verify/{code}', [CertificateController::class, 'verify'])->name('certificates.verify');

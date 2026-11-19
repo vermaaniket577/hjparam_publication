@@ -19,7 +19,135 @@ class CertificateController extends Controller
     {
         CertificateIssuanceService::ensureTableExists();
         $certificate->loadMissing(['submission.journal', 'article.journal']);
+        self::sanitizeCertificate($certificate);
         return view('certificates.publication', compact('certificate'));
+    }
+
+    /**
+     * Clean up legacy duplicate prefixes (e.g. Volume Volume, Issue Issue, pp. pp.)
+     * and sync missing page numbers with linked article.
+     */
+    public static function sanitizeCertificate(Certificate $certificate): Certificate
+    {
+        $dirty = false;
+        if (!empty($certificate->volume) && preg_match('/^volume\s*/i', $certificate->volume)) {
+            $certificate->volume = preg_replace('/^volume\s*/i', '', trim($certificate->volume)) ?: '1';
+            $dirty = true;
+        }
+        if (!empty($certificate->issue) && preg_match('/^issue\s*/i', $certificate->issue)) {
+            $certificate->issue = preg_replace('/^issue\s*/i', '', trim($certificate->issue)) ?: '1';
+            $dirty = true;
+        }
+        if (!empty($certificate->pages) && preg_match('/^pp?\.?\s*/i', $certificate->pages)) {
+            $certificate->pages = preg_replace('/^pp?\.?\s*/i', '', trim($certificate->pages));
+            $dirty = true;
+        } elseif (empty($certificate->pages)) {
+            $art = $certificate->article ?? ($certificate->submission?->article ?? null);
+            if ($art) {
+                $certificate->pages = $art->formatted_pages;
+                $dirty = true;
+            }
+        }
+        if ($dirty && $certificate->exists) {
+            try { $certificate->saveQuietly(); } catch (\Throwable $e) {}
+        }
+        return $certificate;
+    }
+
+    /**
+     * Update certificate fields (page numbers, volume, issue, recipient details, etc.)
+     * and synchronize back to the linked Article record.
+     */
+    public function update(Request $request, Certificate $certificate)
+    {
+        // Auth check: allow admin/editor or the submission/article owner
+        $isStaff = Auth::check() && in_array(Auth::user()->role, ['admin', 'editor']);
+        $isOwner = Auth::check() && (
+            (Auth::id() === $certificate->user_id) || 
+            ($certificate->submission && Auth::id() === $certificate->submission->user_id) ||
+            ($certificate->article && Auth::id() === $certificate->article->user_id)
+        );
+
+        if (!$isStaff && !$isOwner) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+            }
+            abort(403, 'Unauthorized.');
+        }
+
+        CertificateIssuanceService::ensureTableExists();
+
+        $validated = $request->validate([
+            'pages' => 'nullable|string|max:50',
+            'volume' => 'nullable|string|max:50',
+            'issue' => 'nullable|string|max:50',
+            'month_year' => 'nullable|string|max:100',
+            'recipient_name' => 'nullable|string|max:255',
+            'institution' => 'nullable|string|max:500',
+            'paper_title' => 'nullable|string|max:500',
+            'journal_name' => 'nullable|string|max:255',
+            'issn' => 'nullable|string|max:50',
+            'doi' => 'nullable|string|max:255',
+        ]);
+
+        if ($request->has('pages')) {
+            $cleanPages = preg_replace('/^pp?\.?\s*/i', '', trim((string)$request->pages));
+            $certificate->pages = $cleanPages;
+        }
+        if ($request->has('volume')) {
+            $cleanVol = preg_replace('/^volume\s*/i', '', trim((string)$request->volume));
+            $certificate->volume = $cleanVol;
+        }
+        if ($request->has('issue')) {
+            $cleanIssue = preg_replace('/^issue\s*/i', '', trim((string)$request->issue));
+            $certificate->issue = $cleanIssue;
+        }
+        if ($request->has('month_year')) {
+            $certificate->month_year = trim((string)$request->month_year);
+        }
+        if ($request->has('recipient_name') && !empty($request->recipient_name)) {
+            $certificate->recipient_name = trim((string)$request->recipient_name);
+        }
+        if ($request->has('institution')) {
+            $certificate->institution = trim((string)$request->institution);
+        }
+        if ($request->has('paper_title') && !empty($request->paper_title)) {
+            $certificate->paper_title = trim((string)$request->paper_title);
+        }
+        if ($request->has('journal_name') && !empty($request->journal_name)) {
+            $certificate->journal_name = trim((string)$request->journal_name);
+        }
+        if ($request->has('issn')) {
+            $certificate->issn = trim((string)$request->issn);
+        }
+        if ($request->has('doi')) {
+            $certificate->doi = trim((string)$request->doi);
+        }
+
+        $certificate->save();
+
+        // Synchronize with linked Article if present
+        $article = $certificate->article ?? ($certificate->submission?->article ?? null);
+        if ($article) {
+            Article::ensureManuscriptColumns();
+            if ($request->has('pages') && Schema::hasColumn('articles', 'pages')) {
+                $article->pages = $certificate->pages;
+            }
+            if ($request->has('doi') && !empty($certificate->doi)) {
+                $article->doi = $certificate->doi;
+            }
+            $article->save();
+        }
+
+        if ($request->wantsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Certificate updated and synchronized successfully!',
+                'certificate' => $certificate,
+            ]);
+        }
+
+        return back()->with('success', 'Certificate updated and saved successfully.');
     }
 
     /**
@@ -54,6 +182,10 @@ class CertificateController extends Controller
         if ($certs->isEmpty()) {
             return back()->with('error', 'No certificate generated for this submission yet.');
         }
+
+        $certs->each(function ($c) {
+            self::sanitizeCertificate($c);
+        });
 
         // If an author index or cert id requested
         if ($request->has('cert_id')) {
@@ -93,6 +225,10 @@ class CertificateController extends Controller
         if ($certs->isEmpty()) {
             return back()->with('error', 'No certificate generated for this article yet.');
         }
+
+        $certs->each(function ($c) {
+            self::sanitizeCertificate($c);
+        });
 
         if ($request->has('cert_id')) {
             $certificate = $certs->firstWhere('id', $request->cert_id) ?? $certs->first();
