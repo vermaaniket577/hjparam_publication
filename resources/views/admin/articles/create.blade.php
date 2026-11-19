@@ -11,15 +11,15 @@
 
 @section('content')
     <div class="max-w-5xl mx-auto" x-data="{ 
-                    title: @js(old('title', $selectedSubmission->title ?? '')), 
-                    slug: @js(old('slug', isset($selectedSubmission) ? \Illuminate\Support\Str::slug($selectedSubmission->title) : '')),
-                    abstract: @js(old('abstract', $selectedSubmission->abstract ?? '')),
-                    keywords: @js(old('keywords', $selectedSubmission->keywords ?? '')),
-                    doi: @js(old('doi', '')),
+                    title: {{ json_encode(old('title', $selectedSubmission->title ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}, 
+                    slug: {{ json_encode(old('slug', isset($selectedSubmission) ? \Illuminate\Support\Str::slug($selectedSubmission->title) : ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
+                    abstract: {{ json_encode(old('abstract', $selectedSubmission->abstract ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
+                    keywords: {{ json_encode(old('keywords', $selectedSubmission->keywords ?? ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
+                    doi: {{ json_encode(old('doi', ''), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
                     journal_id: '{{ old('journal_id', $selectedSubmission->journal_id ?? '') }}',
                     submission_id: '{{ old('submission_id', $selectedSubmission->id ?? '') }}',
-                    submissionsData: @js($submissions->keyBy('id')),
-                    authors: @js($initialAuthors),
+                    submissionsData: {{ json_encode($submissionsData ?? $submissions->keyBy('id'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
+                    authors: {{ json_encode($initialAuthors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }},
                     addAuthor() {
                         this.authors.push({ name: '', email: '', affiliation: '', is_corresponding: 0 });
                     },

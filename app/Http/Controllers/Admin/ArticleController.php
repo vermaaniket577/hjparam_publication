@@ -34,6 +34,23 @@ class ArticleController extends Controller
             ->take(50)
             ->get();
 
+        $submissionsData = $submissions->mapWithKeys(function ($s) {
+            return [$s->id => [
+                'id' => $s->id,
+                'title' => $s->title,
+                'abstract' => $s->abstract,
+                'keywords' => $s->keywords,
+                'journal_id' => $s->journal_id,
+                'authors_data' => $s->authors_data,
+                'scholars_data' => $s->scholars_data,
+                'user' => $s->user ? [
+                    'name' => $s->user->name,
+                    'email' => $s->user->email,
+                    'affiliation' => $s->user->affiliation,
+                ] : null,
+            ]];
+        });
+
         $selectedSubmission = null;
         if ($request->filled('from_submission')) {
             $selectedSubmission = \App\Models\Submission::with(['journal', 'user'])->find($request->from_submission);
@@ -50,7 +67,7 @@ class ArticleController extends Controller
             }
         }
 
-        return view('admin.articles.create', compact('journals', 'issues', 'submissions', 'selectedSubmission', 'initialAuthors'));
+        return view('admin.articles.create', compact('journals', 'issues', 'submissions', 'submissionsData', 'selectedSubmission', 'initialAuthors'));
     }
 
     /**

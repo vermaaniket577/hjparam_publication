@@ -49,6 +49,14 @@ class Submission extends Model
         'payment_date' => 'date',
     ];
 
+    /**
+     * The attributes that should be hidden for serialization.
+     * Raw binary stream content must never be serialized into JSON / arrays.
+     */
+    protected $hidden = [
+        'binary_content',
+    ];
+
     public function getFormattedSizeAttribute()
     {
         $bytes = $this->file_size;

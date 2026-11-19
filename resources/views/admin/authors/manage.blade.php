@@ -7,7 +7,7 @@
     <script>
         window.articleAuthorsManager = function () {
             return {
-                authors: @json($initialAuthors),
+                authors: {!! json_encode($initialAuthors, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) !!},
                 addAuthor: function () {
                     this.authors.push({
                         id: null,
