@@ -131,8 +131,8 @@
                     <section class="bg-[#0f172a] rounded-[2.5rem] p-10 relative overflow-hidden group shadow-2xl" x-data="{ 
                                 style: 'apa', 
                                 text: { 
-                                    apa: @js($article->apa_citation), 
-                                    mla: @js($article->mla_citation) 
+                                    apa: {{ json_encode($article->apa_citation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }}, 
+                                    mla: {{ json_encode($article->mla_citation, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE | JSON_INVALID_UTF8_SUBSTITUTE) }} 
                                 },
                                 copied: false,
                                 copy() {

@@ -479,26 +479,53 @@ class Article extends Model
     public function getApaCitationAttribute()
     {
         $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
-        $authors = $this->authors->pluck('name')->map(function ($name) {
-            $parts = explode(' ', trim($name));
+        $authorsList = $this->authors->pluck('name')->filter()->values();
+        if ($authorsList->isEmpty()) {
+            $fallback = $this->submission?->user?->name ?? 'Author';
+            $authorsList = collect([$fallback]);
+        }
+
+        $authors = $authorsList->map(function ($name) {
+            $name = trim($name);
+            $parts = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+            if (empty($parts) || count($parts) <= 1) {
+                return $name;
+            }
             $last = array_pop($parts);
-            $initials = array_map(fn($n) => substr($n, 0, 1) . '.', $parts);
-            return $last . ', ' . implode(' ', $initials);
+            $initials = array_map(function ($n) {
+                $char = mb_substr(trim($n), 0, 1, 'UTF-8');
+                return $char !== '' ? $char . '.' : '';
+            }, $parts);
+            $initialsStr = implode(' ', array_filter($initials));
+            return $initialsStr ? "{$last}, {$initialsStr}" : $last;
         })->join(', ', ' & ');
 
         $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
 
-        return "{$authors} ({$year}). {$this->title}. {$journalTitle}, {$vol}({$iss}). " . ($this->doi ? "https://doi.org/{$this->doi}" : "");
+        $doiPart = $this->doi ? "https://doi.org/{$this->doi}" : "";
+        $citation = "{$authors} ({$year}). {$this->title}. {$journalTitle}, {$vol}({$iss}). {$doiPart}";
+        return mb_convert_encoding(trim($citation), 'UTF-8', 'UTF-8');
     }
 
     public function getMlaCitationAttribute()
     {
-        $authors = $this->authors->pluck('name')->map(function ($name) {
-            $parts = explode(' ', trim($name));
+        $authorsList = $this->authors->pluck('name')->filter()->values();
+        if ($authorsList->isEmpty()) {
+            $fallback = $this->submission?->user?->name ?? 'Author';
+            $authorsList = collect([$fallback]);
+        }
+
+        $authors = $authorsList->map(function ($name) {
+            $name = trim($name);
+            $parts = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
+            if (empty($parts) || count($parts) <= 1) {
+                return $name;
+            }
             $last = array_pop($parts);
-            return $last . ', ' . implode(' ', $parts);
+            $firstParts = implode(' ', $parts);
+            return $firstParts ? "{$last}, {$firstParts}" : $last;
         })->join(', and ');
 
         $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
@@ -506,20 +533,25 @@ class Article extends Model
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
 
-        return "{$authors}. \"{$this->title}.\" {$journalTitle}, vol. {$vol}, no. {$iss}, {$year}. " . ($this->doi ? "doi:{$this->doi}" : "");
+        $doiPart = $this->doi ? "doi:{$this->doi}" : "";
+        $citation = "{$authors}. \"{$this->title}.\" {$journalTitle}, vol. {$vol}, no. {$iss}, {$year}. {$doiPart}";
+        return mb_convert_encoding(trim($citation), 'UTF-8', 'UTF-8');
     }
 
     public function getBibtexAttribute()
     {
-        $id = str_replace([' ', '/', '.'], '_', strtolower($this->title));
-        $id = substr($id, 0, 20) . '_' . date('Y');
-        $authors = $this->authors->pluck('name')->join(' and ');
+        $id = str_replace([' ', '/', '.', ':', '?', '"', "'"], '_', mb_strtolower($this->title, 'UTF-8'));
+        $id = mb_substr($id, 0, 20, 'UTF-8') . '_' . date('Y');
+        $authors = $this->authors->pluck('name')->filter()->join(' and ');
+        if (!$authors) {
+            $authors = $this->submission?->user?->name ?? 'Author';
+        }
         $year = !empty($this->published_at) ? \Carbon\Carbon::parse($this->published_at)->format('Y') : date('Y');
         $journalTitle = $this->journal->title ?? 'HJPARAM Publication';
         $vol = $this->issue?->volume?->volume_number ?? '1';
         $iss = $this->issue?->issue_number ?? '1';
 
-        return "@article{{$id},
+        $bibtex = "@article{{$id},
   title={{$this->title}},
   author={{$authors}},
   journal={{$journalTitle}},
@@ -529,5 +561,6 @@ class Article extends Model
   doi={{$this->doi}},
   publisher={HJPARAM Publication}
 }";
+        return mb_convert_encoding($bibtex, 'UTF-8', 'UTF-8');
     }
 }
