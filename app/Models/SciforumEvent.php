@@ -17,4 +17,9 @@ class SciforumEvent extends Model
         'banner_image',
         'submission_link'
     ];
+
+    protected $casts = [
+        'start_date' => 'datetime',
+        'end_date' => 'datetime',
+    ];
 }
