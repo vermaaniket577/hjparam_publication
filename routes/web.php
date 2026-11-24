@@ -37,6 +37,9 @@ Route::post('/conferences/{slug}/submit', [PublicConferenceController::class, 's
 Route::get('/certificates/attendee/{submission}', [CertificateController::class, 'attendee'])->name('certificates.attendee');
 Route::get('/certificates/presentation/{submission}', [CertificateController::class, 'presentation'])->name('certificates.presentation');
 Route::get('/certificates/publication/{certificate}', [CertificateController::class, 'show'])->name('certificates.publication.show');
+Route::get('/certificates/appointment/{certificate}', [CertificateController::class, 'showAppointment'])->name('certificates.appointment.show');
+Route::get('/editorial-board/{member}/certificate', [CertificateController::class, 'forEditorialMember'])->name('certificates.editorial.member');
+Route::get('/users/{user}/appointment-certificate', [CertificateController::class, 'forUserAppointment'])->name('certificates.user.appointment');
 Route::post('/certificates/{certificate}/update', [CertificateController::class, 'update'])->name('certificates.update');
 Route::get('/submissions/{submission}/certificate', [CertificateController::class, 'forSubmission'])->name('certificates.publication.submission');
 Route::get('/articles/{article}/certificate', [CertificateController::class, 'forArticle'])->name('certificates.publication.article');
@@ -283,6 +286,7 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::resource('countries', \App\Http\Controllers\Admin\CountryController::class);
     Route::resource('categories', \App\Http\Controllers\Admin\CategoryController::class);
     Route::resource('contacts', \App\Http\Controllers\Admin\ContactController::class)->names('contact-messages')->only(['index', 'show', 'destroy']);
+    Route::post('contacts/{contactMessage}/accept', [\App\Http\Controllers\Admin\ContactController::class, 'acceptApplication'])->name('admin.contact-messages.accept');
     Route::get('contact-messages-alias', fn() => redirect()->route('admin.contact-messages.index'))->name('contacts.index');
     Route::resource('subscriptions', \App\Http\Controllers\Admin\SubscriptionController::class)->only(['index', 'update', 'destroy']);
 

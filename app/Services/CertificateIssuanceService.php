@@ -68,11 +68,175 @@ class CertificateIssuanceService
                         $table->string('pages')->nullable()->after('month_year');
                     });
                 }
+                if (!Schema::hasColumn('certificates', 'editorial_board_id')) {
+                    Schema::table('certificates', function (Blueprint $table) {
+                        $table->unsignedBigInteger('editorial_board_id')->nullable()->after('user_id')->index();
+                    });
+                }
+                if (!Schema::hasColumn('certificates', 'journal_id')) {
+                    Schema::table('certificates', function (Blueprint $table) {
+                        $table->unsignedBigInteger('journal_id')->nullable()->after('editorial_board_id')->index();
+                    });
+                }
             }
             $checked = true;
         } catch (\Throwable $e) {
             Log::warning('Certificate ensureTableExists: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Get 3-4 letter abbreviation for a journal (e.g. RST for Research in Science & Technology).
+     */
+    public static function getJournalAbbr(?\App\Models\Journal $journal): string
+    {
+        if (!$journal || empty($journal->title)) {
+            return 'RST';
+        }
+
+        $words = preg_split('/[\s\-_]+/', strtoupper($journal->title));
+        $stopWords = ['THE', 'OF', 'IN', 'AND', '&', 'FOR', 'ON', 'A', 'AN', 'JOURNAL', 'INTERNATIONAL', 'ARIDAX'];
+        $sig = [];
+        foreach ($words as $w) {
+            $clean = preg_replace('/[^A-Z]/', '', $w);
+            if ($clean && !in_array($clean, $stopWords)) {
+                $sig[] = $clean[0];
+            }
+        }
+
+        if (count($sig) >= 2) {
+            return substr(implode('', $sig), 0, 4);
+        }
+
+        $slugClean = preg_replace('/[^A-Z]/', '', strtoupper($journal->slug ?: $journal->title));
+        return substr($slugClean, 0, 4) ?: 'RST';
+    }
+
+    /**
+     * Issue official Certificate of Editorial Board Appointment for an Editorial Board Member.
+     */
+    public static function issueForEditorialMember(\App\Models\EditorialBoard $member): Certificate
+    {
+        self::ensureTableExists();
+        $member->loadMissing('journal');
+
+        $journal = $member->journal;
+        $journalName = $journal ? $journal->title : 'Aridax International Journal of Research in Science & Technology';
+        $journalAbbr = self::getJournalAbbr($journal);
+
+        $userId = null;
+        if (!empty($member->email)) {
+            $u = \App\Models\User::where('email', trim($member->email))->first();
+            if ($u) {
+                $userId = $u->id;
+            }
+        }
+
+        $cert = null;
+        if (Schema::hasTable('certificates')) {
+            if (Schema::hasColumn('certificates', 'editorial_board_id')) {
+                $cert = Certificate::where('editorial_board_id', $member->id)->first();
+            }
+            if (!$cert && !empty($member->email)) {
+                $cert = Certificate::where('type', 'editorial_appointment')
+                    ->where('recipient_email', trim($member->email))
+                    ->when($member->journal_id && Schema::hasColumn('certificates', 'journal_id'), fn($q) => $q->where('journal_id', $member->journal_id))
+                    ->first();
+            }
+        }
+
+        if (!$cert) {
+            $cert = new Certificate();
+            $cert->type = 'editorial_appointment';
+            $cert->verification_hash = Str::random(32);
+        }
+
+        // Generate Certificate ID: H + ABBR + 00 + MM + YY + Seq (e.g. HRST001126001)
+        if (empty($cert->certificate_number)) {
+            $month = now()->format('m');
+            $year = now()->format('y');
+            $seq = str_pad(($member->id ?: rand(1, 999)) % 1000, 3, '0', STR_PAD_LEFT);
+            $code = 'H' . $journalAbbr . '00' . $month . $year . $seq;
+            if (Certificate::where('certificate_number', $code)->where('id', '!=', $cert->id ?? 0)->exists()) {
+                $code = 'H' . $journalAbbr . '00' . $month . $year . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT);
+            }
+            $cert->certificate_number = $code;
+        }
+
+        if (Schema::hasColumn('certificates', 'editorial_board_id')) {
+            $cert->editorial_board_id = $member->id;
+        }
+        if (Schema::hasColumn('certificates', 'journal_id')) {
+            $cert->journal_id = $member->journal_id;
+        }
+        $cert->type = 'editorial_appointment';
+        $cert->user_id = $userId ?: $cert->user_id;
+        $cert->recipient_name = $member->name;
+        $cert->recipient_role = $member->role ?: 'Editorial Board Member & Managing Editor';
+        $cert->recipient_email = $member->email;
+        $cert->designation = $member->designation;
+        $cert->department = $member->department;
+        $cert->institution = $member->affiliation;
+        $cert->city_country = implode(', ', array_filter([$member->postal_address, $member->country])) ?: ($member->country ?: '');
+        $cert->journal_name = $journalName;
+        $cert->paper_title = 'Certificate of Editorial Board Appointment - ' . $journalName;
+        $cert->issue_date = $cert->issue_date ?: ($member->created_at ? $member->created_at->toDateString() : now()->toDateString());
+        $cert->save();
+
+        return $cert;
+    }
+
+    /**
+     * Issue official Certificate of Appointment (Reviewer / Editor) directly for a User.
+     */
+    public static function issueForUserAppointment(\App\Models\User $user, ?\App\Models\Journal $journal = null, ?string $role = null): Certificate
+    {
+        self::ensureTableExists();
+
+        $roleTitle = $role ?: ($user->role === 'reviewer' ? 'Peer Reviewer' : 'Editorial Board Member');
+        $journalName = $journal ? $journal->title : 'Aridax International Journal of Research in Science & Technology';
+        $journalAbbr = self::getJournalAbbr($journal);
+
+        $cert = null;
+        if (Schema::hasTable('certificates')) {
+            $cert = Certificate::where('user_id', $user->id)
+                ->where('type', 'editorial_appointment')
+                ->when($journal && Schema::hasColumn('certificates', 'journal_id'), fn($q) => $q->where('journal_id', $journal->id))
+                ->first();
+        }
+
+        if (!$cert) {
+            $cert = new Certificate();
+            $cert->type = 'editorial_appointment';
+            $cert->verification_hash = Str::random(32);
+        }
+
+        if (empty($cert->certificate_number)) {
+            $month = now()->format('m');
+            $year = now()->format('y');
+            $seq = str_pad(($user->id ?: rand(1, 999)) % 1000, 3, '0', STR_PAD_LEFT);
+            $code = 'H' . $journalAbbr . '00' . $month . $year . $seq;
+            if (Certificate::where('certificate_number', $code)->where('id', '!=', $cert->id ?? 0)->exists()) {
+                $code = 'H' . $journalAbbr . '00' . $month . $year . str_pad(rand(100, 999), 3, '0', STR_PAD_LEFT);
+            }
+            $cert->certificate_number = $code;
+        }
+
+        $cert->type = 'editorial_appointment';
+        $cert->user_id = $user->id;
+        if ($journal && Schema::hasColumn('certificates', 'journal_id')) {
+            $cert->journal_id = $journal->id;
+        }
+        $cert->recipient_name = $user->name;
+        $cert->recipient_role = $roleTitle;
+        $cert->recipient_email = $user->email;
+        $cert->institution = $user->affiliation ?: 'HJPARAM Academic Review Panel';
+        $cert->journal_name = $journalName;
+        $cert->paper_title = 'Certificate of ' . $roleTitle . ' Appointment - ' . $journalName;
+        $cert->issue_date = $cert->issue_date ?: now()->toDateString();
+        $cert->save();
+
+        return $cert;
     }
 
     /**

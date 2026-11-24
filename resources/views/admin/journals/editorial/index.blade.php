@@ -249,6 +249,13 @@
                         <div class="flex items-center justify-between pt-4 mt-3 border-t border-gray-100">
                             <span class="text-[11px] font-semibold text-gray-400">Order: {{ $member->sort_order }}</span>
                             <div class="flex items-center gap-2">
+                                <a href="{{ route('certificates.editorial.member', $member) }}" target="_blank"
+                                   class="px-3 py-1 bg-amber-50 hover:bg-amber-100 text-amber-800 text-xs font-bold rounded-lg border border-amber-200 transition inline-flex items-center gap-1"
+                                   title="Official Appointment Certificate">
+                                    <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+                                    Certificate
+                                </a>
+
                                 <button type="button" 
                                         @click="openEditModal({{ json_encode($member) }}, '{{ $member->photo_url ?? '' }}')"
                                         class="px-3 py-1 bg-gray-100 hover:bg-blue-50 hover:text-blue-700 text-gray-700 text-xs font-bold rounded-lg transition">

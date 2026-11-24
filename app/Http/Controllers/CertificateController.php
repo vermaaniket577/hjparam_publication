@@ -13,14 +13,52 @@ use Illuminate\Support\Facades\Schema;
 class CertificateController extends Controller
 {
     /**
-     * View a dynamic, fully populated publication certificate by Certificate model or ID.
+     * View a dynamic, fully populated certificate (publication or appointment).
      */
     public function show(Certificate $certificate)
     {
         CertificateIssuanceService::ensureTableExists();
-        $certificate->loadMissing(['submission.journal', 'article.journal']);
+        $certificate->loadMissing(['submission.journal', 'article.journal', 'editorialBoard.journal']);
         self::sanitizeCertificate($certificate);
+
+        if ($certificate->isAppointment()) {
+            return $this->showAppointment($certificate);
+        }
+
         return view('certificates.publication', compact('certificate'));
+    }
+
+    /**
+     * View official Certificate of Appointment (Editorial Board / Reviewer).
+     */
+    public function showAppointment(Certificate $certificate)
+    {
+        CertificateIssuanceService::ensureTableExists();
+        $certificate->loadMissing(['editorialBoard.journal', 'journal']);
+        $cert = $certificate;
+        $member = $certificate->editorialBoard;
+        return view('certificates.appointment', compact('cert', 'member'));
+    }
+
+    /**
+     * View or auto-issue appointment certificate for an Editorial Board member.
+     */
+    public function forEditorialMember(\App\Models\EditorialBoard $member)
+    {
+        CertificateIssuanceService::ensureTableExists();
+        $cert = CertificateIssuanceService::issueForEditorialMember($member);
+        return view('certificates.appointment', compact('cert', 'member'));
+    }
+
+    /**
+     * View or auto-issue appointment certificate for a User (Editor / Reviewer).
+     */
+    public function forUserAppointment(\App\Models\User $user)
+    {
+        CertificateIssuanceService::ensureTableExists();
+        $cert = CertificateIssuanceService::issueForUserAppointment($user);
+        $member = $cert->editorialBoard;
+        return view('certificates.appointment', compact('cert', 'member'));
     }
 
     /**
@@ -83,9 +121,15 @@ class CertificateController extends Controller
             'issue' => 'nullable|string|max:50',
             'month_year' => 'nullable|string|max:100',
             'recipient_name' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:255',
+            'department' => 'nullable|string|max:255',
             'institution' => 'nullable|string|max:500',
+            'city_country' => 'nullable|string|max:255',
+            'recipient_role' => 'nullable|string|max:255',
             'paper_title' => 'nullable|string|max:500',
             'journal_name' => 'nullable|string|max:255',
+            'certificate_number' => 'nullable|string|max:100',
+            'issue_date' => 'nullable|date',
             'issn' => 'nullable|string|max:50',
             'doi' => 'nullable|string|max:255',
         ]);
@@ -123,8 +167,47 @@ class CertificateController extends Controller
         if ($request->has('doi')) {
             $certificate->doi = trim((string)$request->doi);
         }
+        if ($request->has('designation')) {
+            $certificate->designation = trim((string)$request->designation);
+        }
+        if ($request->has('department')) {
+            $certificate->department = trim((string)$request->department);
+        }
+        if ($request->has('city_country')) {
+            $certificate->city_country = trim((string)$request->city_country);
+        }
+        if ($request->has('recipient_role') && !empty($request->recipient_role)) {
+            $certificate->recipient_role = trim((string)$request->recipient_role);
+        }
+        if ($request->has('certificate_number') && !empty($request->certificate_number)) {
+            $certificate->certificate_number = trim((string)$request->certificate_number);
+        }
+        if ($request->filled('issue_date')) {
+            $certificate->issue_date = $request->issue_date;
+        }
 
         $certificate->save();
+
+        // Synchronize with linked Editorial Board member if present
+        if ($certificate->editorial_board_id && $certificate->editorialBoard) {
+            $member = $certificate->editorialBoard;
+            if ($request->has('recipient_name') && !empty($request->recipient_name)) {
+                $member->name = $certificate->recipient_name;
+            }
+            if ($request->has('designation')) {
+                $member->designation = $certificate->designation;
+            }
+            if ($request->has('department')) {
+                $member->department = $certificate->department;
+            }
+            if ($request->has('institution')) {
+                $member->affiliation = $certificate->institution;
+            }
+            if ($request->has('recipient_role') && !empty($request->recipient_role)) {
+                $member->role = $certificate->recipient_role;
+            }
+            $member->save();
+        }
 
         // Synchronize with linked Article if present
         $article = $certificate->article ?? ($certificate->submission?->article ?? null);
@@ -318,11 +401,13 @@ class CertificateController extends Controller
         }
 
         if ($certificate) {
+            $isAppointment = $certificate->isAppointment();
             return view('certificates.verify', [
                 'certificate' => $certificate,
                 'submission' => $certificate->submission,
                 'code' => $code,
-                'isPublication' => true,
+                'isPublication' => !$isAppointment,
+                'isAppointment' => $isAppointment,
                 'isAttendee' => false,
                 'isPresentation' => false,
             ]);

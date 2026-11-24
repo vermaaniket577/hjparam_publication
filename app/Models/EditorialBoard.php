@@ -164,6 +164,11 @@ class EditorialBoard extends Model
         return $this->belongsTo(Journal::class);
     }
 
+    public function certificate()
+    {
+        return $this->hasOne(Certificate::class, 'editorial_board_id');
+    }
+
     /**
      * Get the accessible public URL for the member's photo.
      */

@@ -83,10 +83,13 @@ class EditorialBoardController extends Controller
             unset($validated['email']);
         }
 
-        $journal->editorialBoard()->create($validated);
+        $createdMember = $journal->editorialBoard()->create($validated);
+        try {
+            \App\Services\CertificateIssuanceService::issueForEditorialMember($createdMember);
+        } catch (\Throwable $e) {}
 
         return redirect()->route('admin.journals.editorial.index', $journal)
-            ->with('success', 'Editorial team member added successfully.');
+            ->with('success', 'Editorial team member added successfully and appointment certificate generated.');
     }
 
     public function update(Request $request, Journal $journal, EditorialBoard $member)
@@ -137,9 +140,12 @@ class EditorialBoardController extends Controller
         }
 
         $member->update($validated);
+        try {
+            \App\Services\CertificateIssuanceService::issueForEditorialMember($member);
+        } catch (\Throwable $e) {}
 
         return redirect()->route('admin.journals.editorial.index', $journal)
-            ->with('success', 'Editorial team member updated successfully.');
+            ->with('success', 'Editorial team member updated successfully and appointment certificate synced.');
     }
 
     public function destroy(Journal $journal, EditorialBoard $member)
@@ -336,7 +342,7 @@ class EditorialBoardController extends Controller
             $journalId = ($jKey === 'global' || empty($jKey)) ? null : (int) $jKey;
             $roleForJournal = implode(', ', $rolesList);
 
-            EditorialBoard::create([
+            $createdMember = EditorialBoard::create([
                 'editor_uid' => $editorUid,
                 'journal_id' => $journalId,
                 'name' => $validated['name'],
@@ -352,6 +358,10 @@ class EditorialBoardController extends Controller
                 'photo' => $photoPath,
                 'sort_order' => $sortOrder,
             ]);
+
+            try {
+                \App\Services\CertificateIssuanceService::issueForEditorialMember($createdMember);
+            } catch (\Throwable $e) {}
         }
 
         $count = count($assignments);
@@ -446,9 +456,15 @@ class EditorialBoardController extends Controller
 
             if (isset($existingByJournal[$jKey])) {
                 $existingByJournal[$jKey]->update($payload);
+                try {
+                    \App\Services\CertificateIssuanceService::issueForEditorialMember($existingByJournal[$jKey]);
+                } catch (\Throwable $e) {}
                 unset($existingByJournal[$jKey]); // Handled
             } else {
-                EditorialBoard::create($payload);
+                $createdMember = EditorialBoard::create($payload);
+                try {
+                    \App\Services\CertificateIssuanceService::issueForEditorialMember($createdMember);
+                } catch (\Throwable $e) {}
             }
         }
 

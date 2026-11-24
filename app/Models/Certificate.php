@@ -15,6 +15,8 @@ class Certificate extends Model
         'submission_id',
         'article_id',
         'user_id',
+        'editorial_board_id',
+        'journal_id',
         'recipient_name',
         'recipient_role',
         'recipient_email',
@@ -52,6 +54,21 @@ class Certificate extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function editorialBoard()
+    {
+        return $this->belongsTo(EditorialBoard::class, 'editorial_board_id');
+    }
+
+    public function journal()
+    {
+        return $this->belongsTo(Journal::class, 'journal_id');
+    }
+
+    public function isAppointment(): bool
+    {
+        return in_array($this->type, ['editorial_appointment', 'appointment', 'reviewer_appointment']) || !empty($this->editorial_board_id);
     }
 
     /**

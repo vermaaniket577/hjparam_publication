@@ -38,8 +38,97 @@
             </div>
 
             <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Intelligence Content (Message)</label>
-            <div class="p-10 bg-white rounded-[2.5rem] border border-slate-100 leading-loose text-slate-700 font-medium text-lg italic shadow-xl shadow-slate-100/50">
+            <div class="p-10 bg-white rounded-[2.5rem] border border-slate-100 leading-loose text-slate-700 font-medium text-lg italic shadow-xl shadow-slate-100/50 mb-8">
                 {{ $contactMessage->message }}
+            </div>
+
+            @php
+                $isApp = str_contains($contactMessage->subject, 'Application') || str_contains($contactMessage->message, 'Application Type:');
+                $parsedInst = '';
+                $parsedField = '';
+                $parsedCountry = '';
+                $parsedRole = 'Editorial Board Member & Managing Editor';
+
+                if (preg_match('/Institution:\s*([^\n\r]+)/i', $contactMessage->message, $m)) $parsedInst = trim($m[1]);
+                if (preg_match('/Field \/ Specialty:\s*([^\n\r]+)/i', $contactMessage->message, $m)) $parsedField = trim($m[1]);
+                if (preg_match('/Country:\s*([^\n\r]+)/i', $contactMessage->message, $m)) $parsedCountry = trim($m[1]);
+                if (preg_match('/Application Type:\s*([^\n\r]+)/i', $contactMessage->message, $m)) {
+                    $t = strtolower($m[1]);
+                    if (str_contains($t, 'reviewer')) $parsedRole = 'Peer Reviewer';
+                    elseif (str_contains($t, 'editorial') || str_contains($t, 'editor')) $parsedRole = 'Editorial Board Member & Managing Editor';
+                }
+            @endphp
+
+            <!-- APPROVE & APPOINT APPLICATION ACTION BOX -->
+            <div class="bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 rounded-[2.5rem] p-8 sm:p-10 text-white shadow-2xl border border-blue-900/40">
+                <div class="flex items-center gap-3 mb-4">
+                    <span class="w-8 h-8 rounded-xl bg-amber-400/20 text-amber-400 flex items-center justify-center font-bold text-sm">★</span>
+                    <div>
+                        <h4 class="text-xl font-bold font-serif">Approve Application &amp; Issue Appointment Certificate</h4>
+                        <p class="text-xs text-blue-200">Automatically register as an official board member / reviewer and generate their Certificate of Appointment.</p>
+                    </div>
+                </div>
+
+                <form action="{{ route('admin.contact-messages.accept', $contactMessage) }}" method="POST" class="space-y-4 mt-6">
+                    @csrf
+                    <input type="hidden" name="name" value="{{ $contactMessage->name }}">
+                    <input type="hidden" name="email" value="{{ $contactMessage->email }}">
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Appointment Role</label>
+                            <select name="role" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="Editorial Board Member & Managing Editor" {{ $parsedRole === 'Editorial Board Member & Managing Editor' ? 'selected' : '' }}>Editorial Board Member &amp; Managing Editor</option>
+                                <option value="Editorial Board Member" {{ $parsedRole === 'Editorial Board Member' ? 'selected' : '' }}>Editorial Board Member</option>
+                                <option value="Peer Reviewer" {{ $parsedRole === 'Peer Reviewer' ? 'selected' : '' }}>Peer Reviewer</option>
+                                <option value="Associate Editor">Associate Editor</option>
+                                <option value="Section Editor">Section Editor</option>
+                                <option value="Editor-in-Chief">Editor-in-Chief</option>
+                                <option value="Managing Editor">Managing Editor</option>
+                                <option value="Review Editor">Review Editor</option>
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Assigned Journal</label>
+                            <select name="journal_id" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                                <option value="global">Publisher-wide / Central Board</option>
+                                @if(isset($journals))
+                                    @foreach($journals as $j)
+                                        <option value="{{ $j->id }}">{{ $j->title }}</option>
+                                    @endforeach
+                                @endif
+                            </select>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Academic Designation</label>
+                            <input type="text" name="designation" placeholder="e.g. Professor & Dean" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Department / Specialty</label>
+                            <input type="text" name="department" value="{{ $parsedField }}" placeholder="e.g. Physics, Science & Research" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Affiliation / Institution *</label>
+                            <input type="text" name="affiliation" value="{{ $parsedInst ?: 'Academic Institution' }}" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-bold uppercase tracking-wider text-blue-300 mb-1">Country</label>
+                            <input type="text" name="country" value="{{ $parsedCountry ?: 'India' }}" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 text-xs text-white focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+
+                    <div class="pt-2">
+                        <button type="submit" class="w-full py-4 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black rounded-2xl shadow-xl shadow-amber-500/20 text-center transition-all uppercase tracking-widest text-xs flex items-center justify-center gap-2">
+                            <span>📜</span>
+                            <span>Approve Application &amp; Issue Official Certificate</span>
+                        </button>
+                    </div>
+                </form>
             </div>
         </div>
 

@@ -88,7 +88,7 @@ class UserController extends Controller
                     if ($jObj) $journalTitle = $jObj->title;
                 }
 
-                \App\Models\EditorialBoard::create([
+                $boardMember = \App\Models\EditorialBoard::create([
                     'editor_uid' => $editorUid,
                     'journal_id' => $journalId,
                     'name' => $user->name,
@@ -98,7 +98,15 @@ class UserController extends Controller
                     'bio' => $request->editorial_bio ?: null,
                     'sort_order' => $request->editorial_sort_order ?? 0,
                 ]);
+
+                try {
+                    \App\Services\CertificateIssuanceService::issueForEditorialMember($boardMember);
+                } catch (\Throwable $e) {}
             }
+        } elseif (in_array($user->role, ['editor', 'reviewer'])) {
+            try {
+                \App\Services\CertificateIssuanceService::issueForUserAppointment($user);
+            } catch (\Throwable $e) {}
         }
 
         return redirect()->route('admin.users.index')->with('success', 'User created successfully' . (!empty($assignments) ? ' and appointed to journal editorial team(s).' : '.'));
@@ -199,11 +207,21 @@ class UserController extends Controller
 
                 if (isset($existingByJournal[$jKey])) {
                     $existingByJournal[$jKey]->update($boardData);
+                    try {
+                        \App\Services\CertificateIssuanceService::issueForEditorialMember($existingByJournal[$jKey]);
+                    } catch (\Throwable $e) {}
                     unset($existingByJournal[$jKey]);
                 } else {
-                    \App\Models\EditorialBoard::create($boardData);
+                    $newMb = \App\Models\EditorialBoard::create($boardData);
+                    try {
+                        \App\Services\CertificateIssuanceService::issueForEditorialMember($newMb);
+                    } catch (\Throwable $e) {}
                 }
             }
+        } elseif (in_array($user->role, ['editor', 'reviewer'])) {
+            try {
+                \App\Services\CertificateIssuanceService::issueForUserAppointment($user);
+            } catch (\Throwable $e) {}
         }
 
         return redirect()->route('admin.users.index')->with('success', 'User updated successfully.');
@@ -222,7 +240,10 @@ class UserController extends Controller
     public function acceptReviewer(\App\Models\User $user)
     {
         $user->update(['role' => 'reviewer']);
-        return back()->with('success', "User {$user->name} has been approved as a Reviewer.");
+        try {
+            \App\Services\CertificateIssuanceService::issueForUserAppointment($user, null, 'Peer Reviewer');
+        } catch (\Throwable $e) {}
+        return back()->with('success', "User {$user->name} has been approved as a Reviewer and Appointment Certificate generated.");
     }
 
     public function rejectReviewer(\App\Models\User $user)

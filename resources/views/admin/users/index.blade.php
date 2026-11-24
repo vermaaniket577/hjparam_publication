@@ -130,6 +130,16 @@
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                     <div class="flex justify-end space-x-2">
+                                        @if($user->role === 'editor' || $user->role === 'reviewer')
+                                            <a href="{{ route('certificates.user.appointment', $user) }}" target="_blank"
+                                                class="text-gray-500 hover:text-amber-600 transition-colors duration-150 p-1 rounded-full hover:bg-amber-50"
+                                                title="Official Appointment Certificate">
+                                                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
+                                                </svg>
+                                            </a>
+                                        @endif
+
                                         <a href="{{ route('admin.users.edit', $user) }}"
                                             class="text-gray-500 hover:text-blue-600 transition-colors duration-150 p-1 rounded-full hover:bg-blue-50"
                                             title="Edit">
